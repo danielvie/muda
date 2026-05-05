@@ -1,0 +1,29 @@
+version: "3"
+
+tasks:
+  default:
+    cmds:
+     - task --list
+
+  run:
+    aliases: [r]
+    desc: "run main app"
+    cmds:
+     - bun run dev
+
+  check:
+    aliases: [c]
+    desc: "type-check the app"
+    cmds:
+     - bun run check
+
+  build:
+    aliases: [b]
+    desc: "build the app"
+    cmds:
+     - bun run build
+
+  clear:
+    desc: "remove generated build outputs"
+    cmds:
+     - powershell -NoProfile -Command "Remove-Item -Recurse -Force dist, dev-dist -ErrorAction SilentlyContinue"

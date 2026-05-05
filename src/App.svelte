@@ -6,6 +6,11 @@
     type InvestmentProjectionResult,
   } from "./finance";
 
+  import { Agentation } from "sv-agentation";
+
+  const agentationEnabled = typeof window !== "undefined" && import.meta.env.DEV;
+  const agentationWorkspaceRoot = agentationEnabled ? __AGENTATION_WORKSPACE_ROOT__ : null;
+
   // Svelte 5 (runes): estado reativo
   let saldoInicial = $state("50000");
   let aporteMensal = $state("2000");
@@ -392,6 +397,16 @@
       </span>
     </div>
   </footer>
+
+  {#if agentationEnabled}
+    <Agentation
+      workspaceRoot={agentationWorkspaceRoot}
+      openSourceOnClick
+      toolbarPosition="bottom-right"
+      outputMode="standard"
+      includeComponentContext
+    />
+  {/if}
 </div>
 
 <style>

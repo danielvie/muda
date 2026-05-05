@@ -1,0 +1,6 @@
+- [x] Replace the SvelteKit-only Agentation environment guard with Vite-safe dev/browser checks.
+- [x] Provide Agentation with the workspace root for source/editor links.
+- [x] Add TypeScript support for the injected workspace-root constant.
+- [x] Ensure Taskfile.yml exposes run, check, build, and clear tasks.
+- [x] Verify the project with type checking and a production build.
+- [x] Reproduce and fix the sv-agentation dev runtime marker crash.

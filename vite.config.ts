@@ -4,8 +4,13 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __AGENTATION_WORKSPACE_ROOT__: JSON.stringify(process.cwd()),
+  },
   plugins: [
-    svelte(),
+    svelte({
+      include: [/\.svelte$/, /node_modules\/sv-agentation/],
+    }),
     VitePWA({
       manifest: {
         name: "Muda APP",
@@ -40,4 +45,13 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    port: 3500,
+  },
+  optimizeDeps: {
+    include: ["sv-agentation"],
+  },
+  ssr: {
+    noExternal: ["sv-agentation"],
+  },
 });
