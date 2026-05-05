@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: "/muda/",
   define: {
     __AGENTATION_WORKSPACE_ROOT__: JSON.stringify(process.cwd()),
   },
@@ -49,6 +50,7 @@ export default defineConfig({
   ],
   server: {
     port: 3500,
+    host: true,
   },
   optimizeDeps: {
     include: ["sv-agentation"],
