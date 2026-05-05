@@ -11,7 +11,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     svelte({
-      include: [/\.svelte$/, /node_modules\/sv-agentation/],
+      include: [/\.svelte$/, /node_modules[\\/]sv-agentation[\\/].*\.svelte$/],
     }),
     VitePWA({
       manifest: {

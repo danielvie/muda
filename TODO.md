@@ -7,3 +7,20 @@
 - [x] Reevaluate colorscheme for readability
 - [x] Update App.css with Tailwind base import
 - [x] Verify dev server works
+- [x] Identify fields that need browser-session memory
+- [x] Add persisted Svelte state for those fields
+- [x] Wire fields to persisted state
+- [x] Verify build/check passes
+- [x] Replace Tailwind CSS variable shorthand classes in App.svelte
+- [x] Verify Tailwind warning cleanup with check/build
+- [x] Move CSS-variable Tailwind arbitrary classes to component CSS
+- [x] Verify App.svelte after removing arbitrary token classes
+- [x] Identify App.svelte responsibilities to split into modules
+- [x] Extract formatting/input helpers from App.svelte
+- [x] Extract SAC yearly schedule builder from App.svelte
+- [x] Split App.svelte UI into focused Svelte components
+- [x] Verify refactor with Svelte check and production build
+- [x] Reassess split for deep-module boundaries
+- [x] Collapse shallow wrapper components back into owning modules
+- [x] Extract projection view-model modules with simple interfaces
+- [x] Verify deep-module refactor with Svelte check and production build
