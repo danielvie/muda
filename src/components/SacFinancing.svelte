@@ -125,14 +125,14 @@
 
     .input-field {
         width: 100%;
-        padding: 8px 10px;
+        padding: 10px 12px;
         border-radius: var(--radius-md);
         background: var(--color-surface-alt);
         color: var(--color-text);
         border: 1px solid var(--color-border);
         outline: none;
         font-family: var(--font-mono);
-        font-size: 13px;
+        font-size: 16px;
         transition: border-color 150ms ease;
     }
 
