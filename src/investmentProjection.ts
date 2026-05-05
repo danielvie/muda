@@ -3,7 +3,7 @@ import {
     type InvestmentProjectionResult,
 } from "./finance";
 import { brl, toNumber } from "./format";
-import type { FieldMemory } from "./memory.svelte";
+import type { FieldMemory } from "./memory.tsx";
 
 export type InvestmentProjectionView = {
     result: InvestmentProjectionResult;

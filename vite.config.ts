@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
+import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import tailwindcss from "@tailwindcss/vite";
 
@@ -11,9 +11,7 @@ export default defineConfig({
   },
   plugins: [
     tailwindcss(),
-    svelte({
-      include: [/\.svelte$/, /node_modules[\\/]sv-agentation[\\/].*\.svelte$/],
-    }),
+    react(),
     VitePWA({
       manifest: {
         name: "Muda APP",
@@ -52,11 +50,5 @@ export default defineConfig({
   server: {
     port: 3500,
     host: true,
-  },
-  optimizeDeps: {
-    include: ["sv-agentation"],
-  },
-  ssr: {
-    noExternal: ["sv-agentation"],
   },
 });

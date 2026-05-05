@@ -1,6 +1,6 @@
 import { sacSummary, type SacSummary } from "./finance";
 import { brl, toNumber } from "./format";
-import type { FieldMemory } from "./memory.svelte";
+import type { FieldMemory } from "./memory.tsx";
 import { buildYearBlocks, type YearBlock } from "./sacSchedule";
 
 export type SacProjectionView = {
