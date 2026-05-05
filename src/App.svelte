@@ -2,6 +2,7 @@
     import AgentationMount from "./components/AgentationMount.svelte";
     import InvestmentProjection from "./components/InvestmentProjection.svelte";
     import SacFinancing from "./components/SacFinancing.svelte";
+    import ReloadPrompt from "./components/ReloadPrompt.svelte";
     import { loadFieldMemory, saveFieldMemory } from "./memory.svelte";
 
     loadFieldMemory();
@@ -46,4 +47,5 @@
     </footer>
 
     <AgentationMount />
+    <ReloadPrompt />
 </div>
