@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { VitePWA } from "vite-plugin-pwa";
+import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -8,6 +9,7 @@ export default defineConfig({
     __AGENTATION_WORKSPACE_ROOT__: JSON.stringify(process.cwd()),
   },
   plugins: [
+    tailwindcss(),
     svelte({
       include: [/\.svelte$/, /node_modules\/sv-agentation/],
     }),
@@ -16,8 +18,8 @@ export default defineConfig({
         name: "Muda APP",
         short_name: "muda",
         description: "Muda",
-        theme_color: "#282c34",
-        background_color: "#282c34",
+        theme_color: "#1a1d23",
+        background_color: "#1a1d23",
         display: "standalone",
         icons: [
           {

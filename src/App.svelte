@@ -213,188 +213,190 @@
   }
 </script>
 
-<div class="page">
-  <header class="header">
-    <div class="container">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">$</div>
-        <div style="min-width: 0;">
-          <h1 class="title">Calculadoras: investimento + SAC</h1>
-          <p class="subtitle">Aporte no fim do mês • Taxa anual em % (ex: 10 = 10% a.a.)</p>
-        </div>
-      </div>
+<div class="min-h-screen flex flex-col bg-(--color-bg) text-(--color-text) font-sans">
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-(--color-bg)/80 backdrop-blur-md border-b border-(--color-border)">
+    <div class="w-full max-w-[980px] mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="m-0 text-sm font-semibold text-(--color-text-heading) tracking-tight">
+        <span class="text-(--color-accent) text-4xl">muda</span><span class="text-(--color-text-muted) font-normal ml-2 text-xs">investimento + SAC</span>
+      </h1>
     </div>
   </header>
 
-  <div class="container">
-    <main class="main">
-    <section class="card" aria-labelledby="inv-title">
-      <h2 id="inv-title" class="cardTitle">Projeção de investimento</h2>
+  <!-- Main -->
+  <div class="w-full max-w-[980px] mx-auto px-4">
+    <main class="py-5 grid gap-4 min-w-0">
 
-      <div class="grid2">
-        <label class="field">
-          <div class="label">Saldo inicial (R$)</div>
-          <input
-            class="input"
-            type="text"
-            bind:value={saldoInicial}
-            onblur={() => formatMoneyOnBlur(saldoInicial, (v) => (saldoInicial = v))}
-          />
-        </label>
+      <!-- Investimento -->
+      <section class="bg-(--color-surface) border border-(--color-border) rounded-(--radius-lg) p-4" aria-labelledby="inv-title">
+        <h2 id="inv-title" class="m-0 text-sm font-semibold text-(--color-text-heading) tracking-tight">Projeção de investimento</h2>
 
-        <label class="field">
-          <div class="label">Aporte mensal (R$)</div>
-          <input
-            class="input"
-            type="text"
-            bind:value={aporteMensal}
-            onblur={() => formatMoneyOnBlur(aporteMensal, (v) => (aporteMensal = v))}
-          />
-        </label>
+        <div class="mt-3 grid grid-cols-2 gap-3 min-w-0 max-md:grid-cols-1">
+          <label class="grid gap-1.5">
+            <span class="text-xs text-(--color-text-muted)">Saldo inicial (R$)</span>
+            <input
+              class="input-field"
+              type="text"
+              bind:value={saldoInicial}
+              onblur={() => formatMoneyOnBlur(saldoInicial, (v) => (saldoInicial = v))}
+            />
+          </label>
 
-        <label class="field">
-          <div class="label">Taxa anual (%)</div>
-          <input class="input" type="number" step="0.1" bind:value={taxaInvestAnual} />
-        </label>
+          <label class="grid gap-1.5">
+            <span class="text-xs text-(--color-text-muted)">Aporte mensal (R$)</span>
+            <input
+              class="input-field"
+              type="text"
+              bind:value={aporteMensal}
+              onblur={() => formatMoneyOnBlur(aporteMensal, (v) => (aporteMensal = v))}
+            />
+          </label>
 
-        <label class="field">
-          <div class="label">Meses para projetar</div>
-          <input
-            class="input"
-            type="text"
-            bind:value={mesesProj}
-            onblur={() => commitExprString(mesesProj, (v) => (mesesProj = v), { int: true, min: 0 })}
-            onkeydown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
-          />
-        </label>
-      </div>
+          <label class="grid gap-1.5">
+            <span class="text-xs text-(--color-text-muted)">Taxa anual (%)</span>
+            <input class="input-field" type="number" step="0.1" bind:value={taxaInvestAnual} />
+          </label>
 
-      <div class="resultBox" style="margin-top: 12px;">
-        {#if investimento}
-          <div class="resultGrid">
-            <div class="resultItem">
-              <div class="resultLabel">Saldo final</div>
-              <div class="resultValue">{brl(investimento.saldoFinal)}</div>
+          <label class="grid gap-1.5">
+            <span class="text-xs text-(--color-text-muted)">Meses para projetar</span>
+            <input
+              class="input-field"
+              type="text"
+              bind:value={mesesProj}
+              onblur={() => commitExprString(mesesProj, (v) => (mesesProj = v), { int: true, min: 0 })}
+              onkeydown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
+            />
+          </label>
+        </div>
+
+        <div class="mt-3 p-3 rounded-(--radius-md) bg-(--color-surface-alt) border border-(--color-border)">
+          {#if investimento}
+            <div class="grid grid-cols-3 gap-2.5 min-w-0 max-md:grid-cols-1">
+              <div class="result-cell">
+                <div class="text-[11px] text-(--color-text-muted) mb-1">Saldo final</div>
+                <div class="text-sm font-semibold text-(--color-text-heading) font-mono">{brl(investimento.saldoFinal)}</div>
+              </div>
+              <div class="result-cell">
+                <div class="text-[11px] text-(--color-text-muted) mb-1">Total aportado</div>
+                <div class="text-sm font-semibold text-(--color-text-heading) font-mono">{brl(investimento.totalAportado)}</div>
+              </div>
+              <div class="result-cell">
+                <div class="text-[11px] text-(--color-text-muted) mb-1">Ganho</div>
+                <div class="text-sm font-semibold text-(--color-positive) font-mono">{brl(investimento.ganho)}</div>
+              </div>
             </div>
-            <div class="resultItem">
-              <div class="resultLabel">Total aportado</div>
-              <div class="resultValue">{brl(investimento.totalAportado)}</div>
+          {:else}
+            <div class="text-xs text-(--color-text-muted)">Preencha os campos com números.</div>
+          {/if}
+        </div>
+      </section>
+
+      <!-- SAC -->
+      <section class="bg-(--color-surface) border border-(--color-border) rounded-(--radius-lg) p-4" aria-labelledby="sac-title">
+        <h2 id="sac-title" class="m-0 text-sm font-semibold text-(--color-text-heading) tracking-tight">Financiamento SAC (resumo)</h2>
+
+        <div class="mt-3 grid grid-cols-2 gap-3 min-w-0 max-md:grid-cols-1">
+          <label class="grid gap-1.5">
+            <span class="text-xs text-(--color-text-muted)">Valor do imóvel (R$)</span>
+            <input
+              class="input-field"
+              type="text"
+              bind:value={valorImovel}
+              onblur={() => formatMoneyOnBlur(valorImovel, (v) => (valorImovel = v))}
+            />
+          </label>
+
+          <label class="grid gap-1.5">
+            <span class="text-xs text-(--color-text-muted)">Entrada (R$)</span>
+            <input
+              class="input-field"
+              type="text"
+              bind:value={entrada}
+              onblur={() => formatMoneyOnBlur(entrada, (v) => (entrada = v))}
+            />
+          </label>
+
+          <label class="grid gap-1.5">
+            <span class="text-xs text-(--color-text-muted)">Taxa anual (%)</span>
+            <input class="input-field" type="number" step="0.1" bind:value={taxaFinAnual} />
+          </label>
+
+          <label class="grid gap-1.5">
+            <span class="text-xs text-(--color-text-muted)">Prazo (meses)</span>
+            <input
+              class="input-field"
+              type="text"
+              bind:value={prazoMeses}
+              onblur={() => commitExprString(prazoMeses, (v) => (prazoMeses = v), { int: true, min: 1 })}
+              onkeydown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
+            />
+          </label>
+        </div>
+
+        <div class="mt-3 p-3 rounded-(--radius-md) bg-(--color-surface-alt) border border-(--color-border)">
+          {#if sac}
+            <div class="grid grid-cols-2 gap-2.5 min-w-0 max-md:grid-cols-1">
+              <div class="result-cell">
+                <div class="text-[11px] text-(--color-text-muted) mb-1">Financiado (PV)</div>
+                <div class="text-sm font-semibold text-(--color-text-heading) font-mono">{brl(sac.pv)}</div>
+              </div>
+              <div class="result-cell">
+                <div class="text-[11px] text-(--color-text-muted) mb-1">Amortização</div>
+                <div class="text-sm font-semibold text-(--color-text-heading) font-mono">{brl(sac.amortizacao)} / mês</div>
+              </div>
+              <div class="result-cell">
+                <div class="text-[11px] text-(--color-text-muted) mb-1">Prestação mês 1</div>
+                <div class="text-sm font-semibold text-(--color-warm) font-mono">{brl(sac.prestacaoMes1)}</div>
+              </div>
+              <div class="result-cell">
+                <div class="text-[11px] text-(--color-text-muted) mb-1">Última prestação</div>
+                <div class="text-sm font-semibold text-(--color-positive) font-mono">{brl(sac.prestacaoUltima)}</div>
+              </div>
             </div>
-            <div class="resultItem">
-              <div class="resultLabel">Ganho</div>
-              <div class="resultValue">{brl(investimento.ganho)}</div>
-            </div>
-          </div>
-        {:else}
-          <div class="muted">Preencha os campos com números.</div>
-        {/if}
-      </div>
-    </section>
 
-    <section class="card" aria-labelledby="sac-title">
-      <h2 id="sac-title" class="cardTitle">Financiamento SAC (resumo)</h2>
+            <details class="mt-3">
+              <summary class="cursor-pointer select-none py-2 px-3 rounded-(--radius-md) bg-(--color-surface) border border-(--color-border) text-xs font-semibold text-(--color-accent) transition-colors hover:border-(--color-border-focus) hover:bg-(--color-accent-soft)">
+                Simulação de prestações por ano (blocos de 12 meses)
+              </summary>
 
-      <div class="grid2">
-        <label class="field">
-          <div class="label">Valor do imóvel (R$)</div>
-          <input
-            class="input"
-            type="text"
-            bind:value={valorImovel}
-            onblur={() => formatMoneyOnBlur(valorImovel, (v) => (valorImovel = v))}
-          />
-        </label>
-
-        <label class="field">
-          <div class="label">Entrada (R$)</div>
-          <input
-            class="input"
-            type="text"
-            bind:value={entrada}
-            onblur={() => formatMoneyOnBlur(entrada, (v) => (entrada = v))}
-          />
-        </label>
-
-        <label class="field">
-          <div class="label">Taxa anual (%)</div>
-          <input class="input" type="number" step="0.1" bind:value={taxaFinAnual} />
-        </label>
-
-        <label class="field">
-          <div class="label">Prazo (meses)</div>
-          <input
-            class="input"
-            type="text"
-            bind:value={prazoMeses}
-            onblur={() => commitExprString(prazoMeses, (v) => (prazoMeses = v), { int: true, min: 1 })}
-            onkeydown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
-          />
-        </label>
-      </div>
-
-      <div class="resultBox" style="margin-top: 12px;">
-        {#if sac}
-          <div class="resultGrid">
-            <div class="resultItem">
-              <div class="resultLabel">Financiado (PV)</div>
-              <div class="resultValue">{brl(sac.pv)}</div>
-            </div>
-            <div class="resultItem">
-              <div class="resultLabel">Amortização</div>
-              <div class="resultValue">{brl(sac.amortizacao)} / mês</div>
-            </div>
-            <div class="resultItem">
-              <div class="resultLabel">Prestação mês 1</div>
-              <div class="resultValue">{brl(sac.prestacaoMes1)}</div>
-            </div>
-            <div class="resultItem">
-              <div class="resultLabel">Última prestação</div>
-              <div class="resultValue">{brl(sac.prestacaoUltima)}</div>
-            </div>
-          </div>
-
-          <details class="details" style="margin-top: 12px;">
-            <summary class="detailsSummary">
-              Simulação de prestações por ano (blocos de 12 meses)
-            </summary>
-
-            <div class="yearBlocks">
-              {#each yearBlocks as block (block.ano)}
-                <details class="yearBlock">
-                  <summary class="yearSummary">
-                    <div>
-                      <div class="yearTitle">Ano {block.ano}</div>
-                      <div class="yearMeta">Meses {block.mesInicio}–{block.mesFim}</div>
-                    </div>
-
-                    <div class="yearRange">{brl(block.primeiraPrestacao)} → {brl(block.ultimaPrestacao)}</div>
-                  </summary>
-
-                  <div class="monthGrid" style="margin-top: 12px;">
-                    {#each block.meses as m (m.mes)}
-                      <div class="monthCell">
-                        <div class="monthLabel">M{m.mes}</div>
-                        <div class="monthValue">{brl(m.prestacao)}</div>
+              <div class="mt-3 grid gap-3">
+                {#each yearBlocks as block (block.ano)}
+                  <details class="p-3 rounded-(--radius-md) bg-(--color-surface-alt) border border-(--color-border)">
+                    <summary class="cursor-pointer flex items-center justify-between gap-3 py-2 px-2 rounded-(--radius-sm) transition-colors hover:bg-(--color-accent-soft)">
+                      <div>
+                        <div class="text-xs font-semibold text-(--color-text-heading)">Ano {block.ano}</div>
+                        <div class="text-[11px] text-(--color-text-muted)">Meses {block.mesInicio}–{block.mesFim}</div>
                       </div>
-                    {/each}
-                  </div>
-                </details>
-              {/each}
-            </div>
-          </details>
-        {:else}
-          <div class="muted">Preencha os campos com números.</div>
-        {/if}
-      </div>
-    </section>
+                      <div class="text-xs font-semibold whitespace-nowrap text-(--color-positive) font-mono">
+                        {brl(block.primeiraPrestacao)} → {brl(block.ultimaPrestacao)}
+                      </div>
+                    </summary>
+
+                    <div class="mt-3 grid grid-cols-4 gap-2 min-w-0 max-md:grid-cols-2">
+                      {#each block.meses as m (m.mes)}
+                        <div class="p-2 rounded-(--radius-sm) bg-(--color-surface) border border-(--color-border) transition-colors hover:border-(--color-border-focus)">
+                          <div class="text-[10px] text-(--color-text-muted) mb-1">M{m.mes}</div>
+                          <div class="text-xs font-semibold text-(--color-text-heading) font-mono">{brl(m.prestacao)}</div>
+                        </div>
+                      {/each}
+                    </div>
+                  </details>
+                {/each}
+              </div>
+            </details>
+          {:else}
+            <div class="text-xs text-(--color-text-muted)">Preencha os campos com números.</div>
+          {/if}
+        </div>
+      </section>
+
     </main>
   </div>
 
-  <footer class="footer">
-    <div class="container">
-      <span>
-        Próximo passo: usar a entrada como saldo projetado do investimento para simular “esperar N meses”.
-      </span>
+  <!-- Footer -->
+  <footer class="mt-auto py-4 px-4 border-t border-(--color-border) text-(--color-text-muted) text-[11px] text-center">
+    <div class="w-full max-w-[980px] mx-auto">
+      Próximo passo: usar a entrada como saldo projetado do investimento para simular "esperar N meses".
     </div>
   </footer>
 
@@ -410,163 +412,33 @@
 </div>
 
 <style>
-  /* One Dark Pro-ish */
-  .page {
-    min-height: 100vh;
-    background: #282c34;
-    color: #abb2bf;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: rgba(33, 37, 43, 0.92);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(97, 175, 239, 0.25);
-  }
-
-  .container {
+  /* Only component-specific styles that Tailwind can't cover */
+  .input-field {
     width: 100%;
-    max-width: 980px;
-    margin: 0 auto;
-    padding: 0 16px;
-  }
-
-  .brand {
-    padding: 18px 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .logo {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: grid;
-    place-items: center;
-    font-weight: 900;
-    background: linear-gradient(135deg, #61afef 0%, #56b6c2 100%);
-    color: #282c34;
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
-  }
-
-  .title {
-    margin: 0;
-    font-size: 18px;
-    letter-spacing: 0.2px;
-    color: #e6e6e6;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .subtitle {
-    margin: 4px 0 0 0;
-    font-size: 13px;
-    color: rgba(171, 178, 191, 0.85);
-  }
-
-  .main {
-    padding: 22px 0;
-    display: grid;
-    gap: 16px;
-    min-width: 0;
-  }
-
-  .card {
-    background: #21252b;
-    border: 1px solid rgba(97, 175, 239, 0.18);
-    border-radius: 14px;
-    padding: 16px;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-  }
-
-  .cardTitle {
-    margin: 0;
-    font-size: 16px;
-    color: #e6e6e6;
-  }
-
-  .grid2 {
-    margin-top: 12px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .field {
-    display: grid;
-    gap: 6px;
-  }
-
-  .label {
-    font-size: 13px;
-    color: rgba(171, 178, 191, 0.92);
-  }
-
-  .input {
-    width: 100%;
-    max-width: 100%;
-    border-radius: 12px;
-    padding: 10px 12px;
-    background: #1e2227;
-    color: #abb2bf;
-    border: 1px solid rgba(97, 175, 239, 0.35);
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-alt);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
     outline: none;
-    transition: transform 120ms ease, border-color 120ms ease;
-  }
-
-  .input:hover {
-    border-color: rgba(97, 175, 239, 0.6);
-  }
-
-  .input:focus {
-    border-color: rgba(97, 175, 239, 0.9);
-  }
-
-  .resultBox {
-    padding: 12px;
-    border-radius: 12px;
-    background: #1e2227;
-    border: 1px solid rgba(97, 175, 239, 0.22);
-  }
-
-  .resultGrid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    min-width: 0;
-  }
-
-  .resultItem {
-    padding: 10px;
-    border-radius: 12px;
-    background: #1e2227;
-    border: 1px solid rgba(198, 120, 221, 0.18);
-    min-width: 0;
-  }
-
-  .resultLabel {
-    font-size: 12px;
-    color: rgba(171, 178, 191, 0.78);
-    margin-bottom: 6px;
-  }
-
-  .resultValue {
-    font-size: 14px;
-    font-weight: 700;
-    color: #e6e6e6;
-  }
-
-  .muted {
+    font-family: var(--font-mono);
     font-size: 13px;
-    color: rgba(171, 178, 191, 0.85);
+    transition: border-color 150ms ease;
+  }
+
+  .input-field:hover {
+    border-color: var(--color-border-focus);
+  }
+
+  .input-field:focus {
+    border-color: var(--color-accent);
+  }
+
+  .result-cell {
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
   }
 
   details > summary {
@@ -575,126 +447,5 @@
 
   details > summary::-webkit-details-marker {
     display: none;
-  }
-
-  .detailsSummary {
-    cursor: pointer;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background: #1e2227;
-    border: 1px solid rgba(97, 175, 239, 0.22);
-    user-select: none;
-    font-weight: 800;
-    color: #e06c75;
-    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
-  }
-
-  .detailsSummary:hover {
-    transform: translateY(-1px);
-    border-color: rgba(97, 175, 239, 0.5);
-    background: #242a31;
-  }
-
-  .yearBlocks {
-    margin-top: 12px;
-    display: grid;
-    gap: 12px;
-  }
-
-  .yearBlock {
-    padding: 12px;
-    border-radius: 14px;
-    background: #1e2227;
-    border: 1px solid rgba(97, 175, 239, 0.18);
-  }
-
-  .yearSummary {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 10px;
-    border-radius: 12px;
-    transition: transform 120ms ease, background 120ms ease;
-  }
-
-  .yearSummary:hover {
-    transform: translateY(-1px);
-    background: rgba(97, 175, 239, 0.08);
-  }
-
-  .yearTitle {
-    font-size: 14px;
-    font-weight: 800;
-    color: #e6e6e6;
-  }
-
-  .yearMeta {
-    font-size: 12px;
-    color: rgba(171, 178, 191, 0.8);
-  }
-
-  .yearRange {
-    font-size: 13px;
-    font-weight: 800;
-    white-space: nowrap;
-    color: #98c379;
-  }
-
-  .monthGrid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    min-width: 0;
-  }
-
-  .monthCell {
-    padding: 10px;
-    border-radius: 12px;
-    background: #21252b;
-    border: 1px solid rgba(152, 195, 121, 0.18);
-    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
-  }
-
-  .monthCell:hover {
-    transform: translateY(-1px);
-    border-color: rgba(152, 195, 121, 0.45);
-    background: #262c34;
-  }
-
-  .monthLabel {
-    font-size: 11px;
-    color: rgba(171, 178, 191, 0.78);
-    margin-bottom: 6px;
-  }
-
-  .monthValue {
-    font-size: 13px;
-    font-weight: 800;
-    color: #e6e6e6;
-  }
-
-  .footer {
-    margin-top: auto;
-    padding: 18px 16px;
-    border-top: 1px solid rgba(97, 175, 239, 0.18);
-    color: rgba(171, 178, 191, 0.85);
-    font-size: 12px;
-    text-align: center;
-  }
-
-  @media (max-width: 720px) {
-    .grid2 {
-      grid-template-columns: 1fr;
-    }
-
-    .resultGrid {
-      grid-template-columns: 1fr;
-    }
-
-    .monthGrid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
   }
 </style>

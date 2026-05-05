@@ -26,4 +26,10 @@ tasks:
   clear:
     desc: "remove generated build outputs"
     cmds:
-     - powershell -NoProfile -Command "Remove-Item -Recurse -Force dist, dev-dist -ErrorAction SilentlyContinue"
+      - powershell -NoProfile -Command "Remove-Item -Recurse -Force dist, dev-dist -ErrorAction SilentlyContinue"
+
+  kill:
+    aliases: [k]
+    desc: "kill all dev servers (ports 3500-3510)"
+    cmds:
+      - powershell -NoProfile -Command "taskkill /F /IM node*"
