@@ -19,6 +19,7 @@ export default defineConfig({
         name: "Muda APP",
         short_name: "muda",
         description: "Muda",
+        start_url: "/muda/",
         theme_color: "#1a1d23",
         background_color: "#1a1d23",
         display: "fullscreen",
