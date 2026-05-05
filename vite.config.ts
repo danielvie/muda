@@ -21,7 +21,7 @@ export default defineConfig({
         description: "Muda",
         theme_color: "#1a1d23",
         background_color: "#1a1d23",
-        display: "standalone",
+        display: "fullscreen",
         icons: [
           {
             src: "icons/128.png",
