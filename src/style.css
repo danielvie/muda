@@ -364,12 +364,12 @@ body {
 
 /* Panel accent per tone */
 .dashboard-panel-sac {
-    --panel-accent: #E8F500;
+    --panel-accent: var(--color-accent);
     --panel-accent-soft: rgba(232, 245, 0, 0.15);
     --panel-header-bg: #111111;
     --panel-header-border: #333;
     --panel-handle-color: #E8F500;
-    --panel-handle-bg: oklch(0.93 0.21 113.62);
+    --panel-handle-bg: var(--color-accent);
 }
 
 .dashboard-panel-investment {
@@ -378,7 +378,7 @@ body {
     --panel-header-bg: #111111;
     --panel-header-border: #333;
     --panel-handle-color: #4dd9a4;
-    --panel-handle-bg: oklch(0.8 0.14 164.22);
+    --panel-handle-bg: #4dd9a4;
 }
 
 
