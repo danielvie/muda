@@ -10,7 +10,7 @@ export default function App() {
       <header className="sticky top-0 z-10 bg-bg/80 backdrop-blur-md border-b border-border">
         <div className="w-full max-w-245 mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="m-0 text-sm font-semibold text-text-heading tracking-tight">
-            <span className="text-accent text-4xl">muda ...</span>
+            <span className="text-accent text-4xl">muda</span>
             <span className="text-text-muted font-normal ml-2 text-xs">
               investimento + SAC
             </span>

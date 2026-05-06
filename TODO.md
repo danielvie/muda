@@ -1,5 +1,14 @@
 # TODO
 
+- [x] Make E2 redesign visibly distinct, not just token changes
+- [x] Add calculator-style field tiles and display inputs
+- [x] Strengthen panel body/header contrast
+- [x] Verify type-check and build after stronger E2 pass
+
+- [x] Apply E2 color system to app CSS
+- [x] Make inputs, chips, and metric cards more calculator-like
+- [x] Verify type-check and build after E2 theme
+
 - [x] Replace fixed tax chips with remembered values
 - [x] Persist last 3 unique tax values
 - [x] Display remembered tax values sorted
