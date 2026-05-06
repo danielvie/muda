@@ -1,7 +1,7 @@
 # TODO
 
 - [x] Make SAC first in default dashboard layout
-- [ ] Verify type-check and build after default order change
+- [x] Verify type-check and build after default order change
 
 - [x] Replace mobile RGL rendering with natural stacked layout
 - [x] Preserve mobile reorder from panel drag handle
