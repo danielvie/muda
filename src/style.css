@@ -203,6 +203,7 @@ body {
 
 .dashboard-toolbar {
     display: flex;
+    margin: 0 10px;
     align-items: center;
     justify-content: flex-end;
     gap: 12px;
@@ -210,10 +211,9 @@ body {
 
 .dashboard-reset {
     min-height: 36px;
-    padding: 0 14px;
-    margin-right: 5px;
+    padding: 4px 14px;
     border: 2px solid #000;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: transparent;
     color: #000;
     font-size: 11px;
@@ -467,6 +467,7 @@ body {
 .dashboard-collapse:focus-visible {
     border-color: var(--panel-handle-color, var(--color-text-heading));
     background: var(--panel-handle-bg, var(--color-accent-soft));
+    color: var(--color-surface);
     outline: none;
 }
 

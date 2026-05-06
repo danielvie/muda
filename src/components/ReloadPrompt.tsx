@@ -21,7 +21,14 @@ export default function ReloadPrompt() {
   if (!needRefresh) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 p-4 bg-surface-alt border border-border rounded-lg shadow-xl flex flex-col gap-3 min-w-62.5">
+    <div className="
+      fixed bottom-4 right-4 z-50 p-4
+      bg-surface-alt
+      border border-border
+      rounded-md shadow-xl
+      flex flex-col gap-3
+      min-w-62.5
+      ">
       <span className="text-sm font-semibold text-text-heading">Nova versão disponível!</span>
       <div className="flex gap-2">
         <button

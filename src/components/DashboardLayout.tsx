@@ -289,6 +289,25 @@ export default function DashboardLayout() {
     setCollapsedPanels({ investment: false, sac: false });
   }, []);
 
+  const setAllCollapsed = useCallback((collapsed: boolean) => {
+    const nextCollapsed: Record<WidgetId, boolean> = {
+      investment: collapsed,
+      sac: collapsed,
+    };
+
+    setLayouts((currentLayouts) => {
+      const expandedHeights = collapsed
+        ? rememberExpandedHeights(currentLayouts, { investment: false, sac: false })
+        : readExpandedHeights();
+      const nextLayouts = withCollapsedHeight(currentLayouts, nextCollapsed, expandedHeights);
+      saveLayouts(nextLayouts);
+      return nextLayouts;
+    });
+
+    saveCollapsedPanels(nextCollapsed);
+    setCollapsedPanels(nextCollapsed);
+  }, []);
+
   const isMobile = mounted && width < breakpoints.sm;
   const mobileOrder = useMemo(() => getMobileOrder(layouts), [layouts]);
 
@@ -411,6 +430,12 @@ export default function DashboardLayout() {
   return (
     <section className="dashboard-shell" aria-labelledby="dashboard-title">
       <div className="dashboard-toolbar">
+        <button className="dashboard-reset" type="button" onClick={() => setAllCollapsed(false)} title="Expandir todos">
+          Expandir todos
+        </button>
+        <button className="dashboard-reset" type="button" onClick={() => setAllCollapsed(true)} title="Recolher todos">
+          Recolher todos
+        </button>
         <button className="dashboard-reset" type="button" onClick={resetLayout} title="Resetar layout">
           Resetar layout
         </button>

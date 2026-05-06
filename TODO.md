@@ -1,5 +1,5 @@
 # TODO
 
-- [x] Locate valorImovel history chip rendering
-- [x] Format valorImovel history chip labels as thousands
+- [x] Locate dashboard toolbar and collapse state flow
+- [x] Add expand-all and collapse-all toolbar actions
 - [x] Verify type-check/build
