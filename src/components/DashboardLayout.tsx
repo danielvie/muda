@@ -15,6 +15,7 @@ type WidgetId = "investment" | "sac";
 const STORAGE_KEY = "muda.dashboard.layouts.v2";
 const COLLAPSED_STORAGE_KEY = "muda.dashboard.collapsed.v2";
 const HEIGHT_STORAGE_KEY = "muda.dashboard.expandedHeights.v2";
+const COLLAPSED_GRID_HEIGHT = 2;
 
 const breakpoints: Record<DashboardBreakpoint, number> = {
   lg: 1000,
@@ -106,6 +107,10 @@ function getDefaultHeight(breakpointName: DashboardBreakpoint, widgetId: WidgetI
   return defaultLayouts[breakpointName]?.find((item) => item.i === widgetId)?.h ?? 8;
 }
 
+function getDefaultLayoutItem(breakpointName: DashboardBreakpoint, widgetId: WidgetId) {
+  return defaultLayouts[breakpointName]?.find((item) => item.i === widgetId);
+}
+
 function withCollapsedHeight(
   layouts: ResponsiveLayouts<DashboardBreakpoint>,
   collapsedPanels: Record<WidgetId, boolean>,
@@ -119,12 +124,18 @@ function withCollapsedHeight(
 
         const typedBreakpoint = breakpointName as DashboardBreakpoint;
         if (collapsedPanels[item.i]) {
-          return { ...item, h: 1, minH: 1, maxH: 1 };
+          return { ...item, h: COLLAPSED_GRID_HEIGHT, minH: COLLAPSED_GRID_HEIGHT, maxH: COLLAPSED_GRID_HEIGHT };
         }
 
+        const defaultItem = getDefaultLayoutItem(typedBreakpoint, item.i);
         const restoredHeight = expandedHeights[typedBreakpoint]?.[item.i] ?? getDefaultHeight(typedBreakpoint, item.i);
-        const { maxH: _maxH, ...expandedItem } = item;
-        return { ...expandedItem, h: Math.max(restoredHeight, item.minH ?? 1) };
+        const { maxH: _maxH, minH: _minH, ...expandedItem } = item;
+        return {
+          ...expandedItem,
+          minH: defaultItem?.minH,
+          maxH: defaultItem?.maxH,
+          h: Math.max(restoredHeight, defaultItem?.minH ?? 1),
+        };
       }),
     ]),
   ) as ResponsiveLayouts<DashboardBreakpoint>;
@@ -193,7 +204,7 @@ function DashboardPanel({
 
   return (
     <section
-      className={`dashboard-panel dashboard-panel-${tone}`}
+      className={`dashboard-panel dashboard-panel-${tone}${collapsed ? " dashboard-panel-collapsed" : ""}`}
       data-dashboard-widget={widgetId}
       aria-label={config.title}
     >
@@ -415,7 +426,7 @@ export default function DashboardLayout() {
               cancel: "input,textarea,button,select,a,[contenteditable=true]",
               threshold: 6,
             }}
-            resizeConfig={{ enabled: true, handles: ["se"] }}
+            resizeConfig={{ enabled: true, handles: ["e", "s"] }}
             onBreakpointChange={(nextBreakpoint: Breakpoint) => setBreakpoint(nextBreakpoint as DashboardBreakpoint)}
             onLayoutChange={onLayoutChange}
           >

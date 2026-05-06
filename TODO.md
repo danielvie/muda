@@ -1,5 +1,5 @@
 # TODO
 
-- [x] Locate dashboard panel radius rule
-- [x] Reduce only the bottom panel corner radius
+- [x] Identify resize library selector specificity issue
+- [x] Override edge handles with matching specificity
 - [x] Verify type-check/build
