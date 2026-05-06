@@ -100,7 +100,7 @@ body {
 .field-chip {
     min-width: 48px;
     min-height: 32px;
-    padding: 0 8px;
+    padding: 10px 8px;
     border-radius: var(--radius-sm);
     border: 2px solid var(--panel-accent, var(--color-accent));
     background: transparent;
