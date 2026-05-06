@@ -7,21 +7,21 @@ export default function YearBlockList({ blocks }: { blocks: YearBlock[] }) {
     <details className="mt-3 group">
       <summary className="
         cursor-pointer select-none
-        py-4
-        px-3
+        py-4 px-3
         rounded-sm
-        bg-accent/90
-        border
-        border-border
+        bg-surface
+        border-2
+        border-accent
         text-sm
         font-semibold
-        text-surface
+        text-accent
         transition-colors
         font-mono
         uppercase
         text-center
         hover:border-border-focus
         hover:bg-accent
+        hover:text-surface
         list-none
         [&::-webkit-details-marker]:hidden">
         Simulação de prestações por ano
