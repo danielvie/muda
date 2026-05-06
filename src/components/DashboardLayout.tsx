@@ -209,6 +209,11 @@ export default function DashboardLayout() {
   const [collapsedPanels, setCollapsedPanels] = useState(readCollapsedPanels);
   const [layouts, setLayouts] = useState(() => withCollapsedHeight(readSavedLayouts(), readCollapsedPanels()));
   const [breakpoint, setBreakpoint] = useState<DashboardBreakpoint>("lg");
+  const [mobileDragState, setMobileDragState] = useState<{
+    activeId: WidgetId;
+    targetId: WidgetId;
+    position: "before" | "after";
+  } | null>(null);
   const draggedMobileWidget = useRef<WidgetId | null>(null);
   const mobileDropTarget = useRef<{ id: WidgetId; position: "before" | "after" } | null>(null);
 
@@ -251,6 +256,7 @@ export default function DashboardLayout() {
     event.preventDefault();
     draggedMobileWidget.current = widgetId;
     mobileDropTarget.current = { id: widgetId, position: "before" };
+    setMobileDragState({ activeId: widgetId, targetId: widgetId, position: "before" });
     event.currentTarget.setPointerCapture(event.pointerId);
 
     const onPointerMove = (moveEvent: PointerEvent) => {
@@ -265,6 +271,11 @@ export default function DashboardLayout() {
           id: targetId,
           position: moveEvent.clientY > rect.top + rect.height / 2 ? "after" : "before",
         };
+        setMobileDragState({
+          activeId: widgetId,
+          targetId,
+          position: mobileDropTarget.current.position,
+        });
       }
     };
 
@@ -276,6 +287,7 @@ export default function DashboardLayout() {
 
       draggedMobileWidget.current = null;
       mobileDropTarget.current = null;
+      setMobileDragState(null);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
@@ -365,7 +377,16 @@ export default function DashboardLayout() {
         {mounted && isMobile && (
           <div className="dashboard-mobile-list">
             {mobileOrder.map((id) => (
-              <div key={id} className="dashboard-mobile-item">
+              <div
+                key={id}
+                className={`dashboard-mobile-item ${
+                  mobileDragState?.activeId === id ? "dashboard-mobile-item-dragging" : ""
+                } ${
+                  mobileDragState?.targetId === id && mobileDragState.activeId !== id
+                    ? `dashboard-mobile-drop-${mobileDragState.position}`
+                    : ""
+                }`}
+              >
                 {renderWidget(id, true)}
               </div>
             ))}

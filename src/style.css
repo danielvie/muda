@@ -172,7 +172,43 @@ body {
 }
 
 .dashboard-mobile-item {
+  position: relative;
   min-width: 0;
+  transition: transform 170ms ease, opacity 170ms ease;
+}
+
+.dashboard-mobile-item::before,
+.dashboard-mobile-item::after {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  z-index: 3;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  content: "";
+}
+
+.dashboard-mobile-item::before {
+  top: -9px;
+}
+
+.dashboard-mobile-item::after {
+  bottom: -9px;
+}
+
+.dashboard-mobile-drop-before::before,
+.dashboard-mobile-drop-after::after {
+  opacity: 1;
+}
+
+.dashboard-mobile-item-dragging {
+  opacity: 0.78;
+  transform: scale(0.99);
 }
 
 .dashboard-mobile-item .dashboard-panel {

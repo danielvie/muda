@@ -1,5 +1,10 @@
 # TODO
 
+- [x] Add mobile drag/drop visual state
+- [x] Add mobile drop indicator before/after target
+- [x] Add small mobile reorder transition
+- [x] Verify type-check and build after mobile animation
+
 - [x] Support mobile drop before or after target panel
 - [x] Verify first panel can move to end
 - [x] Verify type-check and build after mobile ordering fix
