@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { useMemory } from "../memory.tsx";
-import { buildSacProjection } from "../sacProjection";
-import { commitExprString, formatMoneyOnBlur } from "../mathInput";
-import { formatNumber, toNumber } from "../format";
+import { buildSacProjection } from "../sacProjection.ts";
+import { commitExprString, formatMoneyOnBlur } from "../mathInput.ts";
+import { formatNumber, toNumber } from "../format.ts";
 import YearBlockList from "./YearBlockList.tsx";
 
 const TAX_RATE_MEMORY_KEY = "muda.sac.taxRates.v1";
@@ -33,7 +33,7 @@ function formatTaxRateLabel(rate: number) {
   return Number.isInteger(rate) ? String(rate) : String(rate).replace(/0+$/, "").replace(/\.$/, "");
 }
 
-export default function SacFinancing() {
+export default function FinanciamentoSac() {
   const { fields, updateField } = useMemory();
   const projection = buildSacProjection(fields);
   const [taxRateMemory, setTaxRateMemory] = useState(readTaxRateMemory);

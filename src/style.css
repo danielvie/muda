@@ -317,7 +317,7 @@ body {
   overflow: hidden;
   border: 3px solid #222;
   background: #000;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md) var(--radius-md) var(--radius-md) var(--radius-md);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
@@ -462,6 +462,10 @@ body {
 }
 
 @media (max-width: 559px) {
+  .dashboard-grid-wrap {
+    padding-inline: 4px;
+  }
+
   .brand-header h1 {
     font-size: 40px;
   }
@@ -482,7 +486,7 @@ body {
 
   .dashboard-panel {
     height: auto;
-    overflow: visible;
+    overflow: hidden;
   }
 
   .dashboard-panel-body {

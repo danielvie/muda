@@ -7,7 +7,7 @@ import {
   useContainerWidth,
 } from "react-grid-layout";
 import InvestmentProjection from "./InvestmentProjection.tsx";
-import SacFinancing from "./SacFinancing.tsx";
+import FinanciamentoSac from "./FinanciamentoSac.tsx";
 
 type DashboardBreakpoint = "lg" | "md" | "sm" | "xs";
 type WidgetId = "investment" | "sac";
@@ -158,7 +158,7 @@ function withMobileOrder(
 }
 
 const SacIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
   </svg>
 );
@@ -357,7 +357,7 @@ export default function DashboardLayout() {
   function renderWidget(id: WidgetId, mobile = false) {
     const content = id === "investment"
       ? <InvestmentProjection />
-      : <SacFinancing />;
+      : <FinanciamentoSac />;
 
     return (
       <DashboardPanel
