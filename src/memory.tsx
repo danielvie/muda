@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const storageKey = "muda:fields";
+const historyStorageKey = "muda:field-history";
 
 export type FieldMemory = {
   saldoInicial: string;
@@ -12,6 +13,8 @@ export type FieldMemory = {
   taxaFinAnual: number;
   prazoMeses: string;
 };
+
+type FieldHistory = Partial<Record<keyof FieldMemory, string[]>>;
 
 const defaults: FieldMemory = {
   saldoInicial: "50000",
@@ -35,15 +38,28 @@ function readSavedMemory(): FieldMemory {
   return { ...defaults };
 }
 
+function readSavedHistory(): FieldHistory {
+  if (typeof localStorage === "undefined") return {};
+  try {
+    const parsed = JSON.parse(localStorage.getItem(historyStorageKey) ?? "{}") as FieldHistory;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 type MemoryContextType = {
   fields: FieldMemory;
+  fieldHistory: FieldHistory;
   updateField: <K extends keyof FieldMemory>(key: K, value: FieldMemory[K]) => void;
+  rememberFieldValue: <K extends keyof FieldMemory>(key: K, value: FieldMemory[K]) => void;
 };
 
 const MemoryContext = createContext<MemoryContextType | null>(null);
 
 export function MemoryProvider({ children }: { children: React.ReactNode }) {
   const [fields, setFields] = useState<FieldMemory>(readSavedMemory);
+  const [fieldHistory, setFieldHistory] = useState<FieldHistory>(readSavedHistory);
 
   useEffect(() => {
     if (typeof localStorage !== "undefined") {
@@ -51,12 +67,28 @@ export function MemoryProvider({ children }: { children: React.ReactNode }) {
     }
   }, [fields]);
 
+  useEffect(() => {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(historyStorageKey, JSON.stringify(fieldHistory));
+    }
+  }, [fieldHistory]);
+
   const updateField = <K extends keyof FieldMemory>(key: K, value: FieldMemory[K]) => {
     setFields((prev) => ({ ...prev, [key]: value }));
   };
 
+  const rememberFieldValue = <K extends keyof FieldMemory>(key: K, value: FieldMemory[K]) => {
+    const normalized = String(value).trim();
+    if (!normalized) return;
+
+    setFieldHistory((prev) => ({
+      ...prev,
+      [key]: [normalized, ...(prev[key] ?? []).filter((item) => item !== normalized)].slice(0, 3),
+    }));
+  };
+
   return (
-    <MemoryContext.Provider value={{ fields, updateField }}>
+    <MemoryContext.Provider value={{ fields, fieldHistory, updateField, rememberFieldValue }}>
       {children}
     </MemoryContext.Provider>
   );

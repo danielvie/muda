@@ -18,6 +18,7 @@
     --color-warm-soft: rgba(232, 245, 0, 0.14);
     --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-mono: "JetBrains Mono", ui-monospace, monospace;
+    --radius-xs: 4px;
     --radius-sm: 8px;
     --radius-md: 16px;
     --radius-lg: 24px;
@@ -99,13 +100,13 @@ body {
 .field-chip {
     min-width: 48px;
     min-height: 32px;
-    padding: 0 14px;
+    padding: 0 8px;
     border-radius: var(--radius-sm);
     border: 2px solid var(--panel-accent, var(--color-accent));
     background: transparent;
     color: var(--panel-accent, var(--color-accent));
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 10px;
+    font-family: monospace;
     cursor: pointer;
     transition: background 120ms ease, color 120ms ease;
 }
@@ -178,7 +179,7 @@ body {
 /* Metric with accent bottom bar */
 .metric-highlight {
     padding: 20px;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: var(--panel-accent, var(--color-accent));
     color: #000;
 }
@@ -210,8 +211,9 @@ body {
 .dashboard-reset {
     min-height: 36px;
     padding: 0 14px;
+    margin-right: 5px;
     border: 2px solid #000;
-    border-radius: 999px;
+    border-radius: var(--radius-md);
     background: transparent;
     color: #000;
     font-size: 11px;
@@ -344,7 +346,7 @@ body {
     overflow: hidden;
     border: 3px solid #222;
     background: #000;
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border-radius: var(--radius-md) var(--radius-md) var(--radius-sm) var(--radius-sm);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 

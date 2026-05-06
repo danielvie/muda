@@ -1,5 +1,5 @@
 # TODO
 
-- [x] Identify resize library selector specificity issue
-- [x] Override edge handles with matching specificity
+- [x] Locate valorImovel history chip rendering
+- [x] Format valorImovel history chip labels as thousands
 - [x] Verify type-check/build

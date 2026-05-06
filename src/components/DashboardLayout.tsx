@@ -103,6 +103,29 @@ function saveExpandedHeights(heights: Partial<Record<DashboardBreakpoint, Partia
   localStorage.setItem(HEIGHT_STORAGE_KEY, JSON.stringify(heights));
 }
 
+function rememberExpandedHeights(
+  layouts: ResponsiveLayouts<DashboardBreakpoint>,
+  collapsedPanels: Record<WidgetId, boolean>,
+) {
+  const expandedHeights = readExpandedHeights();
+
+  for (const [breakpointName, layout] of Object.entries(layouts)) {
+    const typedBreakpoint = breakpointName as DashboardBreakpoint;
+
+    for (const item of layout) {
+      if (!isWidgetId(item.i) || collapsedPanels[item.i] || item.h <= COLLAPSED_GRID_HEIGHT) continue;
+
+      expandedHeights[typedBreakpoint] = {
+        ...expandedHeights[typedBreakpoint],
+        [item.i]: item.h,
+      };
+    }
+  }
+
+  saveExpandedHeights(expandedHeights);
+  return expandedHeights;
+}
+
 function getDefaultHeight(breakpointName: DashboardBreakpoint, widgetId: WidgetId) {
   return defaultLayouts[breakpointName]?.find((item) => item.i === widgetId)?.h ?? 8;
 }
@@ -128,7 +151,8 @@ function withCollapsedHeight(
         }
 
         const defaultItem = getDefaultLayoutItem(typedBreakpoint, item.i);
-        const restoredHeight = expandedHeights[typedBreakpoint]?.[item.i] ?? getDefaultHeight(typedBreakpoint, item.i);
+        const rememberedHeight = expandedHeights[typedBreakpoint]?.[item.i] ?? getDefaultHeight(typedBreakpoint, item.i);
+        const restoredHeight = item.h > COLLAPSED_GRID_HEIGHT ? item.h : rememberedHeight;
         const { maxH: _maxH, minH: _minH, ...expandedItem } = item;
         return {
           ...expandedItem,
@@ -251,7 +275,8 @@ export default function DashboardLayout() {
   const mobileDropTarget = useRef<{ id: WidgetId; position: "before" | "after" } | null>(null);
 
   const onLayoutChange = useCallback((_layout: Layout, nextLayouts: ResponsiveLayouts<DashboardBreakpoint>) => {
-    const adjustedLayouts = withCollapsedHeight(nextLayouts, collapsedPanels);
+    const expandedHeights = rememberExpandedHeights(nextLayouts, collapsedPanels);
+    const adjustedLayouts = withCollapsedHeight(nextLayouts, collapsedPanels, expandedHeights);
     setLayouts(adjustedLayouts);
     saveLayouts(adjustedLayouts);
   }, [collapsedPanels]);
@@ -345,7 +370,7 @@ export default function DashboardLayout() {
           for (const [breakpointName, layout] of Object.entries(currentLayouts)) {
             const typedBreakpoint = breakpointName as DashboardBreakpoint;
             const item = layout.find((layoutItem) => layoutItem.i === widgetId);
-            if (!item || item.h <= 1) continue;
+            if (!item || item.h <= COLLAPSED_GRID_HEIGHT) continue;
 
             expandedHeights[typedBreakpoint] = {
               ...expandedHeights[typedBreakpoint],

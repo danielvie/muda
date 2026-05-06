@@ -33,11 +33,21 @@ function formatTaxRateLabel(rate: number) {
   return Number.isInteger(rate) ? String(rate) : String(rate).replace(/0+$/, "").replace(/\.$/, "");
 }
 
+function formatValorImovelHistoryLabel(value: string) {
+  const numberValue = toNumber(value);
+  if (!Number.isFinite(numberValue)) return value;
+
+  const thousands = numberValue / 1000;
+  const label = Number.isInteger(thousands) ? String(thousands) : String(Number(thousands.toFixed(1)));
+  return `${label}k`;
+}
+
 export default function FinanciamentoSac() {
-  const { fields, updateField } = useMemory();
+  const { fields, fieldHistory, updateField, rememberFieldValue } = useMemory();
   const projection = buildSacProjection(fields);
   const [taxRateMemory, setTaxRateMemory] = useState(readTaxRateMemory);
   const sortedTaxRates = useMemo(() => [...taxRateMemory].sort((a, b) => a - b), [taxRateMemory]);
+  const valorImovelHistory = fieldHistory.valorImovel ?? [];
   const fillPercentEntry = (value: number) => {
     const valorImovel = toNumber(fields.valorImovel);
     if (!Number.isFinite(valorImovel)) return;
@@ -51,6 +61,12 @@ export default function FinanciamentoSac() {
     updateField("taxaFinAnual", value);
     setTaxRateMemory((rates) => rememberTaxRate(rates, value));
   }
+  const commitValorImovel = () => {
+    formatMoneyOnBlur(fields.valorImovel, (value) => {
+      updateField("valorImovel", value);
+      rememberFieldValue("valorImovel", value);
+    });
+  };
 
   return (
     <section className="p-4" aria-labelledby="sac-title">
@@ -59,13 +75,25 @@ export default function FinanciamentoSac() {
       <div className="grid gap-3 min-w-0">
         {/* Valor do imóvel - full width */}
         <label className="field">
-          <span className="field-label">Valor do imóvel (R$)</span>
+          <span className="field-label field-label-action flex-wrap">
+            Valor do imóvel (R$)
+            {valorImovelHistory.length > 0 && (
+              <div className="flex gap-1.5 flex-wrap">
+                {valorImovelHistory.map((value) => (
+                  <button className="field-chip" type="button" key={value} onClick={() => updateField("valorImovel", value)}>
+                    {formatValorImovelHistoryLabel(value)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </span>
           <input
             className="input-field"
             type="text"
             value={fields.valorImovel}
             onChange={(e) => updateField("valorImovel", e.target.value)}
-            onBlur={() => formatMoneyOnBlur(fields.valorImovel, (v) => updateField("valorImovel", v))}
+            onBlur={commitValorImovel}
+            onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
           />
         </label>
 

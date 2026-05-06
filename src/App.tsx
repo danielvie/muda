@@ -12,7 +12,7 @@ export default function App() {
         <span className="brand-subtitle">investimento + SAC</span>
       </header>
 
-      <div className="w-full mx-auto px-4 flex-1">
+      <div className="w-full mx-auto flex-1">
         <main className="py-3 min-w-0">
           <DashboardLayout />
         </main>
