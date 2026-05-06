@@ -1,6 +1,5 @@
 import React from "react";
-import InvestmentProjection from "./components/InvestmentProjection.tsx";
-import SacFinancing from "./components/SacFinancing.tsx";
+import DashboardLayout from "./components/DashboardLayout.tsx";
 import ReloadPrompt from "./components/ReloadPrompt.tsx";
 
 import { Agentation } from "agentation";
@@ -20,9 +19,8 @@ export default function App() {
       </header>
 
       <div className="w-full max-w-245 mx-auto px-4">
-        <main className="py-5 grid gap-4 min-w-0">
-          <InvestmentProjection />
-          <SacFinancing />
+        <main className="py-5 min-w-0">
+          <DashboardLayout />
         </main>
       </div>
 

@@ -1,18 +1,21 @@
 @import "tailwindcss";
+@import "react-grid-layout/css/styles.css";
 
 @theme {
-  --color-bg: #1a1d23;
-  --color-surface: #22262e;
-  --color-surface-alt: #1e2127;
-  --color-border: #2e3340;
-  --color-border-focus: #4a7c9b;
-  --color-text: #d4d8e0;
-  --color-text-muted: #8b919e;
-  --color-text-heading: #eaedf2;
-  --color-accent: #5b9bd5;
-  --color-accent-soft: rgba(91, 155, 213, 0.12);
-  --color-positive: #6faa5e;
-  --color-warm: #c9855a;
+  --color-bg: #15181d;
+  --color-surface: #242933;
+  --color-surface-alt: #1b2028;
+  --color-border: #394150;
+  --color-border-focus: #e36d5b;
+  --color-text: #e1e6ee;
+  --color-text-muted: #a6afbd;
+  --color-text-heading: #f6f8fb;
+  --color-accent: #e36d5b;
+  --color-accent-soft: rgba(227, 109, 91, 0.14);
+  --color-positive: #73c986;
+  --color-positive-soft: rgba(115, 201, 134, 0.13);
+  --color-warm: #e36d5b;
+  --color-warm-soft: rgba(227, 109, 91, 0.15);
   --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --radius-sm: 4px;
@@ -40,6 +43,11 @@ body {
   background: var(--color-bg);
 }
 
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-text-heading);
+}
+
 .field {
   display: grid;
   gap: 6px;
@@ -65,17 +73,29 @@ body {
 
 .input-field:hover {
   border-color: var(--color-border-focus);
+  background: #202733;
 }
 
 .input-field:focus {
   border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
 
 .metric {
+  position: relative;
   padding: 8px 10px;
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: #28303b;
   border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.metric::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--color-accent);
+  content: "";
 }
 
 .metric-label {
@@ -89,4 +109,178 @@ body {
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-heading);
+}
+
+.metric-value.text-positive {
+  color: var(--color-positive);
+}
+
+.metric-value.text-warm {
+  color: var(--color-warm);
+}
+
+.dashboard-shell {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-title {
+  margin: 0;
+  color: var(--color-text-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.dashboard-reset {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-reset:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-text-heading);
+}
+
+.dashboard-grid-wrap {
+  min-width: 0;
+}
+
+.dashboard-grid {
+  min-height: 1px;
+}
+
+.dashboard-grid .react-grid-item.react-grid-placeholder {
+  border-radius: var(--radius-lg);
+  background: var(--color-accent);
+  border: 1px solid var(--color-border-focus);
+  opacity: 0.24;
+}
+
+.dashboard-grid .react-resizable-handle {
+  width: 28px;
+  height: 28px;
+}
+
+.dashboard-grid .react-resizable-handle::after {
+  width: 8px;
+  height: 8px;
+  border-color: var(--color-warm);
+}
+
+.dashboard-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+.dashboard-panel-investment {
+  --panel-header-bg: #1f342d;
+  --panel-header-border: rgba(115, 201, 134, 0.45);
+  --panel-handle-color: var(--color-positive);
+  --panel-handle-bg: var(--color-positive-soft);
+}
+
+.dashboard-panel-sac {
+  --panel-header-bg: #603b3b;
+  --panel-header-border: #d28080;
+  --panel-handle-color: var(--color-warm);
+  --panel-handle-bg: var(--color-warm-soft);
+}
+
+.dashboard-panel-header {
+  flex: 0 0 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--panel-header-border, var(--color-border));
+  background: var(--panel-header-bg, var(--color-surface-alt));
+}
+
+.dashboard-drag-handle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--panel-header-border, var(--color-border-focus));
+  border-radius: var(--radius-sm);
+  background: var(--panel-handle-bg, var(--color-accent-soft));
+  color: var(--panel-handle-color, var(--color-accent));
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.dashboard-drag-handle:active {
+  cursor: grabbing;
+}
+
+.dashboard-drag-handle:hover,
+.dashboard-drag-handle:focus-visible {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-text-heading);
+  outline: none;
+}
+
+.dashboard-panel-title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-heading);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.dashboard-panel-body > section {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+@media (max-width: 559px) {
+  .dashboard-panel {
+    overflow: visible;
+  }
+
+  .dashboard-panel-body {
+    overflow: visible;
+  }
+
+  .dashboard-drag-handle {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
 }
