@@ -1,13 +1,43 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useMemory } from "../memory.tsx";
 import { buildSacProjection } from "../sacProjection";
 import { commitExprString, formatMoneyOnBlur } from "../mathInput";
 import { formatNumber, toNumber } from "../format";
 import YearBlockList from "./YearBlockList.tsx";
 
+const TAX_RATE_MEMORY_KEY = "muda.sac.taxRates.v1";
+const DEFAULT_TAX_RATE_MEMORY = [7, 10, 12];
+
+function readTaxRateMemory() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(TAX_RATE_MEMORY_KEY) ?? "null") as unknown;
+    if (!Array.isArray(parsed)) return DEFAULT_TAX_RATE_MEMORY;
+
+    const rates = parsed.filter((rate): rate is number => Number.isFinite(rate));
+    return rates.length > 0 ? rates.slice(-3) : DEFAULT_TAX_RATE_MEMORY;
+  } catch {
+    return DEFAULT_TAX_RATE_MEMORY;
+  }
+}
+
+function rememberTaxRate(rates: number[], value: number) {
+  if (!Number.isFinite(value)) return rates;
+
+  const normalized = Number(value.toFixed(2));
+  const nextRates = [...rates.filter((rate) => rate !== normalized), normalized].slice(-3);
+  localStorage.setItem(TAX_RATE_MEMORY_KEY, JSON.stringify(nextRates));
+  return nextRates;
+}
+
+function formatTaxRateLabel(rate: number) {
+  return Number.isInteger(rate) ? String(rate) : String(rate).replace(/0+$/, "").replace(/\.$/, "");
+}
+
 export default function SacFinancing() {
   const { fields, updateField } = useMemory();
   const projection = buildSacProjection(fields);
+  const [taxRateMemory, setTaxRateMemory] = useState(readTaxRateMemory);
+  const sortedTaxRates = useMemo(() => [...taxRateMemory].sort((a, b) => a - b), [taxRateMemory]);
   const fillPercentEntry = (value: number) => {
     const valorImovel = toNumber(fields.valorImovel);
     if (!Number.isFinite(valorImovel)) return;
@@ -17,6 +47,10 @@ export default function SacFinancing() {
   const fillPrazoEntry = (value: number) => {
     updateField("prazoMeses", `${value}`);
   };
+  const fillTaxaAnoEntry = (value: number) => {
+    updateField("taxaFinAnual", value);
+    setTaxRateMemory((rates) => rememberTaxRate(rates, value));
+  }
 
   return (
     <section className="bg-surface border border-border rounded-lg p-4" aria-labelledby="sac-title">
@@ -61,13 +95,22 @@ export default function SacFinancing() {
         </label>
 
         <label className="field">
-          <span className="field-label">Taxa anual (%)</span>
+          <span className="field-label field-label-action">Taxa anual (%)
+            <div className="flex gap-2">
+              {sortedTaxRates.map((rate) => (
+                <button className="field-chip" type="button" key={rate} onClick={() => fillTaxaAnoEntry(rate)}>
+                  {formatTaxRateLabel(rate)}%
+                </button>
+              ))}
+            </div>
+          </span>
           <input
             className="input-field"
             type="number"
             step="0.1"
             value={fields.taxaFinAnual}
             onChange={(e) => updateField("taxaFinAnual", Number(e.target.value))}
+            onBlur={() => setTaxRateMemory((rates) => rememberTaxRate(rates, Number(fields.taxaFinAnual)))}
           />
         </label>
 

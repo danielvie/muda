@@ -1,5 +1,10 @@
 # TODO
 
+- [x] Replace fixed tax chips with remembered values
+- [x] Persist last 3 unique tax values
+- [x] Display remembered tax values sorted
+- [x] Verify type-check and build after tax memory change
+
 - [x] Add 20% Entrada shortcut in SAC form
 - [x] Use existing money parsing/formatting behavior
 - [x] Verify type-check and build after SAC shortcut
