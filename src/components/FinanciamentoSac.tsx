@@ -48,6 +48,10 @@ export default function FinanciamentoSac() {
   const [taxRateMemory, setTaxRateMemory] = useState(readTaxRateMemory);
   const sortedTaxRates = useMemo(() => [...taxRateMemory].sort((a, b) => a - b), [taxRateMemory]);
   const valorImovelHistory = fieldHistory.valorImovel ?? [];
+  const sortedValorImovelHistory = useMemo(
+    () => [...valorImovelHistory].sort((a, b) => toNumber(a) - toNumber(b)),
+    [valorImovelHistory],
+  );
   const fillPercentEntry = (value: number) => {
     const valorImovel = toNumber(fields.valorImovel);
     if (!Number.isFinite(valorImovel)) return;
@@ -77,9 +81,9 @@ export default function FinanciamentoSac() {
         <div className="field">
           <div className="field-label-action flex-wrap">
             <label className="field-label" htmlFor="sac-valor-imovel">Valor do imóvel (R$)</label>
-            {valorImovelHistory.length > 0 && (
+            {sortedValorImovelHistory.length > 0 && (
               <div className="flex gap-1.5 flex-wrap">
-                {valorImovelHistory.map((value) => (
+                {sortedValorImovelHistory.map((value) => (
                   <button className="field-chip" type="button" key={value} onClick={() => updateField("valorImovel", value)}>
                     {formatValorImovelHistoryLabel(value)}
                   </button>

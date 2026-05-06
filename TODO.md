@@ -1,5 +1,5 @@
 # TODO
 
-- [x] Locate chip interaction styles
-- [x] Restore chip hover fill
+- [x] Locate valorImovel history chip block
+- [x] Sort valorImovel history chips by numeric value
 - [x] Verify type-check/build
