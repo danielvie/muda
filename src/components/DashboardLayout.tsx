@@ -12,9 +12,9 @@ import SacFinancing from "./SacFinancing.tsx";
 type DashboardBreakpoint = "lg" | "md" | "sm" | "xs";
 type WidgetId = "investment" | "sac";
 
-const STORAGE_KEY = "muda.dashboard.layouts.v1";
-const COLLAPSED_STORAGE_KEY = "muda.dashboard.collapsed.v1";
-const HEIGHT_STORAGE_KEY = "muda.dashboard.expandedHeights.v1";
+const STORAGE_KEY = "muda.dashboard.layouts.v2";
+const COLLAPSED_STORAGE_KEY = "muda.dashboard.collapsed.v2";
+const HEIGHT_STORAGE_KEY = "muda.dashboard.expandedHeights.v2";
 
 const breakpoints: Record<DashboardBreakpoint, number> = {
   lg: 1000,
@@ -48,6 +48,10 @@ const defaultLayouts: ResponsiveLayouts<DashboardBreakpoint> = {
     { i: "investment", x: 0, y: 11, w: 1, h: 8, minW: 1, minH: 5, maxW: 1 },
   ],
 };
+
+function isWidgetId(id: string): id is WidgetId {
+  return id === "investment" || id === "sac";
+}
 
 function readSavedLayouts(): ResponsiveLayouts<DashboardBreakpoint> {
   try {
@@ -111,7 +115,7 @@ function withCollapsedHeight(
     Object.entries(layouts).map(([breakpointName, layout]) => [
       breakpointName,
       layout.map((item) => {
-        if (item.i !== "investment" && item.i !== "sac") return item;
+        if (!isWidgetId(item.i)) return item;
 
         const typedBreakpoint = breakpointName as DashboardBreakpoint;
         if (collapsedPanels[item.i]) {
@@ -130,7 +134,7 @@ function getMobileOrder(layouts: ResponsiveLayouts<DashboardBreakpoint>): Widget
   return [...(layouts.xs ?? defaultLayouts.xs ?? [])]
     .sort((a, b) => a.y - b.y)
     .map((item) => item.i)
-    .filter((id): id is WidgetId => id === "investment" || id === "sac");
+    .filter((id): id is WidgetId => isWidgetId(id));
 }
 
 function withMobileOrder(
@@ -153,8 +157,24 @@ function withMobileOrder(
   };
 }
 
+const SacIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+  </svg>
+);
+
+const InvestmentIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+  </svg>
+);
+
+const WIDGET_CONFIG: Record<WidgetId, { title: string; icon: React.ReactNode }> = {
+  sac: { title: "Financiamento SAC", icon: <SacIcon /> },
+  investment: { title: "Investimento", icon: <InvestmentIcon /> },
+};
+
 function DashboardPanel({
-  title,
   tone,
   widgetId,
   collapsed,
@@ -162,7 +182,6 @@ function DashboardPanel({
   onToggleCollapsed,
   children,
 }: {
-  title: string;
   tone: WidgetId;
   widgetId?: WidgetId;
   collapsed: boolean;
@@ -170,33 +189,36 @@ function DashboardPanel({
   onToggleCollapsed: () => void;
   children: React.ReactNode;
 }) {
+  const config = WIDGET_CONFIG[tone];
+
   return (
     <section
-      className={`dashboard-panel dashboard-panel-${tone} bg-surface border border-border rounded-lg`}
+      className={`dashboard-panel dashboard-panel-${tone}`}
       data-dashboard-widget={widgetId}
-      aria-label={title}
+      aria-label={config.title}
     >
       <div className="dashboard-panel-header">
         <div
           className="dashboard-drag-handle"
           role="button"
           tabIndex={0}
-          aria-label={`Mover ${title}`}
+          aria-label={`Mover ${config.title}`}
           title="Mover painel"
           onPointerDown={(event) => widgetId && onMobileDragStart?.(widgetId, event)}
         >
           <span aria-hidden="true">::</span>
         </div>
-        <div className="dashboard-panel-title">{title}</div>
+        <div className="dashboard-panel-title">{config.title}</div>
+        <div className="dashboard-panel-icon" aria-hidden="true">{config.icon}</div>
         <button
           className="dashboard-collapse"
           type="button"
           onClick={onToggleCollapsed}
           aria-expanded={!collapsed}
-          aria-label={collapsed ? `Expandir ${title}` : `Recolher ${title}`}
+          aria-label={collapsed ? `Expandir ${config.title}` : `Recolher ${config.title}`}
           title={collapsed ? "Expandir painel" : "Recolher painel"}
         >
-          <span aria-hidden="true">{collapsed ? "+" : "-"}</span>
+          <span aria-hidden="true">{collapsed ? "+" : "−"}</span>
         </button>
       </div>
       {!collapsed && <div className="dashboard-panel-body">{children}</div>}
@@ -264,16 +286,16 @@ export default function DashboardLayout() {
       const widget = element?.closest<HTMLElement>("[data-dashboard-widget]");
       if (!widget) return;
 
-      const targetId = widget?.dataset.dashboardWidget;
-      if (targetId === "investment" || targetId === "sac") {
+      const targetIdStr = widget?.dataset.dashboardWidget;
+      if (targetIdStr && isWidgetId(targetIdStr)) {
         const rect = widget.getBoundingClientRect();
         mobileDropTarget.current = {
-          id: targetId,
+          id: targetIdStr,
           position: moveEvent.clientY > rect.top + rect.height / 2 ? "after" : "before",
         };
         setMobileDragState({
           activeId: widgetId,
-          targetId,
+          targetId: targetIdStr,
           position: mobileDropTarget.current.position,
         });
       }
@@ -333,31 +355,19 @@ export default function DashboardLayout() {
   }, []);
 
   function renderWidget(id: WidgetId, mobile = false) {
-    if (id === "investment") {
-      return (
-        <DashboardPanel
-          title="Investimento"
-          tone="investment"
-          widgetId={mobile ? "investment" : undefined}
-          collapsed={collapsedPanels.investment}
-          onMobileDragStart={mobile ? startMobileDrag : undefined}
-          onToggleCollapsed={() => toggleCollapsed("investment")}
-        >
-          <InvestmentProjection />
-        </DashboardPanel>
-      );
-    }
+    const content = id === "investment"
+      ? <InvestmentProjection />
+      : <SacFinancing />;
 
     return (
       <DashboardPanel
-        title="Financiamento SAC"
-        tone="sac"
-        widgetId={mobile ? "sac" : undefined}
-        collapsed={collapsedPanels.sac}
+        tone={id}
+        widgetId={mobile ? id : undefined}
+        collapsed={collapsedPanels[id]}
         onMobileDragStart={mobile ? startMobileDrag : undefined}
-        onToggleCollapsed={() => toggleCollapsed("sac")}
+        onToggleCollapsed={() => toggleCollapsed(id)}
       >
-        <SacFinancing />
+        {content}
       </DashboardPanel>
     );
   }
@@ -365,9 +375,6 @@ export default function DashboardLayout() {
   return (
     <section className="dashboard-shell" aria-labelledby="dashboard-title">
       <div className="dashboard-toolbar">
-        <h2 id="dashboard-title" className="dashboard-title">
-          Painéis
-        </h2>
         <button className="dashboard-reset" type="button" onClick={resetLayout} title="Resetar layout">
           Resetar layout
         </button>
@@ -412,11 +419,11 @@ export default function DashboardLayout() {
             onBreakpointChange={(nextBreakpoint: Breakpoint) => setBreakpoint(nextBreakpoint as DashboardBreakpoint)}
             onLayoutChange={onLayoutChange}
           >
-            <div key="investment">
-              {renderWidget("investment")}
-            </div>
             <div key="sac">
               {renderWidget("sac")}
+            </div>
+            <div key="investment">
+              {renderWidget("investment")}
             </div>
           </Responsive>
         )}

@@ -21,17 +21,17 @@ export default function ReloadPrompt() {
   if (!needRefresh) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 p-4 bg-surface-alt border border-border rounded-lg shadow-xl flex flex-col gap-3 min-w-[250px]">
+    <div className="fixed bottom-4 right-4 z-50 p-4 bg-surface-alt border border-border rounded-lg shadow-xl flex flex-col gap-3 min-w-62.5">
       <span className="text-sm font-semibold text-text-heading">Nova versão disponível!</span>
       <div className="flex gap-2">
         <button
-          className="flex-1 px-3 py-2 bg-accent hover:bg-accent/80 transition-colors text-bg rounded text-xs font-semibold"
+          className="flex-1 px-3 py-2 bg-accent hover:bg-accent/80 transition-colors text-black rounded text-xs font-bold font-mono"
           onClick={() => updateServiceWorker(true)}
         >
           Atualizar
         </button>
         <button
-          className="flex-1 px-3 py-2 bg-surface hover:bg-surface-alt transition-colors text-text rounded text-xs font-semibold border border-border"
+          className="flex-1 px-3 py-2 bg-surface hover:bg-surface-alt transition-colors text-text rounded text-xs font-semibold border border-border font-mono"
           onClick={close}
         >
           Depois

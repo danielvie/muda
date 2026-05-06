@@ -1,79 +1,9 @@
 # TODO
 
-- [x] Make E2 redesign visibly distinct, not just token changes
-- [x] Add calculator-style field tiles and display inputs
-- [x] Strengthen panel body/header contrast
-- [x] Verify type-check and build after stronger E2 pass
-
-- [x] Apply E2 color system to app CSS
-- [x] Make inputs, chips, and metric cards more calculator-like
-- [x] Verify type-check and build after E2 theme
-
-- [x] Replace fixed tax chips with remembered values
-- [x] Persist last 3 unique tax values
-- [x] Display remembered tax values sorted
-- [x] Verify type-check and build after tax memory change
-
-- [x] Add 20% Entrada shortcut in SAC form
-- [x] Use existing money parsing/formatting behavior
-- [x] Verify type-check and build after SAC shortcut
-
-- [x] Add mobile drag/drop visual state
-- [x] Add mobile drop indicator before/after target
-- [x] Add small mobile reorder transition
-- [x] Verify type-check and build after mobile animation
-
-- [x] Support mobile drop before or after target panel
-- [x] Verify first panel can move to end
-- [x] Verify type-check and build after mobile ordering fix
-
-- [x] Change mobile reorder to commit on drop
-- [x] Keep active panel color tied to dragged panel during mobile drag
-- [x] Verify type-check and build after mobile drag fix
-
-- [x] Add saved collapsed state per dashboard panel
-- [x] Add collapse button to all panel headers
-- [x] Hide panel body when collapsed
-- [x] Verify type-check and build after collapse behavior
-
-- [x] Make SAC first in default dashboard layout
-- [x] Verify type-check and build after default order change
-
-- [x] Replace mobile RGL rendering with natural stacked layout
-- [x] Preserve mobile reorder from panel drag handle
-- [x] Keep RGL drag/resize for tablet and desktop
-- [x] Verify type-check and build after mobile layout fix
-
-- [x] Try mint green plus blue accent palette
-- [x] Make header brand text blue again
-- [x] Verify type-check and build after palette change
-
-- [x] Try coral theme accent `#E36D5B`
-- [x] Verify type-check and build after accent change
-
-- [x] Replace panel header gradient with static color
-- [x] Add distinct colors per dashboard panel
-- [x] Verify type-check and build after panel color changes
-
-- [x] Add semantic accent colors to theme
-- [x] Increase dashboard/input/metric contrast
-- [x] Apply accent treatments to important values and controls
-- [x] Verify type-check and build after design changes
-
-- [x] Install React Grid Layout dependencies
-- [x] Add dashboard layout component with saved responsive layouts
-- [x] Wire existing panels into movable/resizable dashboard
-- [x] Add reset layout control
+- [x] Update style.css: yellow bg, dark cards, panel accent colors (D1-D3)
+- [x] Update App.tsx: big bold "muda" header, remove footer (D4)
+- [x] Update SacFinancing.tsx: new field layout, restyled metrics (D5-D8)
+- [x] Update InvestmentProjection.tsx: new field layout, restyled metrics (D5-D8)
+- [x] Create SummaryPanel.tsx: cross-panel 2×2 metric summary (D7)
+- [x] Update DashboardLayout.tsx: add summary panel, update panel header style (D7, D9)
 - [x] Verify type-check and build
-
-- [x] Install React dependencies
-- [x] Remove Svelte dependencies
-- [x] Update `vite.config.ts` for React
-- [x] Create React App component (`App.tsx`)
-- [x] Migrate `InvestmentProjection.svelte` to React
-- [x] Migrate `SacFinancing.svelte` to React
-- [x] Migrate `ReloadPrompt.svelte` to React
-- [x] Update `index.html` and `main.ts` to React entry points
-- [x] Remove `*.svelte` files
-- [x] Update or create `Taskfile.yml`
-- [x] Fix "Cannot find name 'process'" error in tsconfig.json

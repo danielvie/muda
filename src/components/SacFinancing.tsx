@@ -53,12 +53,11 @@ export default function SacFinancing() {
   }
 
   return (
-    <section className="bg-surface border border-border rounded-lg p-4" aria-labelledby="sac-title">
-      <h2 id="sac-title" className="m-0 text-sm font-semibold text-text-heading tracking-tight">
-        Financiamento SAC (resumo)
-      </h2>
+    <section className="p-4" aria-labelledby="sac-title">
+      <h2 id="sac-title" className="sr-only">Financiamento SAC</h2>
 
-      <div className="mt-3 grid grid-cols-2 gap-3 min-w-0 max-md:grid-cols-1">
+      <div className="grid gap-3 min-w-0">
+        {/* Valor do imóvel - full width */}
         <label className="field">
           <span className="field-label">Valor do imóvel (R$)</span>
           <input
@@ -70,6 +69,7 @@ export default function SacFinancing() {
           />
         </label>
 
+        {/* Entrada - full width with chips */}
         <label className="field">
           <span className="field-label field-label-action">
             Entrada (R$)
@@ -94,68 +94,76 @@ export default function SacFinancing() {
           />
         </label>
 
-        <label className="field">
-          <span className="field-label field-label-action">Taxa anual (%)
-            <div className="flex gap-2">
-              {sortedTaxRates.map((rate) => (
-                <button className="field-chip" type="button" key={rate} onClick={() => fillTaxaAnoEntry(rate)}>
-                  {formatTaxRateLabel(rate)}%
-                </button>
-              ))}
-            </div>
-          </span>
-          <input
-            className="input-field"
-            type="number"
-            step="0.1"
-            value={fields.taxaFinAnual}
-            onChange={(e) => updateField("taxaFinAnual", Number(e.target.value))}
-            onBlur={() => setTaxRateMemory((rates) => rememberTaxRate(rates, Number(fields.taxaFinAnual)))}
-          />
-        </label>
+        {/* Taxa + Prazo side by side */}
+        <div className="grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1">
+          <label className="field">
+            <span className="field-label field-label-action flex-wrap">Taxa anual (%)
+              <div className="flex gap-1.5">
+                {sortedTaxRates.map((rate) => (
+                  <button className="field-chip" type="button" key={rate} onClick={() => fillTaxaAnoEntry(rate)}>
+                    {formatTaxRateLabel(rate)}%
+                  </button>
+                ))}
+              </div>
+            </span>
+            <input
+              className="input-field"
+              type="number"
+              step="0.1"
+              value={fields.taxaFinAnual}
+              onChange={(e) => updateField("taxaFinAnual", Number(e.target.value))}
+              onBlur={() => setTaxRateMemory((rates) => rememberTaxRate(rates, Number(fields.taxaFinAnual)))}
+            />
+          </label>
 
-        <label className="field">
-          <span className="field-label field-label-action">Prazo (meses)
-            <div className="flex gap-2">
-              <button className="field-chip" type="button" onClick={() => fillPrazoEntry(300)}>
-                25 a
-              </button>
-              <button className="field-chip" type="button" onClick={() => fillPrazoEntry(360)}>
-                30 a
-              </button>
-              <button className="field-chip" type="button" onClick={() => fillPrazoEntry(420)}>
-                35 a
-              </button>
-            </div>
-          </span>
-          <input
-          className="input-field"
-          type="text"
-          value={fields.prazoMeses}
-          onChange={(e) => updateField("prazoMeses", e.target.value)}
-          onBlur={() =>
-            commitExprString(fields.prazoMeses, (v) => updateField("prazoMeses", v), { int: true, min: 1 })
-          }
-          onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
-          />
-        </label>
+          <label className="field">
+            <span className="field-label field-label-action flex-wrap">Prazo (meses)
+              <div className="flex gap-1.5">
+                <button className="field-chip" type="button" onClick={() => fillPrazoEntry(300)}>
+                  25a
+                </button>
+                <button className="field-chip" type="button" onClick={() => fillPrazoEntry(360)}>
+                  30a
+                </button>
+                <button className="field-chip" type="button" onClick={() => fillPrazoEntry(420)}>
+                  35a
+                </button>
+              </div>
+            </span>
+            <input
+              className="input-field"
+              type="text"
+              value={fields.prazoMeses}
+              onChange={(e) => updateField("prazoMeses", e.target.value)}
+              onBlur={() =>
+                commitExprString(fields.prazoMeses, (v) => updateField("prazoMeses", v), { int: true, min: 1 })
+              }
+              onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
+            />
+          </label>
+        </div>
       </div>
 
-      <div className="mt-3 p-3 rounded-md bg-surface-alt border border-border">
+      {/* Metrics */}
+      <div className="mt-3">
         {projection ? (
           <>
-            <div className="grid grid-cols-2 gap-2.5 min-w-0 max-md:grid-cols-1">
-              <div className="metric">
-                <div className="metric-label">Financiado (PV)</div>
+            <div className="metric-highlight grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1">
+              <div>
+                <div className="metric-label">Financiado</div>
                 <div className="metric-value">{projection.metrics.pv}</div>
               </div>
-              <div className="metric">
-                <div className="metric-label">Amortização</div>
-                <div className="metric-value">{projection.metrics.amortizacao}</div>
-              </div>
-              <div className="metric">
+            </div>
+            <div className="metric-highlight grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1 mt-2.5">
+              <div>
                 <div className="metric-label">Prestação mês 1</div>
-                <div className="metric-value text-warm">{projection.metrics.prestacaoMes1}</div>
+                <div className="metric-value">{projection.metrics.prestacaoMes1}</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5 min-w-0 mt-2.5 max-sm:grid-cols-1">
+              <div className="metric">
+                <div className="metric-label">Amortizacao</div>
+                <div className="metric-value text-warm">{projection.metrics.amortizacao}</div>
               </div>
               <div className="metric">
                 <div className="metric-label">Última prestação</div>
