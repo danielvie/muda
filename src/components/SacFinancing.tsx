@@ -13,6 +13,10 @@ export default function SacFinancing() {
     if (!Number.isFinite(valorImovel)) return;
     updateField("entrada", formatNumber(valorImovel * value));
   };
+  
+  const fillPrazoEntry = (value: number) => {
+    updateField("prazoMeses", `${value}`);
+  };
 
   return (
     <section className="bg-surface border border-border rounded-lg p-4" aria-labelledby="sac-title">
@@ -68,16 +72,28 @@ export default function SacFinancing() {
         </label>
 
         <label className="field">
-          <span className="field-label">Prazo (meses)</span>
+          <span className="field-label field-label-action">Prazo (meses)
+            <div className="flex gap-2">
+              <button className="field-chip" type="button" onClick={() => fillPrazoEntry(300)}>
+                25 a
+              </button>
+              <button className="field-chip" type="button" onClick={() => fillPrazoEntry(360)}>
+                30 a
+              </button>
+              <button className="field-chip" type="button" onClick={() => fillPrazoEntry(420)}>
+                35 a
+              </button>
+            </div>
+          </span>
           <input
-            className="input-field"
-            type="text"
-            value={fields.prazoMeses}
-            onChange={(e) => updateField("prazoMeses", e.target.value)}
-            onBlur={() =>
-              commitExprString(fields.prazoMeses, (v) => updateField("prazoMeses", v), { int: true, min: 1 })
-            }
-            onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
+          className="input-field"
+          type="text"
+          value={fields.prazoMeses}
+          onChange={(e) => updateField("prazoMeses", e.target.value)}
+          onBlur={() =>
+            commitExprString(fields.prazoMeses, (v) => updateField("prazoMeses", v), { int: true, min: 1 })
+          }
+          onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
           />
         </label>
       </div>
