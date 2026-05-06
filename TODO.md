@@ -1,5 +1,10 @@
 # TODO
 
+- [x] Add saved collapsed state per dashboard panel
+- [x] Add collapse button to all panel headers
+- [x] Hide panel body when collapsed
+- [x] Verify type-check and build after collapse behavior
+
 - [x] Make SAC first in default dashboard layout
 - [x] Verify type-check and build after default order change
 

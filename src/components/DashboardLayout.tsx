@@ -13,6 +13,8 @@ type DashboardBreakpoint = "lg" | "md" | "sm" | "xs";
 type WidgetId = "investment" | "sac";
 
 const STORAGE_KEY = "muda.dashboard.layouts.v1";
+const COLLAPSED_STORAGE_KEY = "muda.dashboard.collapsed.v1";
+const HEIGHT_STORAGE_KEY = "muda.dashboard.expandedHeights.v1";
 
 const breakpoints: Record<DashboardBreakpoint, number> = {
   lg: 1000,
@@ -66,6 +68,64 @@ function saveLayouts(layouts: ResponsiveLayouts<DashboardBreakpoint>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
 }
 
+function readCollapsedPanels(): Record<WidgetId, boolean> {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(COLLAPSED_STORAGE_KEY) ?? "{}") as Partial<Record<WidgetId, boolean>>;
+    return {
+      investment: parsed.investment ?? false,
+      sac: parsed.sac ?? false,
+    };
+  } catch {
+    return { investment: false, sac: false };
+  }
+}
+
+function saveCollapsedPanels(collapsedPanels: Record<WidgetId, boolean>) {
+  localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify(collapsedPanels));
+}
+
+function readExpandedHeights(): Partial<Record<DashboardBreakpoint, Partial<Record<WidgetId, number>>>> {
+  try {
+    return JSON.parse(localStorage.getItem(HEIGHT_STORAGE_KEY) ?? "{}") as Partial<
+      Record<DashboardBreakpoint, Partial<Record<WidgetId, number>>>
+    >;
+  } catch {
+    return {};
+  }
+}
+
+function saveExpandedHeights(heights: Partial<Record<DashboardBreakpoint, Partial<Record<WidgetId, number>>>>) {
+  localStorage.setItem(HEIGHT_STORAGE_KEY, JSON.stringify(heights));
+}
+
+function getDefaultHeight(breakpointName: DashboardBreakpoint, widgetId: WidgetId) {
+  return defaultLayouts[breakpointName]?.find((item) => item.i === widgetId)?.h ?? 8;
+}
+
+function withCollapsedHeight(
+  layouts: ResponsiveLayouts<DashboardBreakpoint>,
+  collapsedPanels: Record<WidgetId, boolean>,
+  expandedHeights = readExpandedHeights(),
+): ResponsiveLayouts<DashboardBreakpoint> {
+  return Object.fromEntries(
+    Object.entries(layouts).map(([breakpointName, layout]) => [
+      breakpointName,
+      layout.map((item) => {
+        if (item.i !== "investment" && item.i !== "sac") return item;
+
+        const typedBreakpoint = breakpointName as DashboardBreakpoint;
+        if (collapsedPanels[item.i]) {
+          return { ...item, h: 1, minH: 1, maxH: 1 };
+        }
+
+        const restoredHeight = expandedHeights[typedBreakpoint]?.[item.i] ?? getDefaultHeight(typedBreakpoint, item.i);
+        const { maxH: _maxH, ...expandedItem } = item;
+        return { ...expandedItem, h: Math.max(restoredHeight, item.minH ?? 1) };
+      }),
+    ]),
+  ) as ResponsiveLayouts<DashboardBreakpoint>;
+}
+
 function getMobileOrder(layouts: ResponsiveLayouts<DashboardBreakpoint>): WidgetId[] {
   return [...(layouts.xs ?? defaultLayouts.xs ?? [])]
     .sort((a, b) => a.y - b.y)
@@ -97,13 +157,17 @@ function DashboardPanel({
   title,
   tone,
   widgetId,
+  collapsed,
   onMobileDragStart,
+  onToggleCollapsed,
   children,
 }: {
   title: string;
   tone: WidgetId;
   widgetId?: WidgetId;
+  collapsed: boolean;
   onMobileDragStart?: (widgetId: WidgetId, event: React.PointerEvent<HTMLDivElement>) => void;
+  onToggleCollapsed: () => void;
   children: React.ReactNode;
 }) {
   return (
@@ -124,26 +188,41 @@ function DashboardPanel({
           <span aria-hidden="true">::</span>
         </div>
         <div className="dashboard-panel-title">{title}</div>
+        <button
+          className="dashboard-collapse"
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? `Expandir ${title}` : `Recolher ${title}`}
+          title={collapsed ? "Expandir painel" : "Recolher painel"}
+        >
+          <span aria-hidden="true">{collapsed ? "+" : "-"}</span>
+        </button>
       </div>
-      <div className="dashboard-panel-body">{children}</div>
+      {!collapsed && <div className="dashboard-panel-body">{children}</div>}
     </section>
   );
 }
 
 export default function DashboardLayout() {
   const { width, containerRef, mounted } = useContainerWidth();
-  const [layouts, setLayouts] = useState(readSavedLayouts);
+  const [collapsedPanels, setCollapsedPanels] = useState(readCollapsedPanels);
+  const [layouts, setLayouts] = useState(() => withCollapsedHeight(readSavedLayouts(), readCollapsedPanels()));
   const [breakpoint, setBreakpoint] = useState<DashboardBreakpoint>("lg");
   const draggedMobileWidget = useRef<WidgetId | null>(null);
 
   const onLayoutChange = useCallback((_layout: Layout, nextLayouts: ResponsiveLayouts<DashboardBreakpoint>) => {
-    setLayouts(nextLayouts);
-    saveLayouts(nextLayouts);
-  }, []);
+    const adjustedLayouts = withCollapsedHeight(nextLayouts, collapsedPanels);
+    setLayouts(adjustedLayouts);
+    saveLayouts(adjustedLayouts);
+  }, [collapsedPanels]);
 
   const resetLayout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(COLLAPSED_STORAGE_KEY);
+    localStorage.removeItem(HEIGHT_STORAGE_KEY);
     setLayouts(defaultLayouts);
+    setCollapsedPanels({ investment: false, sac: false });
   }, []);
 
   const isMobile = mounted && width < breakpoints.sm;
@@ -193,6 +272,40 @@ export default function DashboardLayout() {
     window.addEventListener("pointercancel", onPointerUp);
   }, [isMobile, moveMobileWidget]);
 
+  const toggleCollapsed = useCallback((widgetId: WidgetId) => {
+    setCollapsedPanels((currentCollapsed) => {
+      const nextCollapsed = {
+        ...currentCollapsed,
+        [widgetId]: !currentCollapsed[widgetId],
+      };
+
+      setLayouts((currentLayouts) => {
+        const expandedHeights = readExpandedHeights();
+
+        if (nextCollapsed[widgetId]) {
+          for (const [breakpointName, layout] of Object.entries(currentLayouts)) {
+            const typedBreakpoint = breakpointName as DashboardBreakpoint;
+            const item = layout.find((layoutItem) => layoutItem.i === widgetId);
+            if (!item || item.h <= 1) continue;
+
+            expandedHeights[typedBreakpoint] = {
+              ...expandedHeights[typedBreakpoint],
+              [widgetId]: item.h,
+            };
+          }
+          saveExpandedHeights(expandedHeights);
+        }
+
+        const nextLayouts = withCollapsedHeight(currentLayouts, nextCollapsed, expandedHeights);
+        saveLayouts(nextLayouts);
+        return nextLayouts;
+      });
+
+      saveCollapsedPanels(nextCollapsed);
+      return nextCollapsed;
+    });
+  }, []);
+
   function renderWidget(id: WidgetId, mobile = false) {
     if (id === "investment") {
       return (
@@ -200,7 +313,9 @@ export default function DashboardLayout() {
           title="Investimento"
           tone="investment"
           widgetId={mobile ? "investment" : undefined}
+          collapsed={collapsedPanels.investment}
           onMobileDragStart={mobile ? startMobileDrag : undefined}
+          onToggleCollapsed={() => toggleCollapsed("investment")}
         >
           <InvestmentProjection />
         </DashboardPanel>
@@ -212,7 +327,9 @@ export default function DashboardLayout() {
         title="Financiamento SAC"
         tone="sac"
         widgetId={mobile ? "sac" : undefined}
+        collapsed={collapsedPanels.sac}
         onMobileDragStart={mobile ? startMobileDrag : undefined}
+        onToggleCollapsed={() => toggleCollapsed("sac")}
       >
         <SacFinancing />
       </DashboardPanel>
