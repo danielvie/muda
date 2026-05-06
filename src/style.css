@@ -6,16 +6,16 @@
   --color-surface: #242933;
   --color-surface-alt: #1b2028;
   --color-border: #394150;
-  --color-border-focus: #e36d5b;
+  --color-border-focus: #6aa8d8;
   --color-text: #e1e6ee;
   --color-text-muted: #a6afbd;
   --color-text-heading: #f6f8fb;
-  --color-accent: #e36d5b;
-  --color-accent-soft: rgba(227, 109, 91, 0.14);
-  --color-positive: #73c986;
-  --color-positive-soft: rgba(115, 201, 134, 0.13);
-  --color-warm: #e36d5b;
-  --color-warm-soft: rgba(227, 109, 91, 0.15);
+  --color-accent: #5b9bd5;
+  --color-accent-soft: rgba(91, 155, 213, 0.14);
+  --color-positive: #64c18c;
+  --color-positive-soft: rgba(100, 193, 140, 0.14);
+  --color-warm: #6aa8d8;
+  --color-warm-soft: rgba(106, 168, 216, 0.14);
   --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --radius-sm: 4px;
@@ -166,6 +166,19 @@ body {
   min-height: 1px;
 }
 
+.dashboard-mobile-list {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-mobile-item {
+  min-width: 0;
+}
+
+.dashboard-mobile-item .dashboard-panel {
+  height: auto;
+}
+
 .dashboard-grid .react-grid-item.react-grid-placeholder {
   border-radius: var(--radius-lg);
   background: var(--color-accent);
@@ -195,15 +208,15 @@ body {
 }
 
 .dashboard-panel-investment {
-  --panel-header-bg: #1f342d;
-  --panel-header-border: rgba(115, 201, 134, 0.45);
+  --panel-header-bg: #1d332c;
+  --panel-header-border: rgba(100, 193, 140, 0.48);
   --panel-handle-color: var(--color-positive);
   --panel-handle-bg: var(--color-positive-soft);
 }
 
 .dashboard-panel-sac {
-  --panel-header-bg: #603b3b;
-  --panel-header-border: #d28080;
+  --panel-header-bg: #1e3040;
+  --panel-header-border: rgba(106, 168, 216, 0.52);
   --panel-handle-color: var(--color-warm);
   --panel-handle-bg: var(--color-warm-soft);
 }
@@ -271,6 +284,7 @@ body {
 
 @media (max-width: 559px) {
   .dashboard-panel {
+    height: auto;
     overflow: visible;
   }
 

@@ -1,5 +1,17 @@
 # TODO
 
+- [x] Make SAC first in default dashboard layout
+- [ ] Verify type-check and build after default order change
+
+- [x] Replace mobile RGL rendering with natural stacked layout
+- [x] Preserve mobile reorder from panel drag handle
+- [x] Keep RGL drag/resize for tablet and desktop
+- [x] Verify type-check and build after mobile layout fix
+
+- [x] Try mint green plus blue accent palette
+- [x] Make header brand text blue again
+- [x] Verify type-check and build after palette change
+
 - [x] Try coral theme accent `#E36D5B`
 - [x] Verify type-check and build after accent change
 
