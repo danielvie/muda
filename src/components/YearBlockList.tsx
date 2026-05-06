@@ -5,8 +5,26 @@ import type { YearBlock } from "../sacSchedule";
 export default function YearBlockList({ blocks }: { blocks: YearBlock[] }) {
   return (
     <details className="mt-3 group">
-      <summary className="cursor-pointer select-none py-2 px-3 rounded-md bg-surface border border-border text-xs font-semibold text-accent transition-colors hover:border-border-focus hover:bg-accent-soft list-none [&::-webkit-details-marker]:hidden">
-        Simulação de prestações por ano (blocos de 12 meses)
+      <summary className="
+        cursor-pointer select-none
+        py-4
+        px-3
+        rounded-sm
+        bg-accent/90
+        border
+        border-border
+        text-sm
+        font-semibold
+        text-surface
+        transition-colors
+        font-mono
+        uppercase
+        text-center
+        hover:border-border-focus
+        hover:bg-accent
+        list-none
+        [&::-webkit-details-marker]:hidden">
+        Simulação de prestações por ano
       </summary>
 
       <div className="mt-3 grid gap-3">
