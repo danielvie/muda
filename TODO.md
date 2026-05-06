@@ -1,5 +1,5 @@
 # TODO
 
-- [x] Locate dashboard toolbar and collapse state flow
-- [x] Add expand-all and collapse-all toolbar actions
+- [x] Locate chip interaction styles
+- [x] Restore chip hover fill
 - [x] Verify type-check/build

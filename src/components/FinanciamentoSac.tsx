@@ -74,9 +74,9 @@ export default function FinanciamentoSac() {
 
       <div className="grid gap-3 min-w-0">
         {/* Valor do imóvel - full width */}
-        <label className="field">
-          <span className="field-label field-label-action flex-wrap">
-            Valor do imóvel (R$)
+        <div className="field">
+          <div className="field-label-action flex-wrap">
+            <label className="field-label" htmlFor="sac-valor-imovel">Valor do imóvel (R$)</label>
             {valorImovelHistory.length > 0 && (
               <div className="flex gap-1.5 flex-wrap">
                 {valorImovelHistory.map((value) => (
@@ -86,8 +86,9 @@ export default function FinanciamentoSac() {
                 ))}
               </div>
             )}
-          </span>
+          </div>
           <input
+            id="sac-valor-imovel"
             className="input-field"
             type="text"
             value={fields.valorImovel}
@@ -95,12 +96,12 @@ export default function FinanciamentoSac() {
             onBlur={commitValorImovel}
             onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
           />
-        </label>
+        </div>
 
         {/* Entrada - full width with chips */}
-        <label className="field">
-          <span className="field-label field-label-action">
-            Entrada (R$)
+        <div className="field">
+          <div className="field-label-action">
+            <label className="field-label" htmlFor="sac-entrada">Entrada (R$)</label>
             <div className="flex gap-2">
               <button className="field-chip" type="button" onClick={() => fillPercentEntry(0.2)}>
                 20%
@@ -112,20 +113,22 @@ export default function FinanciamentoSac() {
                 40%
               </button>
             </div>
-          </span>
+          </div>
           <input
+            id="sac-entrada"
             className="input-field"
             type="text"
             value={fields.entrada}
             onChange={(e) => updateField("entrada", e.target.value)}
             onBlur={() => formatMoneyOnBlur(fields.entrada, (v) => updateField("entrada", v))}
           />
-        </label>
+        </div>
 
         {/* Taxa + Prazo side by side */}
         <div className="grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1">
-          <label className="field">
-            <span className="field-label field-label-action flex-wrap">Taxa anual (%)
+          <div className="field">
+            <div className="field-label-action flex-wrap">
+              <label className="field-label" htmlFor="sac-taxa-anual">Taxa anual (%)</label>
               <div className="flex gap-1.5">
                 {sortedTaxRates.map((rate) => (
                   <button className="field-chip" type="button" key={rate} onClick={() => fillTaxaAnoEntry(rate)}>
@@ -133,8 +136,9 @@ export default function FinanciamentoSac() {
                   </button>
                 ))}
               </div>
-            </span>
+            </div>
             <input
+              id="sac-taxa-anual"
               className="input-field"
               type="number"
               step="0.1"
@@ -142,10 +146,11 @@ export default function FinanciamentoSac() {
               onChange={(e) => updateField("taxaFinAnual", Number(e.target.value))}
               onBlur={() => setTaxRateMemory((rates) => rememberTaxRate(rates, Number(fields.taxaFinAnual)))}
             />
-          </label>
+          </div>
 
-          <label className="field">
-            <span className="field-label field-label-action flex-wrap">Prazo (meses)
+          <div className="field">
+            <div className="field-label-action flex-wrap">
+              <label className="field-label" htmlFor="sac-prazo-meses">Prazo (meses)</label>
               <div className="flex gap-1.5">
                 <button className="field-chip" type="button" onClick={() => fillPrazoEntry(300)}>
                   25a
@@ -157,8 +162,9 @@ export default function FinanciamentoSac() {
                   35a
                 </button>
               </div>
-            </span>
+            </div>
             <input
+              id="sac-prazo-meses"
               className="input-field"
               type="text"
               value={fields.prazoMeses}
@@ -168,7 +174,7 @@ export default function FinanciamentoSac() {
               }
               onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
             />
-          </label>
+          </div>
         </div>
       </div>
 

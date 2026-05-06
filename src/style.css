@@ -108,13 +108,20 @@ body {
     font-size: 10px;
     font-family: monospace;
     cursor: pointer;
-    transition: background 120ms ease, color 120ms ease;
+    transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
 }
 
-.field-chip:hover,
-.field-chip:focus-visible {
+.field-chip:hover {
     background: var(--panel-accent, var(--color-accent));
     color: #000;
+}
+
+.field-chip:active {
+    transform: translateY(1px);
+}
+
+.field-chip:focus-visible {
+    box-shadow: 0 0 0 3px var(--panel-accent-soft, var(--color-accent-soft));
     outline: none;
 }
 
