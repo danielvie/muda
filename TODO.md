@@ -1,5 +1,13 @@
 # TODO
 
+- [x] Support mobile drop before or after target panel
+- [x] Verify first panel can move to end
+- [x] Verify type-check and build after mobile ordering fix
+
+- [x] Change mobile reorder to commit on drop
+- [x] Keep active panel color tied to dragged panel during mobile drag
+- [x] Verify type-check and build after mobile drag fix
+
 - [x] Add saved collapsed state per dashboard panel
 - [x] Add collapse button to all panel headers
 - [x] Hide panel body when collapsed

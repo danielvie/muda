@@ -210,6 +210,7 @@ export default function DashboardLayout() {
   const [layouts, setLayouts] = useState(() => withCollapsedHeight(readSavedLayouts(), readCollapsedPanels()));
   const [breakpoint, setBreakpoint] = useState<DashboardBreakpoint>("lg");
   const draggedMobileWidget = useRef<WidgetId | null>(null);
+  const mobileDropTarget = useRef<{ id: WidgetId; position: "before" | "after" } | null>(null);
 
   const onLayoutChange = useCallback((_layout: Layout, nextLayouts: ResponsiveLayouts<DashboardBreakpoint>) => {
     const adjustedLayouts = withCollapsedHeight(nextLayouts, collapsedPanels);
@@ -228,7 +229,7 @@ export default function DashboardLayout() {
   const isMobile = mounted && width < breakpoints.sm;
   const mobileOrder = useMemo(() => getMobileOrder(layouts), [layouts]);
 
-  const moveMobileWidget = useCallback((targetId: WidgetId) => {
+  const moveMobileWidget = useCallback((targetId: WidgetId, position: "before" | "after") => {
     const activeId = draggedMobileWidget.current;
     if (!activeId || activeId === targetId) return;
 
@@ -236,7 +237,7 @@ export default function DashboardLayout() {
       const currentOrder = getMobileOrder(currentLayouts);
       const nextOrder = currentOrder.filter((id) => id !== activeId);
       const targetIndex = nextOrder.indexOf(targetId);
-      nextOrder.splice(targetIndex, 0, activeId);
+      nextOrder.splice(position === "after" ? targetIndex + 1 : targetIndex, 0, activeId);
 
       const nextLayouts = withMobileOrder(currentLayouts, nextOrder);
       saveLayouts(nextLayouts);
@@ -249,19 +250,32 @@ export default function DashboardLayout() {
 
     event.preventDefault();
     draggedMobileWidget.current = widgetId;
+    mobileDropTarget.current = { id: widgetId, position: "before" };
     event.currentTarget.setPointerCapture(event.pointerId);
 
     const onPointerMove = (moveEvent: PointerEvent) => {
       const element = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY);
       const widget = element?.closest<HTMLElement>("[data-dashboard-widget]");
+      if (!widget) return;
+
       const targetId = widget?.dataset.dashboardWidget;
       if (targetId === "investment" || targetId === "sac") {
-        moveMobileWidget(targetId);
+        const rect = widget.getBoundingClientRect();
+        mobileDropTarget.current = {
+          id: targetId,
+          position: moveEvent.clientY > rect.top + rect.height / 2 ? "after" : "before",
+        };
       }
     };
 
     const onPointerUp = () => {
+      const dropTarget = mobileDropTarget.current;
+      if (dropTarget) {
+        moveMobileWidget(dropTarget.id, dropTarget.position);
+      }
+
       draggedMobileWidget.current = null;
+      mobileDropTarget.current = null;
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
