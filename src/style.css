@@ -58,6 +58,32 @@ body {
   color: var(--color-text-muted);
 }
 
+.field-label-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-chip {
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border-focus);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-soft);
+  color: var(--color-text-heading);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.field-chip:hover,
+.field-chip:focus-visible {
+  background: var(--color-accent);
+  color: #10141a;
+  outline: none;
+}
+
 .input-field {
   width: 100%;
   padding: 10px 12px;

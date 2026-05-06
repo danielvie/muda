@@ -2,11 +2,17 @@ import React from "react";
 import { useMemory } from "../memory.tsx";
 import { buildSacProjection } from "../sacProjection";
 import { commitExprString, formatMoneyOnBlur } from "../mathInput";
+import { formatNumber, toNumber } from "../format";
 import YearBlockList from "./YearBlockList.tsx";
 
 export default function SacFinancing() {
   const { fields, updateField } = useMemory();
   const projection = buildSacProjection(fields);
+  const fillPercentEntry = (value: number) => {
+    const valorImovel = toNumber(fields.valorImovel);
+    if (!Number.isFinite(valorImovel)) return;
+    updateField("entrada", formatNumber(valorImovel * value));
+  };
 
   return (
     <section className="bg-surface border border-border rounded-lg p-4" aria-labelledby="sac-title">
@@ -27,7 +33,20 @@ export default function SacFinancing() {
         </label>
 
         <label className="field">
-          <span className="field-label">Entrada (R$)</span>
+          <span className="field-label field-label-action">
+            Entrada (R$)
+            <div className="flex gap-2">
+              <button className="field-chip" type="button" onClick={() => fillPercentEntry(0.2)}>
+                20%
+              </button>
+              <button className="field-chip" type="button" onClick={() => fillPercentEntry(0.3)}>
+                30%
+              </button>
+              <button className="field-chip" type="button" onClick={() => fillPercentEntry(0.4)}>
+                40%
+              </button>
+            </div>
+          </span>
           <input
             className="input-field"
             type="text"

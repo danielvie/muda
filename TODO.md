@@ -1,5 +1,9 @@
 # TODO
 
+- [x] Add 20% Entrada shortcut in SAC form
+- [x] Use existing money parsing/formatting behavior
+- [x] Verify type-check and build after SAC shortcut
+
 - [x] Add mobile drag/drop visual state
 - [x] Add mobile drop indicator before/after target
 - [x] Add small mobile reorder transition
