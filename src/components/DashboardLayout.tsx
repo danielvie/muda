@@ -15,6 +15,7 @@ type WidgetId = "investment" | "sac";
 const STORAGE_KEY = "muda.dashboard.layouts.v2";
 const COLLAPSED_STORAGE_KEY = "muda.dashboard.collapsed.v2";
 const HEIGHT_STORAGE_KEY = "muda.dashboard.expandedHeights.v2";
+const CUSTOM_COLORS_STORAGE_KEY = "muda.dashboard.colors.v2";
 const COLLAPSED_GRID_HEIGHT = 2;
 
 const breakpoints: Record<DashboardBreakpoint, number> = {
@@ -83,6 +84,18 @@ function readCollapsedPanels(): Record<WidgetId, boolean> {
   } catch {
     return { investment: false, sac: false };
   }
+}
+
+function readCustomColors(): Record<WidgetId, string | undefined> {
+  try {
+    return JSON.parse(localStorage.getItem(CUSTOM_COLORS_STORAGE_KEY) ?? "{}");
+  } catch {
+    return {} as Record<WidgetId, string | undefined>;
+  }
+}
+
+function saveCustomColors(colors: Record<WidgetId, string | undefined>) {
+  localStorage.setItem(CUSTOM_COLORS_STORAGE_KEY, JSON.stringify(colors));
 }
 
 function saveCollapsedPanels(collapsedPanels: Record<WidgetId, boolean>) {
@@ -209,10 +222,18 @@ const WIDGET_CONFIG: Record<WidgetId, { title: string; icon: React.ReactNode }> 
   investment: { title: "Investimento", icon: <InvestmentIcon /> },
 };
 
+const PALETTE = [
+  "#E8F500", "#4DD9A4", "#00E5FF", 
+  "#FF007F", "#B388FF", "#FF6D00",
+  "#FF3333", "#76FF03", "#FFFFFF"
+];
+
 function DashboardPanel({
   tone,
   widgetId,
   collapsed,
+  customColor,
+  onColorChange,
   onMobileDragStart,
   onToggleCollapsed,
   children,
@@ -220,15 +241,26 @@ function DashboardPanel({
   tone: WidgetId;
   widgetId?: WidgetId;
   collapsed: boolean;
+  customColor?: string;
+  onColorChange?: (color: string) => void;
   onMobileDragStart?: (widgetId: WidgetId, event: React.PointerEvent<HTMLDivElement>) => void;
   onToggleCollapsed: () => void;
   children: React.ReactNode;
 }) {
   const config = WIDGET_CONFIG[tone];
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+
+  const style = customColor ? {
+    "--panel-accent": customColor,
+    "--panel-accent-soft": `${customColor}26`,
+    "--panel-handle-color": customColor,
+    "--panel-handle-bg": `${customColor}26`,
+  } as React.CSSProperties : undefined;
 
   return (
     <section
       className={`dashboard-panel dashboard-panel-${tone}${collapsed ? " dashboard-panel-collapsed" : ""}`}
+      style={style}
       data-dashboard-widget={widgetId}
       aria-label={config.title}
     >
@@ -244,7 +276,38 @@ function DashboardPanel({
           <span aria-hidden="true">::</span>
         </div>
         <div className="dashboard-panel-title">{config.title}</div>
+        {onColorChange && (
+          <div className="dashboard-color-picker-wrap">
+            <button
+            type="button"
+            className="dashboard-color-picker"
+            title="Mudar cor do painel"
+            style={{ backgroundColor: customColor || (tone === "sac" ? "#E8F500" : "#4DD9A4") }}
+            onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
+            aria-expanded={isColorPickerOpen}
+            aria-label="Mudar cor do painel"
+            />
+            {isColorPickerOpen && (
+              <div className="dashboard-color-matrix">
+                {PALETTE.map((color) => (
+                  <button
+                  key={color}
+                  type="button"
+                  className="dashboard-color-matrix-btn"
+                  style={{ backgroundColor: color }}
+                  aria-label={`Cor ${color}`}
+                  onClick={() => {
+                    onColorChange(color);
+                    setIsColorPickerOpen(false);
+                  }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div className="dashboard-panel-icon" aria-hidden="true">{config.icon}</div>
+        
         <button
           className="dashboard-collapse"
           type="button"
@@ -264,6 +327,7 @@ function DashboardPanel({
 export default function DashboardLayout() {
   const { width, containerRef, mounted } = useContainerWidth();
   const [collapsedPanels, setCollapsedPanels] = useState(readCollapsedPanels);
+  const [customColors, setCustomColors] = useState(readCustomColors);
   const [layouts, setLayouts] = useState(() => withCollapsedHeight(readSavedLayouts(), readCollapsedPanels()));
   const [breakpoint, setBreakpoint] = useState<DashboardBreakpoint>("lg");
   const [mobileDragState, setMobileDragState] = useState<{
@@ -285,8 +349,18 @@ export default function DashboardLayout() {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(COLLAPSED_STORAGE_KEY);
     localStorage.removeItem(HEIGHT_STORAGE_KEY);
+    localStorage.removeItem(CUSTOM_COLORS_STORAGE_KEY);
     setLayouts(defaultLayouts);
     setCollapsedPanels({ investment: false, sac: false });
+    setCustomColors({});
+  }, []);
+
+  const setCustomColor = useCallback((widgetId: WidgetId, color: string) => {
+    setCustomColors((prev) => {
+      const next = { ...prev, [widgetId]: color };
+      saveCustomColors(next);
+      return next;
+    });
   }, []);
 
   const setAllCollapsed = useCallback((collapsed: boolean) => {
@@ -419,6 +493,8 @@ export default function DashboardLayout() {
         tone={id}
         widgetId={mobile ? id : undefined}
         collapsed={collapsedPanels[id]}
+        customColor={customColors[id]}
+        onColorChange={(color) => setCustomColor(id, color)}
         onMobileDragStart={mobile ? startMobileDrag : undefined}
         onToggleCollapsed={() => toggleCollapsed(id)}
       >

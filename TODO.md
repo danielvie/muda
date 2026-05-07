@@ -2,3 +2,5 @@
 - [x] Identify why production rendering can fall back to gray
 - [x] Apply a scoped fix for deterministic accent coloring
 - [x] Run the relevant build/check task
+- [x] Add accent color option for user
+- [x] Add color picker button next to icon

@@ -2,6 +2,7 @@
 @import "react-grid-layout/css/styles.css";
 
 @theme {
+    /*--color-bg: #E8F500;*/
     --color-bg: #E8F500;
     --color-surface: #111111;
     --color-surface-alt: #1a1a1a;
@@ -368,7 +369,7 @@ body {
     --panel-accent-soft: rgba(232, 245, 0, 0.15);
     --panel-header-bg: #111111;
     --panel-header-border: #333;
-    --panel-handle-color: #E8F500;
+    --panel-handle-color: var(--coloar-accent);
     --panel-handle-bg: var(--color-accent);
 }
 
@@ -406,7 +407,7 @@ body {
     border: 1px solid #444;
     border-radius: var(--radius-sm);
     background: rgba(255, 255, 255, 0.04);
-    color: var(--panel-handle-color, var(--color-accent));
+    color: var(--panel-accent);
     font-family: var(--font-mono);
     font-size: 14px;
     line-height: 1;
@@ -451,6 +452,65 @@ body {
     border: 1px solid var(--panel-header-border, #333);
     color: #000;
     line-height: 1;
+}
+
+.dashboard-color-picker-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.dashboard-color-picker {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--panel-header-border, #333);
+    cursor: pointer;
+    padding: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    transition: transform 120ms ease, border-color 120ms ease;
+}
+.dashboard-color-picker:hover {
+    transform: scale(1.1);
+    border-color: #555;
+}
+.dashboard-color-picker:focus-visible {
+    outline: 2px solid var(--panel-accent);
+    outline-offset: 2px;
+}
+
+.dashboard-color-matrix {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 50;
+    width: 116px;
+}
+
+.dashboard-color-matrix-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.dashboard-color-matrix-btn:hover {
+    transform: scale(1.1);
+    border-color: #fff;
 }
 
 .dashboard-collapse {

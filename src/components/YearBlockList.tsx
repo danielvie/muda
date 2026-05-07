@@ -7,20 +7,16 @@ export default function YearBlockList({ blocks }: { blocks: YearBlock[] }) {
     <details className="mt-3 group">
       <summary className="
         cursor-pointer select-none
-        py-4 px-3
-        rounded-sm
+        py-4 px-3 rounded-sm
         bg-surface
         border-2
-        border-accent
-        text-sm
-        font-semibold
-        text-accent
+        border-(--panel-accent)
+        text-sm font-semibold
+        text-(--panel-accent)
         transition-colors
-        font-mono
-        uppercase
-        text-center
-        hover:border-border-focus
-        hover:bg-accent
+        font-mono uppercase
+        text-center hover:border-border-focus
+        hover:bg-(--panel-accent)
         hover:text-surface
         list-none
         [&::-webkit-details-marker]:hidden">
