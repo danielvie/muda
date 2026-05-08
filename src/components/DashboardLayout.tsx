@@ -259,7 +259,7 @@ function DashboardPanel({
 
   return (
     <section
-      className={`dashboard-panel dashboard-panel-${tone}${collapsed ? " dashboard-panel-collapsed" : ""}`}
+      className={`dashboard-panel dashboard-panel-${tone}${collapsed ? " dashboard-panel-collapsed" : ""}${isColorPickerOpen ? " dashboard-panel-active" : ""}`}
       style={style}
       data-dashboard-widget={widgetId}
       aria-label={config.title}

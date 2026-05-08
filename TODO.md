@@ -1,6 +1,5 @@
-- [x] Inspect DashboardPanel icon styles and SAC icon implementation
-- [x] Identify why production rendering can fall back to gray
-- [x] Apply a scoped fix for deterministic accent coloring
-- [x] Run the relevant build/check task
-- [x] Add accent color option for user
-- [x] Add color picker button next to icon
+- [x] Fix color picker cropping when panel is folded
+- [x] Remove `overflow: hidden` from `.dashboard-panel` to allow color matrix to pop out
+- [x] Verify if border-radius clipping is affected and fix if necessary (Added radii to header and body)
+- [x] Lift `z-index` of panel when color picker is open
+- [x] Run build to verify changes
