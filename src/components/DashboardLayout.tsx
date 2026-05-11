@@ -86,15 +86,15 @@ function readCollapsedPanels(): Record<WidgetId, boolean> {
   }
 }
 
-function readCustomColors(): Record<WidgetId, string | undefined> {
+function readCustomColors(): Partial<Record<WidgetId, string>> {
   try {
     return JSON.parse(localStorage.getItem(CUSTOM_COLORS_STORAGE_KEY) ?? "{}");
   } catch {
-    return {} as Record<WidgetId, string | undefined>;
+    return {};
   }
 }
 
-function saveCustomColors(colors: Record<WidgetId, string | undefined>) {
+function saveCustomColors(colors: Partial<Record<WidgetId, string>>) {
   localStorage.setItem(CUSTOM_COLORS_STORAGE_KEY, JSON.stringify(colors));
 }
 
@@ -218,7 +218,7 @@ const InvestmentIcon = () => (
 );
 
 const WIDGET_CONFIG: Record<WidgetId, { title: string; icon: React.ReactNode }> = {
-  sac: { title: "Financiamento SAC", icon: <SacIcon /> },
+  sac: { title: "Financiamento", icon: <SacIcon /> },
   investment: { title: "Investimento", icon: <InvestmentIcon /> },
 };
 

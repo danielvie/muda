@@ -6,12 +6,13 @@ const historyStorageKey = "muda:field-history";
 export type FieldMemory = {
   saldoInicial: string;
   aporteMensal: string;
-  taxaInvestAnual: number;
+  taxaInvestAnual: string;
   mesesProj: string;
   valorImovel: string;
   entrada: string;
-  taxaFinAnual: number;
+  taxaFinAnual: string;
   prazoMeses: string;
+  metodoAmortizacao: "SAC" | "PRICE";
 };
 
 type FieldHistory = Partial<Record<keyof FieldMemory, string[]>>;
@@ -19,12 +20,13 @@ type FieldHistory = Partial<Record<keyof FieldMemory, string[]>>;
 const defaults: FieldMemory = {
   saldoInicial: "50000",
   aporteMensal: "2000",
-  taxaInvestAnual: 10,
+  taxaInvestAnual: "10",
   mesesProj: "24",
   valorImovel: "800000",
   entrada: "180000",
-  taxaFinAnual: 12,
+  taxaFinAnual: "12",
   prazoMeses: "360",
+  metodoAmortizacao: "SAC",
 };
 
 function readSavedMemory(): FieldMemory {

@@ -62,7 +62,7 @@ export default function FinanciamentoSac() {
     updateField("prazoMeses", `${value}`);
   };
   const fillTaxaAnoEntry = (value: number) => {
-    updateField("taxaFinAnual", value);
+    updateField("taxaFinAnual", String(value));
     setTaxRateMemory((rates) => rememberTaxRate(rates, value));
   }
   const commitValorImovel = () => {
@@ -74,9 +74,10 @@ export default function FinanciamentoSac() {
 
   return (
     <section className="p-4" aria-labelledby="sac-title">
-      <h2 id="sac-title" className="sr-only">Financiamento SAC</h2>
+      <h2 id="sac-title" className="sr-only">Financiamento</h2>
 
       <div className="grid gap-3 min-w-0">
+
         {/* Valor do imóvel - full width */}
         <div className="field">
           <div className="field-label-action flex-wrap">
@@ -144,10 +145,9 @@ export default function FinanciamentoSac() {
             <input
               id="sac-taxa-anual"
               className="input-field"
-              type="number"
-              step="0.1"
+              type="text"
               value={fields.taxaFinAnual}
-              onChange={(e) => updateField("taxaFinAnual", Number(e.target.value))}
+              onChange={(e) => updateField("taxaFinAnual", e.target.value)}
               onBlur={() => setTaxRateMemory((rates) => rememberTaxRate(rates, Number(fields.taxaFinAnual)))}
             />
           </div>
@@ -182,6 +182,27 @@ export default function FinanciamentoSac() {
         </div>
       </div>
 
+        {/* Método - close to results */}
+        <div className="field mt-2 pt-2 border-t border-border">
+          <label className="field-label">Método de Amortização</label>
+          <div className="flex gap-2">
+            <button 
+              className={`field-chip ${fields.metodoAmortizacao === "SAC" ? "field-chip-active" : ""}`} 
+              type="button" 
+              onClick={() => updateField("metodoAmortizacao", "SAC")}
+            >
+              SAC
+            </button>
+            <button 
+              className={`field-chip ${fields.metodoAmortizacao === "PRICE" ? "field-chip-active" : ""}`} 
+              type="button" 
+              onClick={() => updateField("metodoAmortizacao", "PRICE")}
+            >
+              PRICE
+            </button>
+          </div>
+        </div>
+
       {/* Metrics */}
       <div className="mt-3">
         {projection ? (
@@ -191,16 +212,22 @@ export default function FinanciamentoSac() {
                 <div className="metric-label">Financiado</div>
                 <div className="metric-value">{projection.metrics.pv}</div>
               </div>
+              <div>
+                <div className="metric-label">Total Pago</div>
+                <div className="metric-value">{projection.metrics.totalPago}</div>
+              </div>
             </div>
             <div className="metric-highlight grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1 mt-2.5">
               <div>
-                <div className="metric-label">Prestação mês 1</div>
+                <div className="metric-label">
+                  {fields.metodoAmortizacao === "SAC" ? "Prestação mês 1" : "Prestação mensal"}
+                </div>
                 <div className="metric-value">{projection.metrics.prestacaoMes1}</div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2.5 min-w-0 mt-2.5 max-sm:grid-cols-1">
               <div className="metric">
-                <div className="metric-label">Amortizacao</div>
+                <div className="metric-label">Amortização</div>
                 <div className="metric-value text-warm">{projection.metrics.amortizacao}</div>
               </div>
               <div className="metric">

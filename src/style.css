@@ -112,7 +112,8 @@ body {
     transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
 }
 
-.field-chip:hover {
+.field-chip:hover,
+.field-chip-active {
     background: var(--panel-accent, var(--color-accent));
     color: #000;
 }

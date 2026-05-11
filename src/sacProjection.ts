@@ -1,4 +1,4 @@
-import { sacSummary, type SacSummary } from "./finance";
+import { financingSummary, type SacSummary } from "./finance";
 import { brl, toNumber } from "./format";
 import type { FieldMemory } from "./memory.tsx";
 import { buildYearBlocks, type YearBlock } from "./sacSchedule";
@@ -10,6 +10,7 @@ export type SacProjectionView = {
         amortizacao: string;
         prestacaoMes1: string;
         prestacaoUltima: string;
+        totalPago: string;
     };
     yearBlocks: YearBlock[];
 };
@@ -19,6 +20,7 @@ export function buildSacProjection(fields: FieldMemory): SacProjectionView | nul
     const entrada = toNumber(fields.entrada);
     const taxaAnual = Number(fields.taxaFinAnual) / 100;
     const prazoMeses = Number(fields.prazoMeses);
+    const metodo = fields.metodoAmortizacao;
 
     if (
         !Number.isFinite(valorImovel) ||
@@ -29,16 +31,17 @@ export function buildSacProjection(fields: FieldMemory): SacProjectionView | nul
         return null;
 
     const input = { valorImovel, entrada, taxaAnual, prazoMeses };
-    const summary = sacSummary(input, 1);
+    const summary = financingSummary(input, 1, metodo);
 
     return {
         summary,
         metrics: {
             pv: brl(summary.pv),
-            amortizacao: `${brl(summary.amortizacao)} / mês`,
+            amortizacao: summary.amortizacao === "Varia" ? "Variável" : `${brl(summary.amortizacao)} / mês`,
             prestacaoMes1: brl(summary.prestacaoMes1),
             prestacaoUltima: brl(summary.prestacaoUltima),
+            totalPago: brl(summary.totalPago),
         },
-        yearBlocks: buildYearBlocks(input),
+        yearBlocks: buildYearBlocks(input, metodo),
     };
 }

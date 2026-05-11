@@ -9,19 +9,25 @@ tasks:
     aliases: [r]
     desc: "run main app"
     cmds:
-     - npm run dev
+     - bun run dev
+
+  install:
+    aliases: [i]
+    desc: "run main app"
+    cmds:
+     - bun install
 
   check:
     aliases: [c]
     desc: "type-check the app"
     cmds:
-     - npm run check
+     - bun run check
 
   build:
     aliases: [b]
     desc: "build the app"
     cmds:
-     - npm run build
+     - bun run build
 
   clear:
     desc: "remove generated build outputs"

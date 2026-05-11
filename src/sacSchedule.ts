@@ -1,4 +1,4 @@
-import { sacInstallmentAt } from "./finance";
+import { sacInstallmentAt, priceInstallmentAt } from "./finance";
 
 export type YearBlock = {
     ano: number;
@@ -9,14 +9,19 @@ export type YearBlock = {
     meses: { mes: number; prestacao: number }[];
 };
 
-export function buildYearBlocks(input: {
-    valorImovel: number;
-    entrada: number;
-    taxaAnual: number;
-    prazoMeses: number;
-}): YearBlock[] {
+export function buildYearBlocks(
+    input: {
+        valorImovel: number;
+        entrada: number;
+        taxaAnual: number;
+        prazoMeses: number;
+    },
+    metodo: "SAC" | "PRICE"
+): YearBlock[] {
     const n = Math.max(1, Math.trunc(input.prazoMeses));
     const blocks: YearBlock[] = [];
+
+    const fn = metodo === "SAC" ? sacInstallmentAt : priceInstallmentAt;
 
     const totalAnos = Math.ceil(n / 12);
     for (let ano = 1; ano <= totalAnos; ano++) {
@@ -25,7 +30,7 @@ export function buildYearBlocks(input: {
 
         const meses: { mes: number; prestacao: number }[] = [];
         for (let mes = mesInicio; mes <= mesFim; mes++) {
-            const inst = sacInstallmentAt(input, mes);
+            const inst = fn(input, mes);
             meses.push({ mes, prestacao: inst.prestacao });
         }
 

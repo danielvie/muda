@@ -73,34 +73,61 @@ export function sacInstallmentAt(input: SacInput, mes: number): SacInstallment {
   return { mes: k, saldoDevedorInicial, amortizacao, juros, prestacao };
 }
 
+export function priceInstallmentAt(input: SacInput, mes: number): SacInstallment {
+  const n = Math.max(1, Math.trunc(input.prazoMeses));
+  const k = Math.min(Math.max(1, Math.trunc(mes)), n);
+
+  const pv = Math.max(0, input.valorImovel - input.entrada);
+  const iM = annualToMonthlyRate(input.taxaAnual);
+
+  // PMT = PV * [i * (1+i)^n] / [(1+i)^n - 1]
+  const pmt = pv * (iM * Math.pow(1 + iM, n)) / (Math.pow(1 + iM, n) - 1);
+
+  // Saldo devedor no mês k-1
+  // SD(k-1) = PV * [(1+i)^n - (1+i)^(k-1)] / [(1+i)^n - 1]
+  const saldoDevedorInicial = pv * (Math.pow(1 + iM, n) - Math.pow(1 + iM, k - 1)) / (Math.pow(1 + iM, n) - 1);
+  const juros = saldoDevedorInicial * iM;
+  const amortizacao = pmt - juros;
+
+  return { mes: k, saldoDevedorInicial, amortizacao, juros, prestacao: pmt };
+}
+
 export type SacSummary = {
   pv: number;
   taxaMensal: number;
-  amortizacao: number;
+  amortizacao: number | "Varia";
   prestacaoMes1: number;
   prestacaoMesK: number;
   prestacaoUltima: number;
+  totalPago: number;
 };
 
-export function sacSummary(
+export function financingSummary(
   input: SacInput,
   mesConsulta: number,
+  metodo: "SAC" | "PRICE"
 ): SacSummary {
   const n = Math.max(1, Math.trunc(input.prazoMeses));
   const pv = Math.max(0, input.valorImovel - input.entrada);
   const taxaMensal = annualToMonthlyRate(input.taxaAnual);
-  const amortizacao = pv / n;
+  
+  const fn = metodo === "SAC" ? sacInstallmentAt : priceInstallmentAt;
 
-  const p1 = sacInstallmentAt(input, 1).prestacao;
-  const pk = sacInstallmentAt(input, mesConsulta).prestacao;
-  const pn = sacInstallmentAt(input, n).prestacao;
+  const p1 = fn(input, 1).prestacao;
+  const pk = fn(input, mesConsulta).prestacao;
+  const pn = fn(input, n).prestacao;
+
+  const totalPago = metodo === "SAC" 
+    ? pv * (1 + taxaMensal * (n + 1) / 2)
+    : p1 * n;
 
   return {
     pv,
     taxaMensal,
-    amortizacao,
+    amortizacao: metodo === "SAC" ? pv / n : "Varia",
     prestacaoMes1: p1,
     prestacaoMesK: pk,
     prestacaoUltima: pn,
+    totalPago,
   };
 }

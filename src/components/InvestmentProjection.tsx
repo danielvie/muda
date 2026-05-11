@@ -116,7 +116,7 @@ export default function InvestmentProjection() {
               {taxaInvestHistory.length > 0 && (
                 <div className="flex gap-1.5 flex-wrap">
                   {taxaInvestHistory.map((value) => (
-                    <button className="field-chip" type="button" key={value} onClick={() => updateField("taxaInvestAnual", toNumber(value))}>
+                    <button className="field-chip" type="button" key={value} onClick={() => updateField("taxaInvestAnual", value)}>
                       {formatPercentLabel(value)}
                     </button>
                   ))}
@@ -126,10 +126,9 @@ export default function InvestmentProjection() {
             <input
               id="inv-taxa-anual"
               className="input-field"
-              type="number"
-              step="0.1"
+              type="text"
               value={fields.taxaInvestAnual}
-              onChange={(e) => updateField("taxaInvestAnual", Number(e.target.value))}
+              onChange={(e) => updateField("taxaInvestAnual", e.target.value)}
               onBlur={commitTaxaInvest}
             />
           </div>
