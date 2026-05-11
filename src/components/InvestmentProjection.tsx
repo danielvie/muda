@@ -61,7 +61,17 @@ export default function InvestmentProjection() {
         <div className="grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1">
           <div className="field">
             <div className="field-label-action flex-wrap">
-              <label className="field-label" htmlFor="inv-saldo-inicial">Saldo inicial (R$)</label>
+              <div className="flex items-center gap-2">
+                <label className="field-label" htmlFor="inv-saldo-inicial">Saldo inicial (R$)</label>
+                <button 
+                  className="field-chip !h-auto !py-1 !px-2 !min-h-0 text-[9px]" 
+                  type="button" 
+                  onClick={() => updateField("saldoInicial", fields.entrada)}
+                  title={`Copiar entrada do financiamento (${fields.entrada})`}
+                >
+                  Usar Entrada
+                </button>
+              </div>
               {saldoInicialHistory.length > 0 && (
                 <div className="flex gap-1.5 flex-wrap">
                   {saldoInicialHistory.map((value) => (

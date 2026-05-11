@@ -7,7 +7,7 @@ import {
   useContainerWidth,
 } from "react-grid-layout";
 import InvestmentProjection from "./InvestmentProjection.tsx";
-import FinanciamentoSac from "./FinanciamentoSac.tsx";
+import Financiamento from "./Financiamento.tsx";
 
 type DashboardBreakpoint = "lg" | "md" | "sm" | "xs";
 type WidgetId = "investment" | "sac";
@@ -486,7 +486,7 @@ export default function DashboardLayout() {
   function renderWidget(id: WidgetId, mobile = false) {
     const content = id === "investment"
       ? <InvestmentProjection />
-      : <FinanciamentoSac />;
+      : <Financiamento />;
 
     return (
       <DashboardPanel

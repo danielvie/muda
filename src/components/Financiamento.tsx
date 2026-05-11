@@ -42,7 +42,7 @@ function formatValorImovelHistoryLabel(value: string) {
   return `${label}k`;
 }
 
-export default function FinanciamentoSac() {
+export default function Financiamento() {
   const { fields, fieldHistory, updateField, rememberFieldValue } = useMemory();
   const projection = buildSacProjection(fields);
   const [taxRateMemory, setTaxRateMemory] = useState(readTaxRateMemory);
