@@ -49,3 +49,5 @@
 - [x] Show automatic budget value in monthly budget placeholder
 - [x] Re-run checks after budget placeholder change
 - [x] Linearize local main on top of origin/main
+- [x] Fix input text selection contrast
+- [x] Re-run checks after selection contrast fix
