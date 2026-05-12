@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { brl } from "../format";
+import { brl, toNumber, formatNumber } from "../format";
 import { useMemory } from "../memory";
 import {
   buildFinanceVsInvestProjection,
@@ -437,16 +437,24 @@ export default function FinanceVsInvest() {
   };
 
   const rememberField = (key: NumericField) => {
-    const value = fields[key].trim();
-    if (!value) return;
+    const raw = fields[key].trim();
+    if (!raw) return;
+
+    const num = toNumber(raw);
+    const isMoney = fieldsByKey[key].label.includes("R$");
+    const finalValue = isMoney && !isNaN(num) ? formatNumber(num) : raw;
+
+    if (isMoney && !isNaN(num)) {
+      updateField(key, finalValue);
+    }
 
     setFieldHistory((current) => {
-      const next = {
+      const nextHistory = {
         ...current,
-        [key]: [value, ...(current[key] ?? []).filter((item) => item !== value)].slice(0, FIELD_HISTORY_LIMIT),
+        [key]: [finalValue, ...(current[key] ?? []).filter((item) => item !== finalValue)].slice(0, FIELD_HISTORY_LIMIT),
       };
-      localStorage.setItem(FIELD_HISTORY_KEY, JSON.stringify(next));
-      return next;
+      localStorage.setItem(FIELD_HISTORY_KEY, JSON.stringify(nextHistory));
+      return nextHistory;
     });
   };
 
