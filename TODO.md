@@ -3,3 +3,46 @@
 - [x] Verify if border-radius clipping is affected and fix if necessary (Added radii to header and body)
 - [x] Lift `z-index` of panel when color picker is open
 - [x] Run build to verify changes
+- [x] Inspect dashboard panel architecture and source simulation state
+- [x] Add Financiar vs Investir model calculations
+- [x] Add Financiar vs Investir panel UI with Portuguese inputs and charts
+- [x] Add one-way imports from Financiamento and Investimento panels
+- [x] Register panel in dashboard add flow
+- [x] Run project checks/build
+- [x] Add chart color legends to Financiar vs Investir panel
+- [x] Re-run checks after legend change
+- [x] Add visible crossing markers to comparison charts
+- [x] Add collapsible monthly values table
+- [x] Re-run checks after feedback changes
+- [x] Add help tooltips to all comparison inputs
+- [x] Improve chart label readability with boxed callouts
+- [x] Re-run checks after tooltip and label changes
+- [x] Change monthly details table to yearly rows with expandable months
+- [x] Re-run checks after yearly table change
+- [x] Center chart callout text vertically
+- [x] Re-run checks after callout alignment fix
+- [x] Style all layout scrollbars with neutral gray design
+- [x] Re-run checks after scrollbar style change
+- [x] Refine panel scrollbar design to better match dark dashboard
+- [x] Re-run checks after refined scrollbar style
+- [x] Add two-item input memory for Financiar vs Investir fields
+- [x] Re-run checks after input memory change
+- [x] Persist last used comparison input values as panel defaults
+- [x] Re-run checks after last-value persistence change
+- [x] Add crossing marker to chart legends
+- [x] Re-run checks after legend crossing change
+- [x] Add crossing value to chart legends
+- [x] Re-run checks after crossing value legend change
+- [x] Add Y-axis value labels to comparison charts
+- [x] Re-run checks after Y-axis labels change
+- [x] Add help popup to each comparison chart
+- [x] Re-run checks after chart help popups
+- [x] Add desktop horizontal padding around dashboard content
+- [x] Re-run checks after desktop padding change
+- [x] Increase comparison input memory from 2 to 3 items
+- [x] Re-run checks after memory limit change
+- [x] Rework comparison controls into top compact assumptions area
+- [x] Add persisted advanced assumptions drawer
+- [x] Re-run checks after comparison layout rework
+- [x] Place comparison charts side by side when width allows
+- [x] Re-run checks after chart layout change

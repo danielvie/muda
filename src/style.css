@@ -45,6 +45,36 @@ body {
     background: var(--color-bg);
 }
 
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #4a4a4a #0b0b0b;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #0b0b0b;
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+    min-height: 40px;
+    border: 2px solid #0b0b0b;
+    border-radius: 999px;
+    background: #4a4a4a;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: #626262;
+}
+
+*::-webkit-scrollbar-corner {
+    background: #0b0b0b;
+}
+
 ::selection {
     background: rgba(0, 0, 0, 0.2);
     color: #000;
@@ -387,6 +417,15 @@ body {
     --panel-handle-bg: #4dd9a4;
 }
 
+.dashboard-panel-comparison {
+    --panel-accent: #00e5ff;
+    --panel-accent-soft: rgba(0, 229, 255, 0.15);
+    --panel-header-bg: #111111;
+    --panel-header-border: #333;
+    --panel-handle-color: #00e5ff;
+    --panel-handle-bg: #00e5ff;
+}
+
 
 
 /* Panel header */
@@ -555,6 +594,31 @@ body {
     background: #000;
     border-bottom-left-radius: calc(var(--radius-sm) - 3px);
     border-bottom-right-radius: calc(var(--radius-sm) - 3px);
+    scrollbar-color: #3f3f3f #050505;
+}
+
+.dashboard-panel-body::-webkit-scrollbar,
+.monthly-details-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.dashboard-panel-body::-webkit-scrollbar-track,
+.monthly-details-scroll::-webkit-scrollbar-track {
+    background: #050505;
+    border-radius: 999px;
+}
+
+.dashboard-panel-body::-webkit-scrollbar-thumb,
+.monthly-details-scroll::-webkit-scrollbar-thumb {
+    border: 2px solid #050505;
+    border-radius: 999px;
+    background: #3f3f3f;
+}
+
+.dashboard-panel-body::-webkit-scrollbar-thumb:hover,
+.monthly-details-scroll::-webkit-scrollbar-thumb:hover {
+    background: #565656;
 }
 
 .dashboard-panel-body > section {
@@ -576,6 +640,430 @@ body {
 
 .dashboard-panel-body > section > .mt-3.grid {
     gap: 10px;
+}
+
+/* --- Finance vs invest comparison --- */
+
+.comparison-panel {
+    display: grid;
+    gap: 14px;
+}
+
+.comparison-summary {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr 1fr;
+    gap: 10px;
+}
+
+.comparison-assumptions,
+.comparison-main {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    align-content: start;
+}
+
+.comparison-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(430px, 100%), 1fr));
+    gap: 12px;
+    min-width: 0;
+}
+
+.comparison-assumptions {
+    padding: 12px;
+    border: 1px solid #333;
+    border-radius: var(--radius-sm);
+    background: #111;
+}
+
+.comparison-assumptions-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.comparison-primary-fields,
+.comparison-advanced-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    min-width: 0;
+}
+
+.comparison-advanced-fields {
+    padding-top: 12px;
+    border-top: 1px solid #2a2a2a;
+}
+
+.comparison-advanced-toggle {
+    justify-self: start;
+}
+
+.comparison-imports {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.comparison-note {
+    color: var(--color-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.field-label-with-help {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.help-tip {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+}
+
+.help-tip-button {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #555;
+    border-radius: 50%;
+    background: #222;
+    color: var(--panel-accent, var(--color-accent));
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: help;
+}
+
+.help-tip-popup {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    z-index: 80;
+    width: min(280px, 72vw);
+    padding: 10px 12px;
+    border: 1px solid var(--panel-accent, var(--color-accent));
+    border-radius: var(--radius-sm);
+    background: #080808;
+    color: var(--color-text-heading);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.35;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.help-tip:hover .help-tip-popup,
+.help-tip:focus-within .help-tip-popup {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.comparison-input {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 16px;
+}
+
+.comparison-memory-chip {
+    min-width: 0;
+    min-height: 22px;
+    max-width: 72px;
+    padding: 3px 6px;
+    overflow: hidden;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.comparison-chart {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #333;
+    border-radius: var(--radius-sm);
+    background: #111;
+}
+
+.comparison-chart-header {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 6px;
+    color: var(--color-text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.comparison-legend {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 8px;
+    color: var(--color-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.comparison-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.legend-swatch {
+    width: 18px;
+    height: 4px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+}
+
+.legend-box {
+    width: 14px;
+    height: 10px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+}
+
+.legend-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+
+.legend-crossing {
+    background: #ffffff;
+    border: 2px solid #000000;
+}
+
+.legend-a {
+    background: var(--panel-accent, #00e5ff);
+}
+
+.legend-b {
+    background: var(--color-positive);
+}
+
+.legend-budget {
+    background: repeating-linear-gradient(90deg, #fff 0 8px, transparent 8px 14px);
+    border: 1px solid #777;
+}
+
+.legend-break-even {
+    background: repeating-linear-gradient(90deg, #fff 0 5px, transparent 5px 10px);
+    border: 1px solid #777;
+}
+
+.legend-rent-forced {
+    background: rgba(255, 0, 127, 0.35);
+    border: 1px solid rgba(255, 0, 127, 0.8);
+}
+
+.comparison-chart svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.chart-axis {
+    stroke: #444;
+    stroke-width: 1;
+}
+
+.chart-grid-line {
+    stroke: #2a2a2a;
+    stroke-width: 1;
+}
+
+.chart-axis-label {
+    fill: #d4d4d4;
+    paint-order: stroke;
+    stroke: #111111;
+    stroke-width: 3;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.chart-line {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.chart-line-a {
+    stroke: var(--panel-accent, #00e5ff);
+}
+
+.chart-line-b {
+    stroke: var(--color-positive);
+}
+
+.chart-line-budget {
+    stroke: #ffffff;
+    stroke-dasharray: 8 7;
+}
+
+.chart-break-even {
+    stroke: #ffffff;
+    stroke-width: 2;
+    stroke-dasharray: 6 6;
+    opacity: 0.9;
+}
+
+.chart-rent-forced {
+    fill: #ff007f;
+    opacity: 0.18;
+}
+
+.chart-crossing-point {
+    fill: #ffffff;
+    stroke: #000000;
+    stroke-width: 3;
+}
+
+.chart-callout rect {
+    fill: #f5f7fa;
+    stroke: #000000;
+    stroke-width: 1.5;
+}
+
+.chart-callout text {
+    fill: #000000;
+    font-size: 12px;
+    font-weight: 900;
+    dominant-baseline: middle;
+}
+
+.chart-label {
+    fill: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.comparison-table {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.comparison-table > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #333;
+    border-radius: var(--radius-sm);
+    background: #1a1a1a;
+}
+
+.comparison-table span {
+    color: var(--color-text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.comparison-table strong {
+    color: var(--color-text-heading);
+    font-family: var(--font-mono);
+    font-size: 15px;
+}
+
+.monthly-details {
+    display: grid;
+    gap: 10px;
+}
+
+.monthly-details-toggle {
+    justify-self: start;
+}
+
+.monthly-details-scroll {
+    max-height: 360px;
+    overflow: auto;
+    border: 1px solid #333;
+    border-radius: var(--radius-sm);
+    background: #111;
+}
+
+.monthly-details table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px;
+}
+
+.monthly-details th,
+.monthly-details td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #2a2a2a;
+    text-align: right;
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.monthly-details th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #181818;
+    color: var(--color-text-muted);
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.monthly-details th:first-child,
+.monthly-details td:first-child {
+    text-align: left;
+}
+
+.monthly-details .year-row {
+    cursor: pointer;
+    background: #151515;
+}
+
+.monthly-details .year-row:hover,
+.monthly-details .year-row:focus-visible {
+    background: #202020;
+    outline: 2px solid var(--panel-accent, var(--color-accent));
+    outline-offset: -2px;
+}
+
+.monthly-details .year-row td:first-child {
+    color: var(--panel-accent, var(--color-accent));
+    font-weight: 900;
+}
+
+.monthly-details .month-row td {
+    background: #0c0c0c;
+    color: var(--color-text-muted);
+    font-size: 11px;
+}
+
+.monthly-details .month-row td:first-child {
+    padding-left: 28px;
 }
 
 @media (max-width: 559px) {
@@ -626,5 +1114,16 @@ body {
 
     .field-label-action {
         flex-wrap: wrap;
+    }
+
+    .comparison-summary,
+    .comparison-primary-fields,
+    .comparison-advanced-fields,
+    .comparison-table {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-assumptions-header {
+        display: grid;
     }
 }

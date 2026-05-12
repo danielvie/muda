@@ -13,7 +13,7 @@ export default function App() {
       </header>
 
       <div className="w-full mx-auto flex-1">
-        <main className="py-3 min-w-0">
+        <main className="py-3 px-4 max-sm:px-1 min-w-0">
           <DashboardLayout />
         </main>
       </div>

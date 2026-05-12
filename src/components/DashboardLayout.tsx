@@ -8,9 +8,10 @@ import {
 } from "react-grid-layout";
 import InvestmentProjection from "./InvestmentProjection.tsx";
 import Financiamento from "./Financiamento.tsx";
+import FinanceVsInvest from "./FinanceVsInvest.tsx";
 
 type DashboardBreakpoint = "lg" | "md" | "sm" | "xs";
-type WidgetId = "investment" | "sac";
+type WidgetId = "investment" | "sac" | "comparison";
 
 const STORAGE_KEY = "muda.dashboard.layouts.v2";
 const COLLAPSED_STORAGE_KEY = "muda.dashboard.collapsed.v2";
@@ -36,23 +37,27 @@ const defaultLayouts: ResponsiveLayouts<DashboardBreakpoint> = {
   lg: [
     { i: "sac", x: 0, y: 0, w: 6, h: 11, minW: 4, minH: 7 },
     { i: "investment", x: 6, y: 0, w: 6, h: 8, minW: 4, minH: 5 },
+    { i: "comparison", x: 0, y: 11, w: 12, h: 12, minW: 6, minH: 8 },
   ],
   md: [
     { i: "sac", x: 0, y: 0, w: 4, h: 11, minW: 3, minH: 7 },
     { i: "investment", x: 4, y: 0, w: 4, h: 8, minW: 3, minH: 5 },
+    { i: "comparison", x: 0, y: 11, w: 8, h: 12, minW: 4, minH: 8 },
   ],
   sm: [
     { i: "sac", x: 0, y: 0, w: 4, h: 11, minW: 4, minH: 7 },
     { i: "investment", x: 0, y: 11, w: 4, h: 8, minW: 4, minH: 5 },
+    { i: "comparison", x: 0, y: 19, w: 4, h: 12, minW: 4, minH: 8 },
   ],
   xs: [
     { i: "sac", x: 0, y: 0, w: 1, h: 11, minW: 1, minH: 7, maxW: 1 },
     { i: "investment", x: 0, y: 11, w: 1, h: 8, minW: 1, minH: 5, maxW: 1 },
+    { i: "comparison", x: 0, y: 19, w: 1, h: 12, minW: 1, minH: 8, maxW: 1 },
   ],
 };
 
 function isWidgetId(id: string): id is WidgetId {
-  return id === "investment" || id === "sac";
+  return id === "investment" || id === "sac" || id === "comparison";
 }
 
 function readSavedLayouts(): ResponsiveLayouts<DashboardBreakpoint> {
@@ -61,13 +66,24 @@ function readSavedLayouts(): ResponsiveLayouts<DashboardBreakpoint> {
     if (!raw) return defaultLayouts;
 
     const parsed = JSON.parse(raw) as Partial<ResponsiveLayouts<DashboardBreakpoint>>;
-    return {
+    return ensureDefaultWidgets({
       ...defaultLayouts,
       ...parsed,
-    };
+    });
   } catch {
     return defaultLayouts;
   }
+}
+
+function ensureDefaultWidgets(layouts: ResponsiveLayouts<DashboardBreakpoint>): ResponsiveLayouts<DashboardBreakpoint> {
+  return Object.fromEntries(
+    Object.entries(defaultLayouts).map(([breakpointName, defaultLayout]) => {
+      const typedBreakpoint = breakpointName as DashboardBreakpoint;
+      const savedLayout = layouts[typedBreakpoint] ?? [];
+      const missingDefaults = defaultLayout.filter((item) => !savedLayout.some((savedItem) => savedItem.i === item.i));
+      return [typedBreakpoint, [...savedLayout, ...missingDefaults]];
+    }),
+  ) as ResponsiveLayouts<DashboardBreakpoint>;
 }
 
 function saveLayouts(layouts: ResponsiveLayouts<DashboardBreakpoint>) {
@@ -80,9 +96,10 @@ function readCollapsedPanels(): Record<WidgetId, boolean> {
     return {
       investment: parsed.investment ?? false,
       sac: parsed.sac ?? false,
+      comparison: parsed.comparison ?? false,
     };
   } catch {
-    return { investment: false, sac: false };
+    return { investment: false, sac: false, comparison: false };
   }
 }
 
@@ -217,9 +234,16 @@ const InvestmentIcon = () => (
   </svg>
 );
 
+const ComparisonIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 18V7m0 11l-3-3m3 3l3-3m9-9v11m0-11l-3 3m3-3l3 3M9 12h6" />
+  </svg>
+);
+
 const WIDGET_CONFIG: Record<WidgetId, { title: string; icon: React.ReactNode }> = {
   sac: { title: "Financiamento", icon: <SacIcon /> },
   investment: { title: "Investimento", icon: <InvestmentIcon /> },
+  comparison: { title: "Financiar vs Investir", icon: <ComparisonIcon /> },
 };
 
 const PALETTE = [
@@ -351,7 +375,7 @@ export default function DashboardLayout() {
     localStorage.removeItem(HEIGHT_STORAGE_KEY);
     localStorage.removeItem(CUSTOM_COLORS_STORAGE_KEY);
     setLayouts(defaultLayouts);
-    setCollapsedPanels({ investment: false, sac: false });
+    setCollapsedPanels({ investment: false, sac: false, comparison: false });
     setCustomColors({});
   }, []);
 
@@ -367,11 +391,12 @@ export default function DashboardLayout() {
     const nextCollapsed: Record<WidgetId, boolean> = {
       investment: collapsed,
       sac: collapsed,
+      comparison: collapsed,
     };
 
     setLayouts((currentLayouts) => {
       const expandedHeights = collapsed
-        ? rememberExpandedHeights(currentLayouts, { investment: false, sac: false })
+        ? rememberExpandedHeights(currentLayouts, { investment: false, sac: false, comparison: false })
         : readExpandedHeights();
       const nextLayouts = withCollapsedHeight(currentLayouts, nextCollapsed, expandedHeights);
       saveLayouts(nextLayouts);
@@ -486,7 +511,9 @@ export default function DashboardLayout() {
   function renderWidget(id: WidgetId, mobile = false) {
     const content = id === "investment"
       ? <InvestmentProjection />
-      : <Financiamento />;
+      : id === "comparison"
+        ? <FinanceVsInvest />
+        : <Financiamento />;
 
     return (
       <DashboardPanel
@@ -561,6 +588,9 @@ export default function DashboardLayout() {
             </div>
             <div key="investment">
               {renderWidget("investment")}
+            </div>
+            <div key="comparison">
+              {renderWidget("comparison")}
             </div>
           </Responsive>
         )}
