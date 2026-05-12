@@ -25,7 +25,7 @@ const defaults: FieldMemory = {
   valorImovel: "800000",
   entrada: "180000",
   taxaFinAnual: "12",
-  prazoMeses: "360",
+  prazoMeses: "420",
   metodoAmortizacao: "SAC",
 };
 
