@@ -46,3 +46,6 @@
 - [x] Re-run checks after comparison layout rework
 - [x] Place comparison charts side by side when width allows
 - [x] Re-run checks after chart layout change
+- [x] Show automatic budget value in monthly budget placeholder
+- [x] Re-run checks after budget placeholder change
+- [x] Linearize local main on top of origin/main

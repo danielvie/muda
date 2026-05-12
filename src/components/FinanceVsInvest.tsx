@@ -502,7 +502,11 @@ export default function FinanceVsInvest() {
         className="input-field comparison-input"
         type="text"
         value={fields[field.key]}
-        placeholder={field.placeholder}
+        placeholder={
+          field.key === "monthlyBudget" && Number.isFinite(automaticBudget)
+            ? brl(automaticBudget)
+            : field.placeholder
+        }
         onChange={(event) => updateField(field.key, event.target.value)}
         onBlur={() => rememberField(field.key)}
         onKeyDown={(event) => event.key === "Enter" && (event.currentTarget as HTMLInputElement).blur()}
