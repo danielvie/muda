@@ -420,6 +420,7 @@ body {
 
 .dashboard-panel-comparison {
     --panel-accent: #00e5ff;
+    --panel-accent-alt: #ff9f1c;
     --panel-accent-soft: rgba(0, 229, 255, 0.15);
     --panel-header-bg: #111111;
     --panel-header-border: #333;
@@ -860,7 +861,7 @@ body {
 }
 
 .legend-b {
-    background: var(--color-positive);
+    background: var(--panel-accent-alt, var(--color-positive));
 }
 
 .legend-budget {
@@ -915,7 +916,7 @@ body {
 }
 
 .chart-line-b {
-    stroke: var(--color-positive);
+    stroke: var(--panel-accent-alt, var(--color-positive));
 }
 
 .chart-line-budget {

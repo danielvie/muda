@@ -53,3 +53,5 @@
 - [x] Re-run checks after selection contrast fix
 - [x] Format money inputs on blur in Financiar vs Investir
 - [x] Re-run checks after input formatting
+- [x] Differentiate chart line colors in FinanceVsInvest
+- [x] Re-run checks after chart color fix
