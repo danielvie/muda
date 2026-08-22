@@ -292,7 +292,6 @@
 
 .lp-field.active > div {
   border-color: var(--lp-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lp-accent) 18%, transparent);
 }
 
 .lp-field input {
@@ -382,7 +381,6 @@
 
 .lp-range-field-e.active {
   border-color: var(--lp-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lp-accent) 18%, transparent);
 }
 
 .lp-range-field-e-head {
@@ -748,7 +746,6 @@
   border-color: var(--lp-accent);
   background: color-mix(in srgb, var(--lp-accent) 13%, var(--lp-paper));
   color: var(--lp-accent);
-  box-shadow: inset 0 -2px 0 var(--lp-accent);
 }
 
 .lp-slider-targets button.active b {
