@@ -725,13 +725,13 @@ function QuickActionButton({
   return (
     <button
       type="button"
-      className={`group relative grid min-h-18.5 content-start gap-1.75 rounded-[9px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_84%,var(--lp-action-bg,var(--lp-accent)))] p-3 text-(--lp-ink) text-left transition-[transform,border-color,background] duration-150 ease-[ease] hover:border-(--lp-accent) hover:bg-[color-mix(in_srgb,var(--lp-paper)_92%,var(--lp-accent))] hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-(--lp-accent) focus-visible:outline-offset-2 active:translate-y-px max-[699px]:pr-8.5! disabled:cursor-not-allowed disabled:opacity-[.48] disabled:transform-none ${paired ? "min-h-18.5 rounded-none! [border:0]! bg-[color-mix(in_srgb,var(--lp-paper)_84%,var(--lp-action-bg,var(--lp-accent)))] hover:bg-[color-mix(in_srgb,var(--lp-paper)_78%,var(--lp-accent))]" : ""} ${className}`}
+      className={`group relative grid min-h-18.5 content-start gap-1.75 rounded-[9px] border border-(--lp-tab-financing) bg-(--lp-tab-financing) p-3 text-(--lp-accent-ink) text-left transition-[transform,border-color,background] duration-150 ease-[ease] hover:border-(--lp-tab-financing) hover:bg-[color-mix(in_srgb,var(--lp-tab-financing)_88%,black)] hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-(--lp-tab-financing) focus-visible:outline-offset-2 active:translate-y-px max-[699px]:pr-8.5! disabled:cursor-not-allowed disabled:opacity-[.48] disabled:transform-none ${paired ? "min-h-18.5 rounded-none! [border:0]! bg-(--lp-tab-financing) hover:bg-[color-mix(in_srgb,var(--lp-tab-financing)_88%,black)]" : ""} ${className}`}
       disabled={action.disabled}
       onClick={action.onClick}
     >
       <span className={`pr-4 ${paired ? "text-[9px]" : "text-[10px]"} font-black`}>{action.label}</span>
-      <small className={`max-w-32.5 text-(--lp-muted) ${paired ? "text-[7px]" : "text-[8px]"} leading-tight`}>{action.detail}</small>
-      <b className="absolute right-2.5 bottom-2.25 grid size-5.25 place-items-center rounded-[5px] border border-(--lp-accent) text-(--lp-accent) text-[13px] font-black leading-none group-hover:bg-(--lp-accent) group-hover:text-(--lp-accent-ink)">→</b>
+      <small className={`max-w-32.5 text-[color-mix(in_srgb,var(--lp-accent-ink)_76%,transparent)] ${paired ? "text-[7px]" : "text-[8px]"} leading-tight`}>{action.detail}</small>
+      <b className="absolute right-2.5 bottom-2.25 grid size-5.25 place-items-center rounded-[5px] border border-(--lp-accent-ink) text-(--lp-accent-ink) text-[13px] font-black leading-none group-hover:bg-(--lp-accent-ink) group-hover:text-(--lp-tab-financing)">→</b>
     </button>
   );
 }
@@ -1222,7 +1222,7 @@ function EnvironmentTabs({
 
 function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
   return (
-    <div className="lp-layout-investment min-h-[calc(100vh-47px)]">
+    <div data-environment="investment" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
       <TopBar
         caption="Ambiente · investimento de renda fixa"
         action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">RENDA FIXA</span>}
@@ -1249,7 +1249,7 @@ function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
 
 function ComparisonEnvironment() {
   return (
-    <div className="lp-layout-comparison min-h-[calc(100vh-47px)]">
+    <div data-environment="comparison" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
       <TopBar
         caption="Ambiente · financiar vs investir"
         action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">COMPARAÇÃO</span>}
@@ -1325,7 +1325,7 @@ function FinancingView({ props }: { props: LayoutProps }) {
   ];
 
   return (
-    <div className="lp-layout-financing min-h-[calc(100vh-47px)]">
+    <div data-environment="financing" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
       <TopBar
         caption="Ambiente · financiamento"
         action={
@@ -1505,7 +1505,7 @@ export default function FinancingWorkspace() {
   };
   return (
     <div
-      className={`financing-workspace palette-c${environment !== "financing" ? " financing-workspace-secondary" : ""}`}
+      className={`financing-workspace palette-c min-h-screen${environment !== "financing" ? " financing-workspace-secondary" : ""}`}
     >
       <EnvironmentTabs value={environment} onChange={setEnvironment} />
       {environment === "financing" ? (

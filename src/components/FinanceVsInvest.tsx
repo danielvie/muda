@@ -230,13 +230,13 @@ function ChartLine({
   const crossingValue = crossing ? brl((getA(crossing) + getB(crossing)) / 2) : "";
 
   return (
-    <div className="comparison-chart min-w-0 rounded-[var(--radius-sm)] border border-[#333] bg-[#111] p-3">
-      <div className="comparison-chart-header mb-1.5 flex flex-wrap items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.06em] text-text-muted">
+    <div className="chart min-w-0 rounded-[var(--radius-sm)] border border-border bg-surface p-3">
+      <div className="mb-1.5 flex flex-wrap items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.06em] text-text-muted">
         <span>{labelA}</span>
         <span>{labelB}</span>
         <HelpTip text={help} />
       </div>
-      <div className="comparison-legend mb-2 flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-text" aria-label="Legenda do gráfico">
+      <div className="mb-2 flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-text" aria-label="Legenda do gráfico">
         <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-a" />{labelA}</span>
         <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-b" />{labelB}</span>
         {crossing && <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-dot legend-crossing" />Cruzamento: {crossingLabel} · {crossingValue}</span>}
@@ -288,14 +288,14 @@ function CashflowChart({ data, help }: { data: FinanceVsInvestMonth[]; help: str
   const crossingValue = crossing ? brl((crossing.rent + crossing.mortgageCost) / 2) : "";
 
   return (
-    <div className="comparison-chart min-w-0 rounded-[var(--radius-sm)] border border-[#333] bg-[#111] p-3">
-      <div className="comparison-chart-header mb-1.5 flex flex-wrap items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.06em] text-text-muted">
+    <div className="chart min-w-0 rounded-[var(--radius-sm)] border border-border bg-surface p-3">
+      <div className="mb-1.5 flex flex-wrap items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.06em] text-text-muted">
         <span>Orçamento</span>
         <span>Aluguel</span>
         <span>Parcela + custos</span>
         <HelpTip text={help} />
       </div>
-      <div className="comparison-legend mb-2 flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-text" aria-label="Legenda do fluxo mensal">
+      <div className="mb-2 flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-text" aria-label="Legenda do fluxo mensal">
         <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-budget" />Orçamento</span>
         <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-b" />Aluguel</span>
         <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-a" />Parcela + custos</span>
@@ -363,13 +363,13 @@ function MonthlyDetailsTable({ data }: { data: FinanceVsInvestMonth[] }) {
   };
 
   return (
-    <div className="monthly-details grid gap-2.5">
+    <div className="data-table grid gap-2.5">
       <button className="field-chip justify-self-start" type="button" onClick={() => setIsOpen((current) => !current)}>
         {isOpen ? "Ocultar tabela por ano" : "Mostrar tabela por ano"}
       </button>
       {isOpen && (
-        <div className="monthly-details-scroll max-h-90 overflow-auto rounded-sm border border-[#333] bg-[#111]">
-          <table className="w-full min-w-190 border-collapse [&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:border-b [&_th]:border-[#2a2a2a] [&_th]:bg-[#181818] [&_th]:px-3 [&_th]:py-2.5 [&_th]:text-right [&_th]:font-sans [&_th]:text-[10px] [&_th]:font-extrabold [&_th]:uppercase [&_th]:tracking-[0.06em] [&_th]:text-text-muted [&_td]:border-b [&_td]:border-[#2a2a2a] [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-right [&_td]:font-mono [&_td]:text-xs [&_td]:text-text [&_td]:whitespace-nowrap [&_th:first-child]:text-left [&_td:first-child]:text-left [&_.year-row>td:first-child]:font-black [&_.year-row>td:first-child]:text-(--panel-accent,var(--color-accent)) [&_.month-row>td]:bg-[#0c0c0c] [&_.month-row>td]:text-text-muted [&_.month-row>td]:text-[11px] [&_.month-row>td:first-child]:pl-7">
+        <div className="table-scroll max-h-90 overflow-auto rounded-sm border border-border bg-surface">
+          <table className="w-full min-w-190 border-collapse [&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:border-b [&_th]:border-border [&_th]:bg-surface-alt [&_th]:px-3 [&_th]:py-2.5 [&_th]:text-right [&_th]:font-sans [&_th]:text-[10px] [&_th]:font-extrabold [&_th]:uppercase [&_th]:tracking-[0.06em] [&_th]:text-text-muted [&_td]:border-b [&_td]:border-border [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-right [&_td]:font-mono [&_td]:text-xs [&_td]:text-text [&_td]:whitespace-nowrap [&_th:first-child]:text-left [&_td:first-child]:text-left [&_.table-year-row>td:first-child]:font-black [&_.table-year-row>td:first-child]:text-(--panel-accent,var(--color-accent)) [&_.table-month-row>td]:bg-surface [&_.table-month-row>td]:text-text-muted [&_.table-month-row>td]:text-[11px] [&_.table-month-row>td:first-child]:pl-7">
             <thead>
               <tr>
                 <th>Ano</th>
@@ -384,7 +384,7 @@ function MonthlyDetailsTable({ data }: { data: FinanceVsInvestMonth[] }) {
               {yearlyRows.map((row) => (
                 <React.Fragment key={row.year}>
                   <tr
-                    className="year-row cursor-pointer bg-[#151515] hover:bg-[#202020] focus-visible:bg-[#202020] focus-visible:[outline:2px_solid_var(--panel-accent,var(--color-accent))] focus-visible:-outline-offset-2"
+                    className="table-year-row cursor-pointer bg-surface-alt hover:bg-surface focus-visible:bg-surface focus-visible:[outline:2px_solid_var(--panel-accent,var(--color-accent))] focus-visible:-outline-offset-2"
                     tabIndex={0}
                     onClick={() => toggleYear(row.year)}
                     onKeyDown={(event) => {
@@ -402,7 +402,7 @@ function MonthlyDetailsTable({ data }: { data: FinanceVsInvestMonth[] }) {
                     <td>{brl(row.budget)}</td>
                   </tr>
                   {expandedYears[row.year] && row.months.map((month) => (
-                    <tr className="month-row" key={month.month}>
+                    <tr className="table-month-row" key={month.month}>
                       <td>Mês {month.month}</td>
                       <td>{brl(month.rent)}</td>
                       <td>{brl(month.mortgageCost)}</td>
@@ -551,7 +551,7 @@ export default function FinanceVsInvest() {
         </div>
       </div>
 
-      <div className="grid min-w-0 content-start gap-3 rounded-[var(--radius-sm)] border border-[#333] bg-[#111] p-3">
+      <div className="grid min-w-0 content-start gap-3 rounded-[var(--radius-sm)] border border-border bg-surface p-3">
         <div className="flex items-start justify-between gap-3 max-[559px]:grid">
           <div>
             <div className="metric-label">Premissas</div>
@@ -580,7 +580,7 @@ export default function FinanceVsInvest() {
         </button>
 
         {isAdvancedOpen && (
-          <div className="grid min-w-0 grid-cols-3 gap-2.5 border-t border-[#2a2a2a] pt-3 max-[559px]:grid-cols-1">
+          <div className="grid min-w-0 grid-cols-3 gap-2.5 border-t border-border pt-3 max-[559px]:grid-cols-1">
           <div className="field grid min-w-0 gap-1.5">
             <div className="flex min-w-0 items-center gap-1.5">
               <label className="field-label">Método</label>
@@ -626,16 +626,16 @@ export default function FinanceVsInvest() {
                 help="Mostra quanto do orçamento mensal é consumido por moradia em cada caminho. Aluguel cresce pela inflação do aluguel; parcela + custos usa o financiamento e custo de posse. O que sobra do orçamento vira aporte no respectivo caminho."
               />
             </div>
-            <div className="comparison-table grid grid-cols-[repeat(3,1fr)] gap-2.5 max-[559px]:grid-cols-1">
-              <div className="grid min-w-0 gap-1 rounded-[var(--radius-sm)] border border-[#333] bg-[#1a1a1a] p-3">
+            <div className="grid grid-cols-[repeat(3,1fr)] gap-2.5 max-[559px]:grid-cols-1">
+              <div className="grid min-w-0 gap-1 rounded-[var(--radius-sm)] border border-border bg-surface-alt p-3">
                 <span className="text-text-muted text-[10px] font-extrabold uppercase tracking-[0.06em]">Final financiando</span>
                 <strong className="font-mono text-[15px] text-text-heading">{brl(projection.finalFinanceNetWorth)}</strong>
               </div>
-              <div className="grid min-w-0 gap-1 rounded-[var(--radius-sm)] border border-[#333] bg-[#1a1a1a] p-3">
+              <div className="grid min-w-0 gap-1 rounded-[var(--radius-sm)] border border-border bg-surface-alt p-3">
                 <span className="text-text-muted text-[10px] font-extrabold uppercase tracking-[0.06em]">Final investindo</span>
                 <strong className="font-mono text-[15px] text-text-heading">{brl(projection.finalInvestNetWorth)}</strong>
               </div>
-              <div className="grid min-w-0 gap-1 rounded-[var(--radius-sm)] border border-[#333] bg-[#1a1a1a] p-3">
+              <div className="grid min-w-0 gap-1 rounded-[var(--radius-sm)] border border-border bg-surface-alt p-3">
                 <span className="text-text-muted text-[10px] font-extrabold uppercase tracking-[0.06em]">Vantagem relativa</span>
                 <strong className="font-mono text-[15px] text-text-heading">{(projection.differencePercent * 100).toFixed(1)}%</strong>
               </div>
