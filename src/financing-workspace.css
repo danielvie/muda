@@ -383,6 +383,7 @@
 .lp-range-input-row input {
   width: 100%;
   min-height: 24px;
+  padding-inline: 8px;
   accent-color: var(--lp-accent);
 }
 
@@ -525,6 +526,10 @@
   width: 100%;
   height: 28px;
   margin: -1px 0;
+  padding-inline: 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
   accent-color: var(--lp-accent);
   cursor: grab;
 }
@@ -548,6 +553,7 @@
   background: var(--lp-accent);
   box-shadow: 0 2px 8px rgba(20, 32, 32, .2);
   appearance: none;
+  transform: translateY(4px);
 }
 
 .lp-main-slider::-moz-range-track {
@@ -563,6 +569,7 @@
   border-radius: 50%;
   background: var(--lp-accent);
   box-shadow: 0 2px 8px rgba(20, 32, 32, .2);
+  transform: translateY(4px);
 }
 
 .lp-slider-scale {
