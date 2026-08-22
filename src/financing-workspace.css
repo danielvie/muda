@@ -942,7 +942,7 @@
   overflow: hidden;
   border: 1px solid var(--lp-line);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--lp-paper) 90%, var(--lp-accent) 3%);
+  background: transparent;
 }
 
 .lp-quick-interest-pair .lp-quick-action {
@@ -950,7 +950,6 @@
   border: 0;
   border-radius: 0;
   background: transparent;
-  box-shadow: none;
 }
 
 .lp-quick-interest-pair .lp-quick-action + .lp-quick-action {
@@ -983,8 +982,7 @@
   cursor: pointer;
   font: inherit;
   text-align: left;
-  box-shadow: 0 2px 0 color-mix(in srgb, var(--lp-line) 80%, var(--lp-accent));
-  transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
 }
 
 .lp-quick-action:hover {
@@ -999,7 +997,6 @@
 }
 
 .lp-quick-action:active {
-  box-shadow: none;
   transform: translateY(1px);
 }
 
@@ -1038,7 +1035,6 @@
 }
 
 .lp-quick-action:disabled {
-  box-shadow: none;
   cursor: not-allowed;
   opacity: .48;
   transform: none;
