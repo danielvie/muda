@@ -431,7 +431,6 @@
 .lp-slider-panel {
   display: grid;
   gap: 13px;
-  margin-top: 10px;
   padding: 17px;
   border: 1px solid color-mix(in srgb, var(--lp-accent) 30%, var(--lp-line));
   border-radius: 14px;
@@ -582,10 +581,6 @@
 }
 
 /* Results stay ahead of details and graphs. */
-.lp-financing-result {
-  margin-top: 10px;
-}
-
 .lp-payment-hero {
   padding: 20px;
   border-radius: 14px;
@@ -638,7 +633,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 9px;
+  margin-top: 8px;
 }
 
 .lp-result-number {
@@ -766,7 +761,6 @@
 
 /* Graph remains below every numeric answer and starts closed. */
 .lp-payment-chart {
-  margin-top: 12px;
   border: 1px solid var(--lp-line);
   border-radius: 11px;
   background: color-mix(in srgb, var(--lp-paper) 60%, transparent);
@@ -858,7 +852,6 @@
   justify-content: space-between;
   width: 100%;
   min-height: 48px;
-  margin-top: 9px;
   padding: 0 14px;
   border: 1px solid var(--lp-line);
   border-radius: 9px;
@@ -877,7 +870,6 @@
 .lp-advanced-fields {
   display: grid;
   gap: 13px;
-  margin-top: 5px;
   padding: 15px;
   border: 1px solid var(--lp-line);
   border-top: 0;
@@ -890,7 +882,6 @@
 .lp-quick-actions {
   display: grid;
   gap: 11px;
-  margin-top: 2px;
   padding: 16px;
   border: 1px solid var(--lp-line);
   border-radius: 14px;
@@ -1129,7 +1120,7 @@
 .lp-layout-financing .lp-mobile-main {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .lp-layout-financing .lp-mobile-main > * {
