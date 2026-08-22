@@ -922,8 +922,38 @@
 
 .lp-quick-action-grid {
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.lp-quick-action-grid > .wide,
+.lp-quick-interest-pair {
+  grid-column: span 2;
+}
+
+.lp-quick-interest-pair {
+  display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 7px;
+  min-width: 0;
+  padding: 5px;
+  border: 1px solid var(--lp-line);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--lp-paper) 88%, var(--lp-accent) 3%);
+}
+
+.lp-quick-interest-pair .lp-quick-action {
+  min-height: 64px;
+  padding: 11px 12px;
+}
+
+.lp-quick-interest-pair .lp-quick-action span {
+  padding-right: 0;
+  font-size: 9px;
+}
+
+.lp-quick-interest-pair .lp-quick-action small {
+  font-size: 7px;
 }
 
 .lp-quick-action {
@@ -971,10 +1001,6 @@
   font-size: 14px;
 }
 
-.lp-quick-action.primary {
-  border-color: color-mix(in srgb, var(--lp-accent) 42%, var(--lp-line));
-  background: color-mix(in srgb, var(--lp-accent) 12%, var(--lp-paper));
-}
 
 .lp-quick-action:disabled {
   cursor: not-allowed;
@@ -1145,14 +1171,6 @@
   border-color: #c5dfe7;
 }
 
-.lp-layout-financing .lp-quick-action.primary {
-  border-color: #ed8052;
-  background: #f9d6c5;
-}
-
-.lp-layout-financing .lp-quick-action.primary b {
-  color: #d96538;
-}
 
 .lp-layout-financing .lp-financing-fields.compact,
 .lp-layout-financing .lp-slider-explicit {
@@ -1163,6 +1181,21 @@
   border-radius: 10px;
 }
 
+
+@media (max-width: 699px) {
+  .lp-quick-action-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .lp-quick-action-grid > .wide {
+    grid-column: span 1;
+  }
+
+  .lp-quick-action-grid > .wide:nth-child(3),
+  .lp-quick-interest-pair {
+    grid-column: 1 / -1;
+  }
+}
 
 @media (min-width: 700px) {
   .lp-mobile-main {
@@ -1528,19 +1561,6 @@
   border-color: color-mix(in srgb, var(--lp-accent) 30%, var(--lp-line));
 }
 
-.financing-workspace[class*="palette-"] .lp-layout-financing .lp-quick-action.primary {
-  border-color: var(--lp-accent);
-  background: var(--lp-accent);
-  color: var(--lp-accent-ink);
-}
-
-.financing-workspace[class*="palette-"] .lp-layout-financing .lp-quick-action.primary small {
-  color: color-mix(in srgb, var(--lp-accent-ink) 72%, transparent);
-}
-
-.financing-workspace[class*="palette-"] .lp-layout-financing .lp-quick-action.primary b {
-  color: var(--lp-accent-ink);
-}
 
 .financing-workspace[class*="palette-"] .lp-layout-financing .lp-financing-fields.compact,
 .financing-workspace[class*="palette-"] .lp-layout-financing .lp-slider-explicit {

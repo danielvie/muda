@@ -51,7 +51,6 @@ type QuickAction = {
   label: string;
   detail: string;
   onClick: () => void;
-  primary?: boolean;
   disabled?: boolean;
 };
 
@@ -319,8 +318,12 @@ function StudyShelf({ studies, currentPayment, loadStudy, removeStudy, clearStud
   return <div className="lp-study-shelf"><header><span className="lp-kicker">COMPARAR ESTUDOS</span><button type="button" onClick={clearStudies}>Limpar</button></header><div className="lp-study-list">{[...studies].reverse().map((study) => { const difference = study.payment - currentPayment; const differenceLabel = Math.abs(difference) < 1 ? "igual ao atual" : `${difference > 0 ? "+" : "−"}${money(Math.abs(difference))} vs atual`; return <article className="lp-study-card" key={study.id}><button type="button" className="lp-study-load" onClick={() => loadStudy(study.id)}><span><b>{study.label}</b><small>{money(study.state.property, true)} · {study.state.method}</small></span><strong>{money(study.payment)}</strong><em className={difference > 0 ? "higher" : difference < 0 ? "lower" : "same"}>{differenceLabel}</em></button><button type="button" className="lp-study-remove" aria-label={`Remover ${study.label}`} onClick={() => removeStudy(study.id)}>×</button></article>; })}</div><p>Toque em um estudo para carregá-lo. A diferença compara a prestação salva com a atual.</p></div>;
 }
 
+function QuickActionButton({ action, className = "" }: { action: QuickAction; className?: string }) {
+  return <button type="button" className={`lp-quick-action ${className}`} disabled={action.disabled} onClick={action.onClick}><span>{action.label}</span><small>{action.detail}</small><b>→</b></button>;
+}
+
 function QuickActions({ title, helper, actions, studies, currentPayment, loadStudy, removeStudy, clearStudies }: { title: string; helper: string; actions: QuickAction[]; studies: Study[]; currentPayment: number; loadStudy: (id: number) => void; removeStudy: (id: number) => void; clearStudies: () => void }) {
-  return <section className="lp-quick-actions"><header><div><span className="lp-kicker">AÇÕES RÁPIDAS</span><h3>{title}</h3></div><span className="lp-study-count">{studies.length ? `${studies.length} salvos` : "sem estudos"}</span></header><p className="lp-quick-helper">{helper}</p><div className="lp-quick-action-grid">{actions.map((action) => <button type="button" key={action.label} className={`lp-quick-action${action.primary ? " primary" : ""}`} disabled={action.disabled} onClick={action.onClick}><span>{action.label}</span><small>{action.detail}</small><b>→</b></button>)}</div>{studies.length > 0 ? <StudyShelf studies={studies} currentPayment={currentPayment} loadStudy={loadStudy} removeStudy={removeStudy} clearStudies={clearStudies} /> : <div className="lp-empty-studies">Salve uma simulação para criar uma referência e comparar outras combinações.</div>}</section>;
+  return <section className="lp-quick-actions"><header><div><span className="lp-kicker">AÇÕES RÁPIDAS</span><h3>{title}</h3></div><span className="lp-study-count">{studies.length ? `${studies.length} salvos` : "sem estudos"}</span></header><p className="lp-quick-helper">{helper}</p><div className="lp-quick-action-grid"><QuickActionButton action={actions[0]} className="wide" /><QuickActionButton action={actions[1]} className="wide" /><QuickActionButton action={actions[2]} className="wide" /><div className="lp-quick-interest-pair"><QuickActionButton action={actions[3]} /><QuickActionButton action={actions[4]} /></div></div>{studies.length > 0 ? <StudyShelf studies={studies} currentPayment={currentPayment} loadStudy={loadStudy} removeStudy={removeStudy} clearStudies={clearStudies} /> : <div className="lp-empty-studies">Salve uma simulação para criar uma referência e comparar outras combinações.</div>}</section>;
 }
 
 function ResultNumber({ label, value, note = "", tone = "" }: { label: string; value: string; note?: string; tone?: string }) {
@@ -393,7 +396,7 @@ function FinancingView({ props }: { props: LayoutProps }) {
   const lowerRate = () => update({ financingRate: Math.max(4, state.financingRate - .5) });
   const increaseRate = () => update({ financingRate: Math.min(18, state.financingRate + .5) });
   const actions: QuickAction[] = [
-    { label: state.method === "SAC" ? "Testar PRICE" : "Voltar ao SAC", detail: "alternar o sistema de amortização", onClick: toggleMethod, primary: true },
+    { label: state.method === "SAC" ? "Testar PRICE" : "Voltar ao SAC", detail: "alternar o sistema de amortização", onClick: toggleMethod },
     { label: "Salvar comparação", detail: "guardar este método", onClick: () => saveStudy("Comparação") },
     { label: "Prazo +5 anos", detail: "testar o efeito no pagamento", onClick: extendTerm },
     { label: "Juros −0,5 p.p.", detail: "simular uma taxa menor", onClick: lowerRate },
