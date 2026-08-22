@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import FinanceVsInvest from "./FinanceVsInvest.tsx";
 import InvestmentProjection from "./InvestmentProjection.tsx";
 import "../financing-workspace.css";
@@ -296,9 +296,15 @@ function NumberField({ label, value, onChange, suffix, step = 1, sliderKey, acti
   return <label className={`lp-field${active ? " active" : ""}`}><span>{label}</span><div><input type="number" inputMode="decimal" value={value} step={step} onFocus={() => onFocusSlider?.(sliderKey)} onChange={(event) => onChange(Number(event.currentTarget.value) || 0)} /><small>{suffix}</small>{onSelectSlider && <button type="button" className="lp-field-slider-button" aria-label={`Ajustar ${label} na barra`} aria-pressed={active} onClick={(event) => { event.preventDefault(); event.stopPropagation(); onSelectSlider(sliderKey); }}>↕</button>}</div></label>;
 }
 
+function RangeFieldE({ label, value, min, max, onChange, suffix, sliderKey, active, onFocusSlider, onSelectSlider }: { label: string; value: number; min: number; max: number; onChange: (value: number) => void; suffix: string; sliderKey: SliderKey; active: boolean } & FieldInteractionProps) {
+  const position = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
+  const sliderStyle = { "--lp-range-position": `${position}%` } as CSSProperties;
+  const nudge = (direction: number) => onChange(Math.min(max, Math.max(min, value + direction)));
+  return <label className={`lp-range-field lp-range-field-e${active ? " active" : ""}${onSelectSlider ? " has-action" : ""}`}><span className="lp-range-field-e-head"><b>{label}</b></span><div className="lp-range-field-e-body"><div className="lp-range-field-e-value"><small>Valor escolhido</small><strong>{value}</strong><span>{suffix}</span></div><div className="lp-range-field-e-control"><button type="button" aria-label={`Diminuir ${label}`} onClick={() => nudge(-1)}>−</button><div className="lp-range-field-e-slider" style={sliderStyle}><div className="lp-range-field-e-track"><span className="lp-range-field-e-progress" /><span className="lp-range-field-e-thumb" /></div><input className="lp-range-field-e-input" type="range" min={min} max={max} step={1} value={value} aria-label={`Ajustar ${label}`} onFocus={() => onFocusSlider?.(sliderKey)} onChange={(event) => onChange(Number(event.currentTarget.value))} /></div><button type="button" aria-label={`Aumentar ${label}`} onClick={() => nudge(1)}>+</button></div><div className="lp-range-field-e-scale"><span>{min} {suffix}</span><span>{max} {suffix}</span></div></div>{onSelectSlider && <button type="button" className="lp-range-field-e-action" aria-label={`Ajustar ${label} na barra`} aria-pressed={active} onClick={(event) => { event.preventDefault(); event.stopPropagation(); onSelectSlider(sliderKey); }}>↕</button>}</label>;
+}
+
 function RangeField({ label, value, min, max, onChange, suffix = "anos", sliderKey, activeKey, onFocusSlider, onSelectSlider }: { label: string; value: number; min: number; max: number; onChange: (value: number) => void; suffix?: string; sliderKey: SliderKey } & FieldInteractionProps) {
-  const active = activeKey === sliderKey;
-  return <label className={`lp-range-field${active ? " active" : ""}`}><span><b>{label}</b><strong>{value} {suffix}</strong></span><div className="lp-range-input-row"><input type="range" min={min} max={max} step={1} value={value} onFocus={() => onFocusSlider?.(sliderKey)} onChange={(event) => onChange(Number(event.currentTarget.value))} />{onSelectSlider && <button type="button" className="lp-field-slider-button" aria-label={`Ajustar ${label} na barra`} aria-pressed={active} onClick={(event) => { event.preventDefault(); event.stopPropagation(); onSelectSlider(sliderKey); }}>↕</button>}</div></label>;
+  return <RangeFieldE label={label} value={value} min={min} max={max} onChange={onChange} suffix={suffix} sliderKey={sliderKey} active={activeKey === sliderKey} onFocusSlider={onFocusSlider} onSelectSlider={onSelectSlider} />;
 }
 
 function MethodToggle({ value, onChange }: { value: Method; onChange: (value: Method) => void }) {
