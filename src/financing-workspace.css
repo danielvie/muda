@@ -1333,6 +1333,26 @@
   background: var(--lp-bg);
 }
 
+.lp-layout-financing .lp-mobile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lp-layout-financing .lp-mobile-main > * {
+  margin-top: 0;
+}
+
+.lp-advanced-editor {
+  display: grid;
+  gap: 0;
+}
+
+.lp-advanced-editor .lp-advanced-trigger,
+.lp-advanced-editor .lp-advanced-fields {
+  margin-top: 0;
+}
+
 .lp-layout-financing .lp-mobile-heading h1 {
   color: #126b7b;
 }
@@ -1356,7 +1376,6 @@
 }
 
 .lp-layout-financing .lp-quick-actions + .lp-financing-fields.compact {
-  margin-top: 16px;
   border-radius: 10px;
 }
 

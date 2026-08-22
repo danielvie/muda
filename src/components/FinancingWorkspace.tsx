@@ -322,7 +322,7 @@ function AdvancedFields({ state, update, interaction = {} }: { state: FinancingS
 
 function AdvancedEditor({ state, update, interaction = {} }: { state: FinancingState; update: (patch: Partial<FinancingState>) => void; interaction?: FieldInteractionProps }) {
   const [open, setOpen] = useState(false);
-  return <><button type="button" className="lp-advanced-trigger" onClick={() => setOpen(!open)}><span>{open ? "Fechar detalhes avançados" : "Abrir detalhes avançados"}</span><b>{open ? "↑" : "↓"}</b></button>{open && <AdvancedFields state={state} update={update} interaction={interaction} />}</>;
+  return <div className="lp-advanced-editor"><button type="button" className="lp-advanced-trigger" onClick={() => setOpen(!open)}><span>{open ? "Fechar detalhes avançados" : "Abrir detalhes avançados"}</span><b>{open ? "↑" : "↓"}</b></button>{open && <AdvancedFields state={state} update={update} interaction={interaction} />}</div>;
 }
 
 function StudyShelf({ studies, currentPayment, loadStudy, removeStudy, clearStudies }: { studies: Study[]; currentPayment: number; loadStudy: (id: number) => void; removeStudy: (id: number) => void; clearStudies: () => void }) {
