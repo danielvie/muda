@@ -6,9 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
   base: "/muda/",
-  define: {
-    __AGENTATION_WORKSPACE_ROOT__: JSON.stringify(process.cwd()),
-  },
+
   plugins: [
     tailwindcss(),
     react(),
@@ -18,8 +16,8 @@ export default defineConfig({
         short_name: "muda",
         description: "Muda",
         start_url: "/muda/",
-        theme_color: "#E8F500",
-        background_color: "#E8F500",
+        theme_color: "#147a8f",
+        background_color: "#147a8f",
         display: "fullscreen",
         icons: [
           {

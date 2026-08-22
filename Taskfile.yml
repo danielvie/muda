@@ -11,6 +11,12 @@ tasks:
     cmds:
      - bun run dev
 
+  init:
+    aliases: [i]
+    desc: "run main app"
+    cmds:
+     - task: install
+
   install:
     aliases: [i]
     desc: "run main app"

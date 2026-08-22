@@ -25,7 +25,11 @@ function formatPercentLabel(value: string) {
   return `${label}%`;
 }
 
-export default function InvestmentProjection() {
+type InvestmentProjectionProps = {
+  financingEntry?: number;
+};
+
+export default function InvestmentProjection({ financingEntry }: InvestmentProjectionProps = {}) {
   const { fields, fieldHistory, updateField, rememberFieldValue } = useMemory();
   const projection = buildInvestmentProjection(fields);
   const saldoInicialHistory = useMemo(() => sortHistoryByNumber(fieldHistory.saldoInicial ?? []), [fieldHistory.saldoInicial]);
@@ -66,8 +70,8 @@ export default function InvestmentProjection() {
                 <button 
                   className="field-chip !h-auto !py-1 !px-2 !min-h-0 text-[9px]" 
                   type="button" 
-                  onClick={() => updateField("saldoInicial", fields.entrada)}
-                  title={`Copiar entrada do financiamento (${fields.entrada})`}
+                  onClick={() => updateField("saldoInicial", financingEntry === undefined ? fields.entrada : String(financingEntry))}
+                  title={`Copiar entrada do financiamento (${financingEntry === undefined ? fields.entrada : financingEntry})`}
                 >
                   Usar Entrada
                 </button>
