@@ -1190,6 +1190,11 @@
   border-color: #c5dfe7;
 }
 
+.lp-layout-financing .lp-quick-actions + .lp-financing-fields.compact {
+  margin-top: 16px;
+  border-radius: 10px;
+}
+
 
 @media (min-width: 700px) {
   .lp-mobile-main {
