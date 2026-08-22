@@ -273,24 +273,38 @@ function DashboardPanel({
 }) {
   const config = WIDGET_CONFIG[tone];
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
-
-  const style = customColor ? {
-    "--panel-accent": customColor,
-    "--panel-accent-soft": `${customColor}26`,
-    "--panel-handle-color": customColor,
-    "--panel-handle-bg": `${customColor}26`,
-  } as React.CSSProperties : undefined;
+  const panelAccent = customColor ?? (
+    tone === "sac" ? "#E8F500" : tone === "investment" ? "#4DD9A4" : "#00E5FF"
+  );
+  const panelAccentSoft = customColor
+    ? `${customColor}26`
+    : tone === "sac"
+      ? "rgba(232, 245, 0, 0.15)"
+      : tone === "investment"
+        ? "rgba(77, 217, 164, 0.15)"
+        : "rgba(0, 229, 255, 0.15)";
+  const style = {
+    "--panel-accent": panelAccent,
+    "--panel-accent-soft": panelAccentSoft,
+    "--panel-accent-alt": tone === "comparison" ? "#FF9F1C" : "var(--color-positive)",
+    "--panel-handle-color": panelAccent,
+    "--panel-handle-bg": customColor ? `${customColor}26` : panelAccent,
+  } as React.CSSProperties;
 
   return (
     <section
-      className={`dashboard-panel dashboard-panel-${tone}${collapsed ? " dashboard-panel-collapsed" : ""}${isColorPickerOpen ? " dashboard-panel-active" : ""}`}
+      className={[
+        "relative flex h-full min-h-0 min-w-0 flex-col rounded-[var(--radius-md)_var(--radius-md)_var(--radius-sm)_var(--radius-sm)] border-[3px] border-[#222] bg-black shadow-[0_20px_60px_rgba(0,0,0,0.4)]",
+        collapsed && "min-h-[62px] rounded-[var(--radius-md)]",
+        isColorPickerOpen && "z-[60]",
+      ].filter(Boolean).join(" ")}
       style={style}
       data-dashboard-widget={widgetId}
       aria-label={config.title}
     >
-      <div className="dashboard-panel-header">
+      <div className={`flex flex-[0_0_56px] items-center gap-2.5 rounded-t-[calc(var(--radius-md)-3px)] border-b border-[#333] bg-[#111] px-4 py-3 ${collapsed ? "rounded-b-[calc(var(--radius-md)-3px)] border-b-0" : ""}`}>
         <div
-          className="dashboard-drag-handle"
+          className="dashboard-drag-handle grid size-8 shrink-0 cursor-grab select-none place-items-center touch-none rounded-[var(--radius-sm)] border border-[#444] bg-[rgba(255,255,255,0.04)] font-mono text-sm leading-none text-[var(--panel-accent)] transition-[background,border-color] duration-[120ms] ease-in-out active:cursor-grabbing hover:border-[var(--panel-handle-color,var(--color-accent))] hover:bg-[var(--panel-handle-bg,var(--color-accent-soft))] hover:text-[var(--color-text-heading)] focus-visible:border-[var(--panel-handle-color,var(--color-accent))] focus-visible:bg-[var(--panel-handle-bg,var(--color-accent-soft))] focus-visible:text-[var(--color-text-heading)] focus-visible:outline-none max-[559px]:size-9 max-[559px]:text-base"
           role="button"
           tabIndex={0}
           aria-label={`Mover ${config.title}`}
@@ -299,41 +313,40 @@ function DashboardPanel({
         >
           <span aria-hidden="true">::</span>
         </div>
-        <div className="dashboard-panel-title">{config.title}</div>
+        <div className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[17px] font-black uppercase tracking-[0.04em] text-[var(--panel-accent,var(--color-text-heading))]">{config.title}</div>
         {onColorChange && (
-          <div className="dashboard-color-picker-wrap">
+          <div className="relative inline-block">
             <button
-            type="button"
-            className="dashboard-color-picker"
-            title="Mudar cor do painel"
-            style={{ backgroundColor: customColor || (tone === "sac" ? "#E8F500" : "#4DD9A4") }}
-            onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
-            aria-expanded={isColorPickerOpen}
-            aria-label="Mudar cor do painel"
+              type="button"
+              className="size-5 cursor-pointer appearance-none overflow-hidden rounded-full border-2 border-[#333] bg-transparent p-0 transition-[transform,border-color] duration-[120ms] ease-in-out hover:scale-110 hover:border-[#555] focus-visible:outline-2 focus-visible:outline-[var(--panel-accent)] focus-visible:outline-offset-2"
+              title="Mudar cor do painel"
+              style={{ backgroundColor: customColor || (tone === "sac" ? "#E8F500" : "#4DD9A4") }}
+              onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
+              aria-expanded={isColorPickerOpen}
+              aria-label="Mudar cor do painel"
             />
             {isColorPickerOpen && (
-              <div className="dashboard-color-matrix">
+              <div className="absolute right-0 top-full z-[50] mt-2 grid w-[116px] grid-cols-3 gap-2 rounded-[var(--radius-sm)] border border-[#333] bg-[#111] p-2 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
                 {PALETTE.map((color) => (
                   <button
-                  key={color}
-                  type="button"
-                  className="dashboard-color-matrix-btn"
-                  style={{ backgroundColor: color }}
-                  aria-label={`Cor ${color}`}
-                  onClick={() => {
-                    onColorChange(color);
-                    setIsColorPickerOpen(false);
-                  }}
+                    key={color}
+                    type="button"
+                    className="size-6 cursor-pointer rounded-full border-2 border-transparent bg-transparent p-0 transition-[transform,border-color] duration-[120ms] ease-in-out hover:scale-110 hover:border-white"
+                    style={{ backgroundColor: color }}
+                    aria-label={`Cor ${color}`}
+                    onClick={() => {
+                      onColorChange(color);
+                      setIsColorPickerOpen(false);
+                    }}
                   />
                 ))}
               </div>
             )}
           </div>
         )}
-        <div className="dashboard-panel-icon" aria-hidden="true">{config.icon}</div>
-        
+        <div className="grid size-9 shrink-0 place-items-center rounded-full border border-[#333] bg-[var(--panel-accent,var(--color-accent))] text-black leading-none" aria-hidden="true">{config.icon}</div>
         <button
-          className="dashboard-collapse"
+          className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-[var(--radius-sm)] border border-[#444] bg-[rgba(255,255,255,0.04)] font-mono text-lg font-bold leading-none text-[var(--color-text-heading)] transition-[background,border-color] duration-[120ms] ease-in-out hover:border-[var(--panel-handle-color,var(--color-text-heading))] hover:bg-[var(--panel-handle-bg,var(--color-accent-soft))] hover:text-[var(--color-surface)] focus-visible:border-[var(--panel-handle-color,var(--color-text-heading))] focus-visible:bg-[var(--panel-handle-bg,var(--color-accent-soft))] focus-visible:text-[var(--color-surface)] focus-visible:outline-none max-[559px]:size-9"
           type="button"
           onClick={onToggleCollapsed}
           aria-expanded={!collapsed}
@@ -343,7 +356,12 @@ function DashboardPanel({
           <span aria-hidden="true">{collapsed ? "+" : "−"}</span>
         </button>
       </div>
-      {!collapsed && <div className="dashboard-panel-body">{children}</div>}
+      {!collapsed && (
+        <div className="min-h-0 flex-1 overflow-auto rounded-b-[calc(var(--radius-sm)-3px)] bg-black [scrollbar-color:#3f3f3f_#050505] max-[559px]:overflow-visible [&>section]:h-full [&>section]:rounded-none [&>section]:border-0 [&>section]:bg-black [&>section]:p-4 [&>section>h2]:hidden [&>section>.mt-3.p-3]:border-[#333] [&>section>.mt-3.p-3]:bg-[#1a1a1a] [&>section>.mt-3.grid]:gap-2.5 max-[559px]:[&>section]:p-3"
+        >
+          {children}
+        </div>
+      )}
     </section>
   );
 }
@@ -531,42 +549,46 @@ export default function DashboardLayout() {
   }
 
   return (
-    <section className="dashboard-shell" aria-labelledby="dashboard-title">
-      <div className="dashboard-toolbar">
-        <button className="dashboard-reset" type="button" onClick={() => setAllCollapsed(false)} title="Expandir todos">
+    <section className="grid min-w-0 gap-4" aria-labelledby="dashboard-title">
+      <div className="mx-2.5 flex items-center justify-end gap-3">
+        <button className="min-h-9 cursor-pointer rounded-[var(--radius-sm)] border-2 border-black bg-transparent px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.04em] text-black transition-[background,color] duration-[120ms] ease-in-out hover:bg-black hover:text-[var(--color-bg)]" type="button" onClick={() => setAllCollapsed(false)} title="Expandir todos">
           Expandir todos
         </button>
-        <button className="dashboard-reset" type="button" onClick={() => setAllCollapsed(true)} title="Recolher todos">
+        <button className="min-h-9 cursor-pointer rounded-[var(--radius-sm)] border-2 border-black bg-transparent px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.04em] text-black transition-[background,color] duration-[120ms] ease-in-out hover:bg-black hover:text-[var(--color-bg)]" type="button" onClick={() => setAllCollapsed(true)} title="Recolher todos">
           Recolher todos
         </button>
-        <button className="dashboard-reset" type="button" onClick={resetLayout} title="Resetar layout">
+        <button className="min-h-9 cursor-pointer rounded-[var(--radius-sm)] border-2 border-black bg-transparent px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.04em] text-black transition-[background,color] duration-[120ms] ease-in-out hover:bg-black hover:text-[var(--color-bg)]" type="button" onClick={resetLayout} title="Resetar layout">
           Resetar layout
         </button>
       </div>
 
-      <div ref={containerRef} className="dashboard-grid-wrap">
+      <div ref={containerRef} className="min-w-0 max-[559px]:px-1">
         {mounted && isMobile && (
-          <div className="dashboard-mobile-list">
-            {mobileOrder.map((id) => (
-              <div
-                key={id}
-                className={`dashboard-mobile-item ${
-                  mobileDragState?.activeId === id ? "dashboard-mobile-item-dragging" : ""
-                } ${
-                  mobileDragState?.targetId === id && mobileDragState.activeId !== id
-                    ? `dashboard-mobile-drop-${mobileDragState.position}`
-                    : ""
-                }`}
-              >
-                {renderWidget(id, true)}
-              </div>
-            ))}
+          <div className="grid gap-4">
+            {mobileOrder.map((id) => {
+              const isDragging = mobileDragState?.activeId === id;
+              const isDropTarget = mobileDragState?.targetId === id && mobileDragState.activeId !== id;
+
+              return (
+                <div
+                  key={id}
+                  className={[
+                    "relative min-w-0 transition-[transform,opacity] duration-[170ms] ease-in-out before:absolute before:-top-[9px] before:left-3 before:right-3 before:z-[3] before:h-[5px] before:rounded-full before:bg-[var(--color-surface)] before:shadow-[0_0_0_3px_var(--color-accent-soft)] before:opacity-0 before:pointer-events-none before:transition-opacity before:duration-[120ms] before:ease-in-out before:content-[''] after:absolute after:-bottom-[9px] after:left-3 after:right-3 after:z-[3] after:h-[5px] after:rounded-full after:bg-[var(--color-surface)] after:shadow-[0_0_0_3px_var(--color-accent-soft)] after:opacity-0 after:pointer-events-none after:transition-opacity after:duration-[120ms] after:ease-in-out after:content-[''] [&>section]:h-auto",
+                    isDragging && "scale-[0.99] opacity-[0.78]",
+                    isDropTarget && mobileDragState.position === "before" && "before:opacity-100",
+                    isDropTarget && mobileDragState.position === "after" && "after:opacity-100",
+                  ].filter(Boolean).join(" ")}
+                >
+                  {renderWidget(id, true)}
+                </div>
+              );
+            })}
           </div>
         )}
 
         {mounted && !isMobile && (
           <Responsive<DashboardBreakpoint>
-            className="dashboard-grid"
+            className="min-h-px [&_.react-grid-item.react-grid-placeholder]:rounded-[var(--radius-lg)] [&_.react-grid-item.react-grid-placeholder]:border-2 [&_.react-grid-item.react-grid-placeholder]:border-black [&_.react-grid-item.react-grid-placeholder]:bg-black [&_.react-grid-item.react-grid-placeholder]:opacity-[0.15] [&_.react-resizable-handle]:rounded-full [&_.react-resizable-handle]:bg-[var(--color-text-muted)] [&_.react-resizable-handle]:opacity-[0.55] [&_.react-resizable-handle]:transition-[opacity,background] [&_.react-resizable-handle]:duration-[120ms] [&_.react-resizable-handle]:ease-in-out [&_.react-resizable-handle:hover]:bg-[var(--color-accent)] [&_.react-resizable-handle:hover]:opacity-100 [&_.react-resizable-handle::after]:hidden [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-e]:top-1/2 [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-e]:right-[6px] [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-e]:bottom-auto [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-e]:left-auto [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-e]:h-12 [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-e]:w-[6px] [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-e]:-mt-6 [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-e]:transform-none [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-s]:top-auto [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-s]:right-auto [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-s]:bottom-[6px] [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-s]:left-1/2 [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-s]:h-[6px] [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-s]:w-12 [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-s]:-ml-6 [&_.react-grid-item>.react-resizable-handle.react-resizable-handle-s]:transform-none"
             width={width}
             breakpoints={breakpoints}
             cols={cols}

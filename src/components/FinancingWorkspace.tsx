@@ -327,21 +327,30 @@ function sliderValue(key: SliderKey, state: FinancingState) {
 
 function Brand() {
   return (
-    <div className="lp-brand flex shrink-0 items-center gap-1.75">
-      <img src={`${BASE_URL}logo.svg`} alt="" />
-      <span>muda</span>
+    <div className="flex shrink-0 items-center gap-1.75 text-(--lp-heading)">
+      <img
+        className="size-7.5 shrink-0 object-contain"
+        src={`${BASE_URL}logo.svg`}
+        alt=""
+      />
+      <span className="text-[21px] font-black tracking-[-.07em]">muda</span>
     </div>
   );
 }
 
 function TopBar({ caption, action }: { caption: string; action?: ReactNode }) {
   return (
-    <header className="lp-topbar sticky top-11.75 z-5 flex min-h-15.5 items-center gap-2.5 px-3.5 py-2.5">
+    <header className="sticky top-11.75 z-5 flex min-h-15.5 items-center gap-2.5 border-b border-(--lp-line) bg-(--lp-paper) px-3.5 py-2.5">
       <Brand />
-      <span className="lp-topbar-caption">{caption}</span>
+      <span className="min-w-0 flex-1 overflow-hidden text-(--lp-muted) font-mono text-[9px] text-ellipsis whitespace-nowrap max-[420px]:text-[8px]">
+        {caption}
+      </span>
       <div className="flex shrink-0 items-center gap-1.5">
         {action ?? (
-          <button type="button" className="lp-quiet-button">
+          <button
+            type="button"
+            className="min-h-10 min-w-10 border-0 bg-transparent p-1.25 text-inherit text-[20px] leading-none"
+          >
             ⋯
           </button>
         )}
@@ -363,7 +372,7 @@ function Button({
     <button
       type="button"
       onClick={onClick}
-      className={`lp-button${secondary ? " lp-button-secondary" : ""}`}
+      className={`min-h-10 rounded-lg border px-3 text-[10px] font-extrabold ${secondary ? "border-(--lp-line) bg-(--lp-paper) text-(--lp-ink)" : "border-(--lp-ink) bg-(--lp-ink) text-white"}`}
     >
       {children}
     </button>
@@ -390,22 +399,25 @@ function NumberField({
 } & FieldInteractionProps) {
   const active = activeKey === sliderKey;
   return (
-    <label className={`lp-field grid min-w-0 gap-1.25${active ? " active" : ""}`}>
-      <span>{label}</span>
-      <div className="flex min-w-0 items-center">
+    <label className="grid min-w-0 gap-1.25">
+      <span className="text-(--lp-muted) text-[9px] font-extrabold">{label}</span>
+      <div
+        className={`flex min-h-12 min-w-0 items-center rounded-lg border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_76%,transparent)] transition-[border-color,box-shadow] duration-150 ease-[ease]${active ? " border-(--lp-accent)!" : ""}`}
+      >
         <input
           type="number"
           inputMode="decimal"
           value={value}
           step={step}
+          className="w-full min-w-0 border-0 bg-transparent p-[10px_5px_10px_10px] text-(--lp-ink) font-mono text-[13px] font-extrabold outline-0 focus:shadow-[inset_0_0_0_2px_var(--lp-accent)] max-[420px]:text-[12px]"
           onFocus={() => onFocusSlider?.(sliderKey)}
           onChange={(event) => onChange(Number(event.currentTarget.value) || 0)}
         />
-        <small>{suffix}</small>
+        <small className="whitespace-nowrap pr-1.75 text-(--lp-muted) text-[8px] max-[420px]:pr-1 max-[420px]:text-[7px]">{suffix}</small>
         {onSelectSlider && (
           <button
             type="button"
-            className="lp-field-slider-button"
+            className="grid h-7.5 w-7.75 shrink-0 place-items-center border-0 border-l border-(--lp-line) bg-transparent pr-0 text-(--lp-muted) text-[15px] leading-none hover:text-(--lp-accent) aria-pressed:text-(--lp-accent)"
             aria-label={`Ajustar ${label} na barra`}
             aria-pressed={active}
             onClick={(event) => {
@@ -430,18 +442,26 @@ function MethodToggle({
   onChange: (value: Method) => void;
 }) {
   return (
-    <div className="lp-method-toggle mt-4.25 flex items-center gap-1.25 pt-3.5">
-      <span>Sistema de amortização</span>
+    <div className="mt-4.25 flex items-center gap-1.25 border-t border-(--lp-line) pt-3.5">
+      <span className="flex-1 text-(--lp-muted) text-[9px]">Sistema de amortização</span>
       <button
         type="button"
-        className={value === "SAC" ? "active" : ""}
+        className={`min-h-9 rounded-[6px] border border-(--lp-line) bg-transparent px-2.5 text-(--lp-muted) text-[9px] font-black ${
+          value === "SAC"
+            ? "border-(--lp-ink)! bg-(--lp-ink)! text-white!"
+            : ""
+        }`}
         onClick={() => onChange("SAC")}
       >
         SAC
       </button>
       <button
         type="button"
-        className={value === "PRICE" ? "active" : ""}
+        className={`min-h-9 rounded-[6px] border border-(--lp-line) bg-transparent px-2.5 text-(--lp-muted) text-[9px] font-black ${
+          value === "PRICE"
+            ? "border-(--lp-ink)! bg-(--lp-ink)! text-white!"
+            : ""
+        }`}
         onClick={() => onChange("PRICE")}
       >
         PRICE
@@ -465,16 +485,18 @@ function FinancingFields({
 }) {
   const fieldProps = { ...interaction };
   return (
-    <section className={`lp-financing-fields${compact ? " compact p-3.75" : " p-4.25 max-[420px]:p-3.75"}`}>
+    <section
+      className={`border border-(--lp-line) bg-(--lp-paper) ${compact ? "rounded-[10px] p-3.75" : "rounded-[14px] p-4.25 max-[420px]:p-3.75"}`}
+    >
       <header className="mb-4.25 flex items-start justify-between gap-3">
         <div>
-          <span className="lp-kicker">CALCULADORA DE FINANCIAMENTO</span>
-          <h2>
+          <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">CALCULADORA DE FINANCIAMENTO</span>
+          <h2 className="mt-1.25 text-[20px] tracking-[-.06em]">
             {title ??
               (compact ? "Comece pelo essencial" : "Defina o empréstimo")}
           </h2>
         </div>
-        <span className="lp-step">01</span>
+        <span className="grid size-7 place-items-center rounded-full bg-(--lp-accent) text-(--lp-accent-ink) font-mono text-[10px] font-black">01</span>
       </header>
       <div className="grid grid-cols-2 gap-x-2.25 gap-y-2.75">
         <NumberField
@@ -554,8 +576,8 @@ function AdvancedFields({
   interaction?: FieldInteractionProps;
 }) {
   return (
-    <section className="lp-advanced-fields grid gap-3.25 p-3.75">
-      <span className="lp-kicker">DETALHES AVANÇADOS</span>
+    <section className="grid gap-3.25 rounded-b-[11px] border border-t-0 border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_70%,transparent)] p-3.75">
+      <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">DETALHES AVANÇADOS</span>
       <div className="grid grid-cols-2 gap-x-2.25 gap-y-2.75">
         <NumberField
           label="Custo de posse"
@@ -594,13 +616,13 @@ function AdvancedEditor({
     <div className="grid gap-0">
       <button
         type="button"
-        className="lp-advanced-trigger"
+        className="flex min-h-12 w-full items-center justify-between rounded-[9px] border border-(--lp-line) bg-transparent px-3.5 text-(--lp-ink) text-[10px] font-black text-left"
         onClick={() => setOpen(!open)}
       >
         <span>
           {open ? "Fechar detalhes avançados" : "Abrir detalhes avançados"}
         </span>
-        <b>{open ? "↑" : "↓"}</b>
+        <b className="text-(--lp-accent) text-[16px]">{open ? "↑" : "↓"}</b>
       </button>
       {open && (
         <AdvancedFields
@@ -627,10 +649,14 @@ function StudyShelf({
   clearStudies: () => void;
 }) {
   return (
-    <div className="lp-study-shelf grid gap-2 pt-3">
+    <div className="grid gap-2 border-t border-(--lp-line) pt-3">
       <header className="flex items-center justify-between gap-3">
-        <span className="lp-kicker">COMPARAR ESTUDOS</span>
-        <button type="button" onClick={clearStudies}>
+        <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">COMPARAR ESTUDOS</span>
+        <button
+          type="button"
+          className="min-h-7 rounded-[5px] border-0 bg-transparent px-1.75 text-(--lp-muted) text-[8px] font-black hover:text-(--lp-accent)"
+          onClick={clearStudies}
+        >
           Limpar
         </button>
       </header>
@@ -642,34 +668,34 @@ function StudyShelf({
               ? "igual ao atual"
               : `${difference > 0 ? "+" : "−"}${money(Math.abs(difference))} vs atual`;
           return (
-            <article className="lp-study-card flex min-w-0 items-stretch" key={study.id}>
+            <article className="flex min-w-0 items-stretch rounded-lg border border-(--lp-line) bg-(--lp-paper)" key={study.id}>
               <button
                 type="button"
-                className="lp-study-load grid min-w-0 flex-1 grid-cols-[1fr_auto] gap-x-2.5 gap-y-1 p-2.5"
+                className="grid min-w-0 flex-1 grid-cols-[1fr_auto] gap-x-2.5 gap-y-1 border-0 bg-transparent p-2.5 text-(--lp-ink) text-left"
                 onClick={() => loadStudy(study.id)}
               >
-                <span className="grid min-w-0 gap-1">
-                  <b>{study.label}</b>
-                  <small>
+                <span className="row-start-1 row-span-2 grid min-w-0 gap-1">
+                  <b className="overflow-hidden text-[9px] text-ellipsis whitespace-nowrap">{study.label}</b>
+                  <small className="text-(--lp-muted) text-[8px]">
                     {money(study.state.property, true)} · {study.state.method}
                   </small>
                 </span>
-                <strong>{money(study.payment)}</strong>
+                <strong className="text-(--lp-accent) font-mono text-[11px] text-right">{money(study.payment)}</strong>
                 <em
-                  className={
+                  className={`text-[8px] not-italic text-right ${
                     difference > 0
-                      ? "higher"
+                      ? "text-(--lp-orange)"
                       : difference < 0
-                        ? "lower"
-                        : "same"
-                  }
+                        ? "text-(--lp-positive)"
+                        : "text-(--lp-muted)"
+                  }`}
                 >
                   {differenceLabel}
                 </em>
               </button>
               <button
                 type="button"
-                className="lp-study-remove"
+                className="w-7.75 shrink-0 border-0 border-l border-(--lp-line) bg-transparent text-(--lp-muted) text-[16px] hover:text-(--lp-orange)"
                 aria-label={`Remover ${study.label}`}
                 onClick={() => removeStudy(study.id)}
               >
@@ -679,7 +705,7 @@ function StudyShelf({
           );
         })}
       </div>
-      <p>
+      <p className="text-(--lp-muted) text-[8px] leading-[1.35]">
         Toque em um estudo para carregá-lo. A diferença compara a prestação
         salva com a atual.
       </p>
@@ -690,20 +716,22 @@ function StudyShelf({
 function QuickActionButton({
   action,
   className = "",
+  paired = false,
 }: {
   action: QuickAction;
   className?: string;
+  paired?: boolean;
 }) {
   return (
     <button
       type="button"
-      className={`lp-quick-action max-[699px]:pr-8.5! ${className}`}
+      className={`group relative grid min-h-18.5 content-start gap-1.75 rounded-[9px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_84%,var(--lp-action-bg,var(--lp-accent)))] p-3 text-(--lp-ink) text-left transition-[transform,border-color,background] duration-150 ease-[ease] hover:border-(--lp-accent) hover:bg-[color-mix(in_srgb,var(--lp-paper)_92%,var(--lp-accent))] hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-(--lp-accent) focus-visible:outline-offset-2 active:translate-y-px max-[699px]:pr-8.5! disabled:cursor-not-allowed disabled:opacity-[.48] disabled:transform-none ${paired ? "min-h-18.5 rounded-none! [border:0]! bg-[color-mix(in_srgb,var(--lp-paper)_84%,var(--lp-action-bg,var(--lp-accent)))] hover:bg-[color-mix(in_srgb,var(--lp-paper)_78%,var(--lp-accent))]" : ""} ${className}`}
       disabled={action.disabled}
       onClick={action.onClick}
     >
-      <span>{action.label}</span>
-      <small>{action.detail}</small>
-      <b>→</b>
+      <span className={`pr-4 ${paired ? "text-[9px]" : "text-[10px]"} font-black`}>{action.label}</span>
+      <small className={`max-w-32.5 text-(--lp-muted) ${paired ? "text-[7px]" : "text-[8px]"} leading-tight`}>{action.detail}</small>
+      <b className="absolute right-2.5 bottom-2.25 grid size-5.25 place-items-center rounded-[5px] border border-(--lp-accent) text-(--lp-accent) text-[13px] font-black leading-none group-hover:bg-(--lp-accent) group-hover:text-(--lp-accent-ink)">→</b>
     </button>
   );
 }
@@ -728,24 +756,28 @@ function QuickActions({
   clearStudies: () => void;
 }) {
   return (
-    <section className="lp-quick-actions grid gap-2.75 p-4">
+    <section className="grid gap-2.75 rounded-[14px] border border-[color-mix(in_srgb,var(--lp-accent)_30%,var(--lp-line))] bg-[color-mix(in_srgb,var(--lp-paper)_78%,transparent)] p-4">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <span className="lp-kicker">AÇÕES RÁPIDAS</span>
-          <h3>{title}</h3>
+          <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">AÇÕES RÁPIDAS</span>
+          <h3 className="mt-1.25 text-[18px] tracking-[-.06em]">{title}</h3>
         </div>
-        <span className="lp-study-count">
+        <span className="whitespace-nowrap rounded-[99px] bg-[color-mix(in_srgb,var(--lp-accent)_12%,transparent)] px-1.75 py-1.25 text-(--lp-accent) font-mono text-[8px] font-black">
           {studies.length ? `${studies.length} salvos` : "sem estudos"}
         </span>
       </header>
-      <p className="lp-quick-helper">{helper}</p>
+      <p className="max-w-112.5 text-(--lp-muted) text-[10px] leading-[1.35]">{helper}</p>
       <div className="grid grid-cols-6 gap-1.75">
         <QuickActionButton action={actions[0]} className="col-span-3" />
         <QuickActionButton action={actions[1]} className="col-span-3" />
         <QuickActionButton action={actions[2]} className="col-span-2" />
-        <div className="lp-quick-interest-pair col-span-4 grid min-w-0 grid-cols-2 overflow-hidden">
-          <QuickActionButton action={actions[3]} />
-          <QuickActionButton action={actions[4]} />
+        <div className="col-span-4 grid min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-(--lp-line) bg-transparent">
+          <QuickActionButton action={actions[3]} paired />
+          <QuickActionButton
+            action={actions[4]}
+            paired
+            className="[border-left:1px_solid_var(--lp-line)]!"
+          />
         </div>
       </div>
       {studies.length > 0 ? (
@@ -757,7 +789,7 @@ function QuickActions({
           clearStudies={clearStudies}
         />
       ) : (
-        <div className="lp-empty-studies">
+        <div className="rounded-lg border border-dashed border-(--lp-line) px-2.75 py-2.5 text-(--lp-muted) text-[9px] leading-[1.35]">
           Salve uma simulação para criar uma referência e comparar outras
           combinações.
         </div>
@@ -777,11 +809,17 @@ function ResultNumber({
   note?: string;
   tone?: string;
 }) {
+  const toneClass =
+    tone === "positive"
+      ? "text-(--lp-positive)"
+      : tone === "warning"
+        ? "text-(--lp-orange)"
+        : "";
   return (
-    <div className={`lp-result-number grid min-w-0 gap-1 p-3.25 ${tone}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      {note && <small>{note}</small>}
+    <div className="grid min-w-0 gap-1 rounded-[9px] border border-(--lp-line) bg-(--lp-paper) p-3.25">
+      <span className="text-(--lp-muted) text-[9px] leading-tight">{label}</span>
+      <strong className={`overflow-hidden text-[clamp(16px,5vw,20px)] tracking-[-.06em] text-ellipsis whitespace-nowrap ${toneClass}`}>{value}</strong>
+      {note && <small className="text-(--lp-muted) text-[9px] leading-tight">{note}</small>}
     </div>
   );
 }
@@ -832,31 +870,39 @@ function InstallmentList({ result }: { result: Calculation }) {
           (row) => row.month <= 12 || row.month % 12 === 0,
         );
   return (
-    <div className="lp-installment-list mt-1.25 px-3.5 pt-3.75 pb-2">
+    <div className="mt-1.25 rounded-b-[14px] border border-(--lp-line) bg-(--lp-paper) px-3.5 pt-3.75 pb-2">
       <header className="mb-3.25 flex items-end justify-between gap-3 max-[420px]:items-start max-[420px]:flex-col">
         <div>
-          <span className="lp-kicker">DETALHES DO FINANCIAMENTO</span>
-          <h3>{mode === "yearly" ? "Resumo anual" : "Todas as parcelas"}</h3>
+          <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">DETALHES DO FINANCIAMENTO</span>
+          <h3 className="mt-1 text-[16px] tracking-tighter">{mode === "yearly" ? "Resumo anual" : "Todas as parcelas"}</h3>
         </div>
-        <div className="lp-list-toggle flex shrink-0 gap-0.75">
+        <div className="flex shrink-0 gap-0.75">
           <button
             type="button"
-            className={mode === "yearly" ? "active" : ""}
+            className={`min-h-8 rounded-[6px] border border-(--lp-line) bg-transparent px-2 text-(--lp-muted) text-[8px] font-black ${
+              mode === "yearly"
+                ? "border-(--lp-ink)! bg-(--lp-ink)! text-white!"
+                : ""
+            }`}
             onClick={() => setMode("yearly")}
           >
             Anual
           </button>
           <button
             type="button"
-            className={mode === "monthly" ? "active" : ""}
+            className={`min-h-8 rounded-[6px] border border-(--lp-line) bg-transparent px-2 text-(--lp-muted) text-[8px] font-black ${
+              mode === "monthly"
+                ? "border-(--lp-ink)! bg-(--lp-ink)! text-white!"
+                : ""
+            }`}
             onClick={() => setMode("monthly")}
           >
             Mensal
           </button>
         </div>
       </header>
-      <div className="lp-schedule-table">
-        <div className="lp-schedule-head">
+      <div className="schedule-table">
+        <div className="schedule-head">
           <span>Parcela</span>
           <span>Pagamento</span>
           <span>Amortização</span>
@@ -864,8 +910,8 @@ function InstallmentList({ result }: { result: Calculation }) {
           <span>Saldo</span>
         </div>
         {visibleRows.map((row) => (
-          <div className="lp-schedule-row" key={row.month}>
-            <span>
+          <div className="schedule-row" key={row.month}>
+            <span className="grid gap-0.75">
               <b>{row.month}</b>
               <small>
                 {row.month <= 12
@@ -880,7 +926,7 @@ function InstallmentList({ result }: { result: Calculation }) {
           </div>
         ))}
       </div>
-      <footer>
+      <footer className="mt-2.5 text-(--lp-muted) text-[9px] leading-[1.3]">
         {mode === "monthly"
           ? `${visibleRows.length} parcelas exibidas`
           : `${visibleRows.length} pontos no tempo · troque para Mensal para ver todas`}
@@ -899,16 +945,20 @@ function FinancingResult({
   const [open, setOpen] = useState(false);
   return (
     <section>
-      <div className="lp-payment-hero p-5 max-[420px]:p-3.75">
-        <span className="lp-kicker">PRESTAÇÃO ESTIMADA</span>
-        <strong>{money(result.financingPayment)}</strong>
-        <p>
+      <div className="rounded-[14px] bg-(--lp-hero) p-5 text-white max-[420px]:p-3.75">
+        <span className="text-[color-mix(in_srgb,#fff_68%,transparent)] text-[9px] font-black tracking-[.14em] uppercase">PRESTAÇÃO ESTIMADA</span>
+        <strong className="mt-2.5 mb-1.5 block text-(--lp-yellow) text-[clamp(38px,12vw,60px)] -tracking-widest leading-[.9]">{money(result.financingPayment)}</strong>
+        <p className="text-[color-mix(in_srgb,#fff_68%,transparent)] text-[10px] leading-[1.4]">
           {state.method} · primeira parcela ·{" "}
           {money(result.financingPaymentEnd)} na última parcela do prazo
         </p>
-        <button type="button" onClick={() => setOpen(!open)}>
+        <button
+          type="button"
+          className="mt-5 flex min-h-12 w-full items-center justify-between border-0 border-t border-[#3d4847] bg-transparent pt-3 text-[10px] font-black text-white text-left"
+          onClick={() => setOpen(!open)}
+        >
           {open ? "Fechar detalhes" : "Abrir lista de parcelas"}
-          <b>{open ? "↑" : "↓"}</b>
+          <b className="text-(--lp-yellow) text-[17px]">{open ? "↑" : "↓"}</b>
         </button>
       </div>
       <FinancingSummary result={result} state={state} />
@@ -930,36 +980,40 @@ function PaymentChart({ result }: { result: Calculation }) {
       )
       .join(" ");
   return (
-    <section className="lp-payment-chart">
-      <button type="button" onClick={() => setOpen(!open)}>
+    <section className="rounded-[11px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_60%,transparent)]">
+      <button
+        type="button"
+        className="flex min-h-12.75 w-full items-center justify-between border-0 bg-transparent p-[14px_15px] text-(--lp-ink) text-[10px] font-black text-left"
+        onClick={() => setOpen(!open)}
+      >
         <span>
           {open ? "Ocultar evolução" : "Ver evolução do saldo e da parcela"}
         </span>
-        <b>{open ? "−" : "+"}</b>
+        <b className="text-(--lp-accent) text-[18px]">{open ? "−" : "+"}</b>
       </button>
       {open && (
-        <div>
-          <svg
+        <div className="px-3.5 pb-3.75">
+          <svg className="block h-auto w-full"
             viewBox="0 0 520 180"
             role="img"
             aria-label="Evolução do saldo devedor e da prestação"
           >
-            <path className="lp-chart-grid" d="M0 25H520M0 80H520M0 135H520" />
+            <path className="chart-grid" d="M0 25H520M0 80H520M0 135H520" />
             <polyline
-              className="lp-chart-balance"
+              className="chart-balance"
               points={points(result.balancePoints)}
             />
             <polyline
-              className="lp-chart-payment"
+              className="chart-payment"
               points={points(result.paymentPoints)}
             />
           </svg>
-          <div className="lp-chart-legend">
-            <span>
-              <i className="balance" /> Saldo devedor
+          <div className="mt-2 flex flex-wrap gap-3 text-(--lp-muted) text-[9px] font-extrabold">
+            <span className="flex items-center gap-1.25">
+              <i className="size-1.75 rounded-full bg-(--lp-orange)" /> Saldo devedor
             </span>
-            <span>
-              <i className="payment" /> Prestação
+            <span className="flex items-center gap-1.25">
+              <i className="size-1.75 rounded-full bg-(--lp-accent)" /> Prestação
             </span>
           </div>
         </div>
@@ -981,7 +1035,7 @@ function SliderTargets({
 }) {
   return (
     <div
-      className="lp-slider-targets"
+      className="flex gap-1.5 overflow-x-auto -mt-0.5 mb-px min-w-0 px-px pt-0.5 pb-1.25 [scrollbar-width:thin]"
       role="tablist"
       aria-label="Variável controlada pela barra"
     >
@@ -991,13 +1045,23 @@ function SliderTargets({
           <button
             type="button"
             key={key}
-            className={activeKey === key ? "active" : ""}
+            className={`grid min-w-21.75 gap-1 rounded-lg border border-(--lp-line) bg-transparent p-[9px_10px] text-(--lp-muted) text-left ${
+              activeKey === key
+                ? "border-(--lp-accent)! bg-[color-mix(in_srgb,var(--lp-accent)_13%,var(--lp-paper))]! text-(--lp-accent)!"
+                : ""
+            }`}
             role="tab"
             aria-selected={activeKey === key}
             onClick={() => onChange(key)}
           >
-            <span>{spec.short}</span>
-            <b>{spec.format(sliderValue(key, state))}</b>
+            <span className="text-[9px] font-extrabold">{spec.short}</span>
+            <b
+              className={`overflow-hidden text-(--lp-ink) font-mono text-[9px] text-ellipsis whitespace-nowrap ${
+                activeKey === key ? "text-(--lp-accent)!" : ""
+              }`}
+            >
+              {spec.format(sliderValue(key, state))}
+            </b>
           </button>
         );
       })}
@@ -1011,7 +1075,6 @@ function SliderPanel({
   activeKey,
   onChangeActive,
   targetKeys,
-  mode,
   title,
   helper,
   showTargets = false,
@@ -1022,7 +1085,6 @@ function SliderPanel({
   activeKey: SliderKey;
   onChangeActive?: (key: SliderKey) => void;
   targetKeys?: readonly SliderKey[];
-  mode: string;
   title: string;
   helper: string;
   showTargets?: boolean;
@@ -1034,14 +1096,14 @@ function SliderPanel({
     update(spec.patch(clampSliderValue(spec, nextValue)));
   const nudge = (direction: number) => change(value + direction * spec.step);
   return (
-    <section className={`lp-slider-panel lp-slider-${mode} grid gap-3.25 p-4.25 max-[420px]:p-3.75`}>
-      <header>
+    <section className={`grid gap-3.25 rounded-[14px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_80%,var(--lp-accent)_5%)] p-4.25 max-[420px]:p-3.75`}>
+      <header className="flex items-start justify-between gap-3.5">
         <div>
-          <span className="lp-kicker">BARRA DE AJUSTE</span>
-          <h3>{title}</h3>
-          <p>{helper}</p>
+          <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">BARRA DE AJUSTE</span>
+          <h3 className="mt-1.25 text-[18px] tracking-[-.06em]">{title}</h3>
+          <p className="mt-1.25 max-w-70 text-(--lp-muted) text-[10px] leading-[1.35]">{helper}</p>
         </div>
-        <output>{spec.format(value)}</output>
+        <output className="shrink-0 text-(--lp-accent) font-mono text-[15px] font-black text-right">{spec.format(value)}</output>
       </header>
       {showTargets && (
         <SliderTargets
@@ -1051,12 +1113,12 @@ function SliderPanel({
           keys={targetKeys ?? PRIMARY_SLIDER_KEYS}
         />
       )}
-      <div className="lp-slider-current flex items-baseline justify-between gap-2.5 px-2.75 py-2.25">
+      <div className="flex items-baseline justify-between gap-2.5 rounded-[7px] bg-[color-mix(in_srgb,var(--lp-accent)_10%,transparent)] px-2.75 py-2.25 text-(--lp-muted) text-[9px]">
         <span>Ajustando</span>
-        <strong>{spec.label}</strong>
+        <strong className="text-(--lp-ink) text-[10px]">{spec.label}</strong>
       </div>
       <input
-        className="lp-main-slider"
+        className="w-full min-h-6 px-2 accent-(--lp-accent) cursor-grab active:cursor-grabbing"
         type="range"
         min={spec.min}
         max={spec.max}
@@ -1065,22 +1127,24 @@ function SliderPanel({
         aria-label={`Ajustar ${spec.label}`}
         onChange={(event) => change(Number(event.currentTarget.value))}
       />
-      <div className="lp-slider-scale -mt-2 flex justify-between gap-2.5">
+      <div className="-mt-2 flex justify-between gap-2.5 text-(--lp-muted) font-mono text-[8px]">
         <span>{spec.format(spec.min)}</span>
         <span>{spec.format(spec.max)}</span>
       </div>
       {showNudge && (
-        <div className="lp-slider-nudge -mt-0.5 flex items-center justify-center gap-3">
+        <div className="-mt-0.5 flex items-center justify-center gap-3">
           <button
             type="button"
+            className="grid h-8.5 w-9.5 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[18px] leading-none active:scale-[.96]"
             onClick={() => nudge(-1)}
             aria-label={`Diminuir ${spec.label}`}
           >
             −
           </button>
-          <span>{spec.format(spec.step)} por toque</span>
+          <span className="min-w-25 text-(--lp-muted) font-mono text-[8px] text-center">{spec.format(spec.step)} por toque</span>
           <button
             type="button"
+            className="grid h-8.5 w-9.5 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[18px] leading-none active:scale-[.96]"
             onClick={() => nudge(1)}
             aria-label={`Aumentar ${spec.label}`}
           >
@@ -1102,10 +1166,10 @@ function Heading({
   description: string;
 }) {
   return (
-    <header className="lp-mobile-heading px-0.5 pt-5.25 pb-4.75">
-      <span className="lp-kicker">{kicker}</span>
-      <h1>{title}</h1>
-      <p>{description}</p>
+    <header className="px-0.5 pt-5.25 pb-4.75">
+      <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">{kicker}</span>
+      <h1 className="mt-2.25 text-(--lp-heading) text-[clamp(35px,11vw,58px)] -tracking-widest leading-[.87]">{title}</h1>
+      <p className="mt-3.5 max-w-107.5 text-(--lp-muted) text-[13px] leading-[1.42]">{description}</p>
     </header>
   );
 }
@@ -1121,7 +1185,7 @@ function EnvironmentTabs({
 }) {
   return (
     <nav
-      className="lp-environment-tabs sticky top-0 z-10 flex gap-1 px-3 py-1.25"
+      className="sticky top-0 z-10 flex gap-1 border-b border-(--lp-line) bg-(--lp-paper) px-3 py-1.25"
       role="tablist"
       aria-label="Ambientes financeiros"
     >
@@ -1129,7 +1193,7 @@ function EnvironmentTabs({
         type="button"
         role="tab"
         aria-selected={value === "financing"}
-        className={value === "financing" ? "active" : ""}
+        className={`min-h-9 flex-1 rounded-[7px] border-0 bg-transparent text-(--lp-muted) text-[10px] font-black focus-visible:outline-2 focus-visible:outline-(--lp-accent) focus-visible:outline-offset-2 ${value === "financing" ? "bg-(--lp-tab-financing)! text-(--lp-accent-ink)!" : ""}`}
         onClick={() => onChange("financing")}
       >
         Financiar
@@ -1138,7 +1202,7 @@ function EnvironmentTabs({
         type="button"
         role="tab"
         aria-selected={value === "investment"}
-        className={value === "investment" ? "active" : ""}
+        className={`min-h-9 flex-1 rounded-[7px] border-0 bg-transparent text-(--lp-muted) text-[10px] font-black focus-visible:outline-2 focus-visible:outline-(--lp-accent) focus-visible:outline-offset-2 ${value === "investment" ? "bg-(--lp-tab-investment)! text-(--lp-accent-ink)!" : ""}`}
         onClick={() => onChange("investment")}
       >
         Investir
@@ -1147,7 +1211,7 @@ function EnvironmentTabs({
         type="button"
         role="tab"
         aria-selected={value === "comparison"}
-        className={value === "comparison" ? "active" : ""}
+        className={`min-h-9 flex-1 rounded-[7px] border-0 bg-transparent text-(--lp-muted) text-[10px] font-black focus-visible:outline-2 focus-visible:outline-(--lp-accent) focus-visible:outline-offset-2 ${value === "comparison" ? "bg-(--lp-tab-comparison)! text-(--lp-accent-ink)!" : ""}`}
         onClick={() => onChange("comparison")}
       >
         Comparar
@@ -1161,7 +1225,7 @@ function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
     <div className="lp-layout-investment min-h-[calc(100vh-47px)]">
       <TopBar
         caption="Ambiente · investimento de renda fixa"
-        action={<span className="lp-topbar-mode">RENDA FIXA</span>}
+        action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">RENDA FIXA</span>}
       />
       <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <Heading
@@ -1175,7 +1239,7 @@ function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
           }
           description="Calcule saldo final, aportes e rendimento. A entrada do financiamento pode ser usada como saldo inicial."
         />
-        <section className="lp-investment-card">
+        <section className="pane">
           <InvestmentProjection financingEntry={financingEntry} />
         </section>
       </main>
@@ -1188,7 +1252,7 @@ function ComparisonEnvironment() {
     <div className="lp-layout-comparison min-h-[calc(100vh-47px)]">
       <TopBar
         caption="Ambiente · financiar vs investir"
-        action={<span className="lp-topbar-mode">COMPARAÇÃO</span>}
+        action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">COMPARAÇÃO</span>}
       />
       <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <Heading
@@ -1202,7 +1266,7 @@ function ComparisonEnvironment() {
           }
           description="Coloque as duas estratégias lado a lado e veja patrimônio, fluxo mensal e ponto de virada."
         />
-        <section className="lp-comparison-card">
+        <section className="pane">
           <FinanceVsInvest />
         </section>
       </main>
@@ -1305,7 +1369,6 @@ function FinancingView({ props }: { props: LayoutProps }) {
           activeKey={activeKey}
           onChangeActive={setActiveKey}
           targetKeys={["termMonths", "entry", "property", "financingRate"]}
-          mode="explicit"
           title="Controle escolhido"
           helper="A barra ajusta a variável marcada nos campos ou na faixa."
           showTargets

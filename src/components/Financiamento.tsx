@@ -79,8 +79,8 @@ export default function Financiamento() {
       <div className="grid gap-3 min-w-0">
 
         {/* Valor do imóvel - full width */}
-        <div className="field">
-          <div className="field-label-action flex-wrap">
+        <div className="field grid min-w-0 gap-1.5">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <label className="field-label" htmlFor="sac-valor-imovel">Valor do imóvel (R$)</label>
             {sortedValorImovelHistory.length > 0 && (
               <div className="flex gap-1.5 flex-wrap">
@@ -104,8 +104,8 @@ export default function Financiamento() {
         </div>
 
         {/* Entrada - full width with chips */}
-        <div className="field">
-          <div className="field-label-action">
+        <div className="field grid min-w-0 gap-1.5">
+          <div className="flex items-center justify-between gap-2 max-[559px]:flex-wrap">
             <label className="field-label" htmlFor="sac-entrada">Entrada (R$)</label>
             <div className="flex gap-2">
               <button className="field-chip" type="button" onClick={() => fillPercentEntry(0.2)}>
@@ -131,8 +131,8 @@ export default function Financiamento() {
 
         {/* Taxa + Prazo side by side */}
         <div className="grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1">
-          <div className="field">
-            <div className="field-label-action flex-wrap">
+          <div className="field grid min-w-0 gap-1.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <label className="field-label" htmlFor="sac-taxa-anual">Taxa anual (%)</label>
               <div className="flex gap-1.5">
                 {sortedTaxRates.map((rate) => (
@@ -152,8 +152,8 @@ export default function Financiamento() {
             />
           </div>
 
-          <div className="field">
-            <div className="field-label-action flex-wrap">
+          <div className="field grid min-w-0 gap-1.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <label className="field-label" htmlFor="sac-prazo-meses">Prazo (meses)</label>
               <div className="flex gap-1.5">
                 <button className="field-chip" type="button" onClick={() => fillPrazoEntry(300)}>
@@ -183,18 +183,18 @@ export default function Financiamento() {
       </div>
 
         {/* Método - close to results */}
-        <div className="field mt-2 pt-2 border-t border-border">
+        <div className="field grid min-w-0 gap-1.5 mt-2 border-t border-border pt-2">
           <label className="field-label">Método de Amortização</label>
           <div className="flex gap-2">
             <button 
-              className={`field-chip ${fields.metodoAmortizacao === "SAC" ? "field-chip-active" : ""}`} 
+              className={`field-chip ${fields.metodoAmortizacao === "SAC" ? "bg-[var(--panel-accent,var(--color-accent))]! text-black!" : ""}`}
               type="button" 
               onClick={() => updateField("metodoAmortizacao", "SAC")}
             >
               SAC
             </button>
             <button 
-              className={`field-chip ${fields.metodoAmortizacao === "PRICE" ? "field-chip-active" : ""}`} 
+              className={`field-chip ${fields.metodoAmortizacao === "PRICE" ? "bg-[var(--panel-accent,var(--color-accent))]! text-black!" : ""}`}
               type="button" 
               onClick={() => updateField("metodoAmortizacao", "PRICE")}
             >
@@ -228,7 +228,7 @@ export default function Financiamento() {
             <div className="grid grid-cols-2 gap-2.5 min-w-0 mt-2.5 max-sm:grid-cols-1">
               <div className="metric">
                 <div className="metric-label">Amortização</div>
-                <div className="metric-value text-warm">{projection.metrics.amortizacao}</div>
+                <div className="metric-value text-[var(--panel-accent,var(--color-accent))]!">{projection.metrics.amortizacao}</div>
               </div>
               <div className="metric">
                 <div className="metric-label">Última prestação</div>

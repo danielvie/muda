@@ -166,9 +166,19 @@ function findFirstCrossing(
 
 function HelpTip({ text }: { text: string }) {
   return (
-    <span className="help-tip">
-      <button className="help-tip-button" type="button" aria-label={text}>?</button>
-      <span className="help-tip-popup" role="tooltip">{text}</span>
+    <span className="group relative inline-grid flex-none place-items-center">
+      <button
+        className="grid h-4.5 w-4.5 cursor-help place-items-center rounded-full border border-(--panel-accent,var(--color-accent)) bg-[color-mix(in_srgb,var(--color-surface)_86%,var(--panel-accent,var(--color-accent)))] font-mono text-[11px] font-black leading-none text-(--panel-accent,var(--color-accent))"
+        type="button"
+        aria-label={text}
+      >?
+      </button>
+      <span
+        className="pointer-events-none absolute right-0 bottom-[calc(100%+8px)] z-80 w-[min(280px,72vw)] translate-y-1 rounded-sm border border-(--panel-accent,var(--color-accent)) bg-surface p-[10px_12px] text-xs font-bold leading-[1.35] text-text-heading opacity-0 shadow-[0_12px_32px_rgba(0,0,0,0.55)] [transition:opacity_120ms_ease,transform_120ms_ease] group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
+        role="tooltip"
+      >
+        {text}
+      </span>
     </span>
   );
 }
@@ -220,19 +230,19 @@ function ChartLine({
   const crossingValue = crossing ? brl((getA(crossing) + getB(crossing)) / 2) : "";
 
   return (
-    <div className="comparison-chart">
-      <div className="comparison-chart-header">
+    <div className="comparison-chart min-w-0 rounded-[var(--radius-sm)] border border-[#333] bg-[#111] p-3">
+      <div className="comparison-chart-header mb-1.5 flex flex-wrap items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.06em] text-text-muted">
         <span>{labelA}</span>
         <span>{labelB}</span>
         <HelpTip text={help} />
       </div>
-      <div className="comparison-legend" aria-label="Legenda do gráfico">
-        <span><i className="legend-swatch legend-a" />{labelA}</span>
-        <span><i className="legend-swatch legend-b" />{labelB}</span>
-        {crossing && <span><i className="legend-dot legend-crossing" />Cruzamento: {crossingLabel} · {crossingValue}</span>}
-        {breakEvenMonth && <span><i className="legend-swatch legend-break-even" />Ponto de virada</span>}
+      <div className="comparison-legend mb-2 flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-text" aria-label="Legenda do gráfico">
+        <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-a" />{labelA}</span>
+        <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-b" />{labelB}</span>
+        {crossing && <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-dot legend-crossing" />Cruzamento: {crossingLabel} · {crossingValue}</span>}
+        {breakEvenMonth && <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-break-even" />Ponto de virada</span>}
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${labelA} versus ${labelB}`}>
+      <svg className="block h-auto w-full" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${labelA} versus ${labelB}`}>
         <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} className="chart-axis" />
         <line x1={pad} y1={pad} x2={pad} y2={height - pad} className="chart-axis" />
         {axisTicks(min, max).map((tick) => (
@@ -278,21 +288,21 @@ function CashflowChart({ data, help }: { data: FinanceVsInvestMonth[]; help: str
   const crossingValue = crossing ? brl((crossing.rent + crossing.mortgageCost) / 2) : "";
 
   return (
-    <div className="comparison-chart">
-      <div className="comparison-chart-header">
+    <div className="comparison-chart min-w-0 rounded-[var(--radius-sm)] border border-[#333] bg-[#111] p-3">
+      <div className="comparison-chart-header mb-1.5 flex flex-wrap items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.06em] text-text-muted">
         <span>Orçamento</span>
         <span>Aluguel</span>
         <span>Parcela + custos</span>
         <HelpTip text={help} />
       </div>
-      <div className="comparison-legend" aria-label="Legenda do fluxo mensal">
-        <span><i className="legend-swatch legend-budget" />Orçamento</span>
-        <span><i className="legend-swatch legend-b" />Aluguel</span>
-        <span><i className="legend-swatch legend-a" />Parcela + custos</span>
-        {crossing && <span><i className="legend-dot legend-crossing" />Cruzamento: {crossingLabel} · {crossingValue}</span>}
-        <span><i className="legend-box legend-rent-forced" />Aluguel elevou orçamento</span>
+      <div className="comparison-legend mb-2 flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-text" aria-label="Legenda do fluxo mensal">
+        <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-budget" />Orçamento</span>
+        <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-b" />Aluguel</span>
+        <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-swatch legend-a" />Parcela + custos</span>
+        {crossing && <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-dot legend-crossing" />Cruzamento: {crossingLabel} · {crossingValue}</span>}
+        <span className="inline-flex min-w-0 items-center gap-1.5"><i className="legend-box legend-rent-forced" />Aluguel elevou orçamento</span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Fluxo mensal">
+      <svg className="block h-auto w-full" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Fluxo mensal">
         <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} className="chart-axis" />
         {axisTicks(0, max).map((tick) => (
           <React.Fragment key={tick}>
@@ -358,8 +368,8 @@ function MonthlyDetailsTable({ data }: { data: FinanceVsInvestMonth[] }) {
         {isOpen ? "Ocultar tabela por ano" : "Mostrar tabela por ano"}
       </button>
       {isOpen && (
-        <div className="monthly-details-scroll">
-          <table>
+        <div className="monthly-details-scroll max-h-90 overflow-auto rounded-sm border border-[#333] bg-[#111]">
+          <table className="w-full min-w-190 border-collapse [&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:border-b [&_th]:border-[#2a2a2a] [&_th]:bg-[#181818] [&_th]:px-3 [&_th]:py-2.5 [&_th]:text-right [&_th]:font-sans [&_th]:text-[10px] [&_th]:font-extrabold [&_th]:uppercase [&_th]:tracking-[0.06em] [&_th]:text-text-muted [&_td]:border-b [&_td]:border-[#2a2a2a] [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-right [&_td]:font-mono [&_td]:text-xs [&_td]:text-text [&_td]:whitespace-nowrap [&_th:first-child]:text-left [&_td:first-child]:text-left [&_.year-row>td:first-child]:font-black [&_.year-row>td:first-child]:text-(--panel-accent,var(--color-accent)) [&_.month-row>td]:bg-[#0c0c0c] [&_.month-row>td]:text-text-muted [&_.month-row>td]:text-[11px] [&_.month-row>td:first-child]:pl-7">
             <thead>
               <tr>
                 <th>Ano</th>
@@ -374,7 +384,7 @@ function MonthlyDetailsTable({ data }: { data: FinanceVsInvestMonth[] }) {
               {yearlyRows.map((row) => (
                 <React.Fragment key={row.year}>
                   <tr
-                    className="year-row"
+                    className="year-row cursor-pointer bg-[#151515] hover:bg-[#202020] focus-visible:bg-[#202020] focus-visible:[outline:2px_solid_var(--panel-accent,var(--color-accent))] focus-visible:-outline-offset-2"
                     tabIndex={0}
                     onClick={() => toggleYear(row.year)}
                     onKeyDown={(event) => {
@@ -496,7 +506,7 @@ export default function FinanceVsInvest() {
         <HelpTip text={field.help} />
         {(fieldHistory[field.key] ?? []).map((value) => (
           <button
-            className="field-chip comparison-memory-chip"
+            className="field-chip min-w-0! min-h-5.5! max-w-18! overflow-hidden! p-[3px_6px]! text-[9px]! text-ellipsis! whitespace-nowrap!"
             type="button"
             key={value}
             onClick={() => updateField(field.key, value)}
@@ -507,7 +517,7 @@ export default function FinanceVsInvest() {
       </div>
       <input
         id={`compare-${field.key}`}
-        className="input-field comparison-input"
+        className="input-field min-h-11! p-[10px_12px]! text-base! max-[559px]:min-h-12! max-[559px]:p-3.5! max-[559px]:text-lg!"
         type="text"
         value={fields[field.key]}
         placeholder={
@@ -541,7 +551,7 @@ export default function FinanceVsInvest() {
         </div>
       </div>
 
-      <div className="comparison-assumptions grid min-w-0 content-start gap-3 p-3">
+      <div className="grid min-w-0 content-start gap-3 rounded-[var(--radius-sm)] border border-[#333] bg-[#111] p-3">
         <div className="flex items-start justify-between gap-3 max-[559px]:grid">
           <div>
             <div className="metric-label">Premissas</div>
@@ -570,7 +580,7 @@ export default function FinanceVsInvest() {
         </button>
 
         {isAdvancedOpen && (
-          <div className="comparison-advanced-fields grid min-w-0 grid-cols-3 gap-2.5 pt-3 max-[559px]:grid-cols-1">
+          <div className="grid min-w-0 grid-cols-3 gap-2.5 border-t border-[#2a2a2a] pt-3 max-[559px]:grid-cols-1">
           <div className="field grid min-w-0 gap-1.5">
             <div className="flex min-w-0 items-center gap-1.5">
               <label className="field-label">Método</label>
@@ -617,17 +627,17 @@ export default function FinanceVsInvest() {
               />
             </div>
             <div className="comparison-table grid grid-cols-[repeat(3,1fr)] gap-2.5 max-[559px]:grid-cols-1">
-              <div>
-                <span>Final financiando</span>
-                <strong>{brl(projection.finalFinanceNetWorth)}</strong>
+              <div className="grid min-w-0 gap-1 rounded-[var(--radius-sm)] border border-[#333] bg-[#1a1a1a] p-3">
+                <span className="text-text-muted text-[10px] font-extrabold uppercase tracking-[0.06em]">Final financiando</span>
+                <strong className="font-mono text-[15px] text-text-heading">{brl(projection.finalFinanceNetWorth)}</strong>
               </div>
-              <div>
-                <span>Final investindo</span>
-                <strong>{brl(projection.finalInvestNetWorth)}</strong>
+              <div className="grid min-w-0 gap-1 rounded-[var(--radius-sm)] border border-[#333] bg-[#1a1a1a] p-3">
+                <span className="text-text-muted text-[10px] font-extrabold uppercase tracking-[0.06em]">Final investindo</span>
+                <strong className="font-mono text-[15px] text-text-heading">{brl(projection.finalInvestNetWorth)}</strong>
               </div>
-              <div>
-                <span>Vantagem relativa</span>
-                <strong>{(projection.differencePercent * 100).toFixed(1)}%</strong>
+              <div className="grid min-w-0 gap-1 rounded-[var(--radius-sm)] border border-[#333] bg-[#1a1a1a] p-3">
+                <span className="text-text-muted text-[10px] font-extrabold uppercase tracking-[0.06em]">Vantagem relativa</span>
+                <strong className="font-mono text-[15px] text-text-heading">{(projection.differencePercent * 100).toFixed(1)}%</strong>
               </div>
             </div>
             <MonthlyDetailsTable data={projection.months} />
