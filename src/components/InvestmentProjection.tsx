@@ -63,12 +63,12 @@ export default function InvestmentProjection({ financingEntry }: InvestmentProje
       <div className="grid gap-3 min-w-0">
         {/* Saldo + Aporte side by side */}
         <div className="grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1">
-          <div className="field">
-            <div className="field-label-action flex-wrap">
+          <div className="field grid min-w-0 gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <label className="field-label" htmlFor="inv-saldo-inicial">Saldo inicial (R$)</label>
                 <button 
-                  className="field-chip !h-auto !py-1 !px-2 !min-h-0 text-[9px]" 
+                  className="field-chip h-auto! py-1! px-2! min-h-0! text-[9px]"
                   type="button" 
                   onClick={() => updateField("saldoInicial", financingEntry === undefined ? fields.entrada : String(financingEntry))}
                   title={`Copiar entrada do financiamento (${financingEntry === undefined ? fields.entrada : financingEntry})`}
@@ -97,8 +97,8 @@ export default function InvestmentProjection({ financingEntry }: InvestmentProje
             />
           </div>
 
-          <div className="field">
-            <div className="field-label-action flex-wrap">
+          <div className="field grid min-w-0 gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="field-label" htmlFor="inv-aporte-mensal">Aporte mensal (R$)</label>
               {aporteMensalHistory.length > 0 && (
                 <div className="flex gap-1.5 flex-wrap">
@@ -124,8 +124,8 @@ export default function InvestmentProjection({ financingEntry }: InvestmentProje
 
         {/* Taxa + Periodo side by side */}
         <div className="grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1">
-          <div className="field">
-            <div className="field-label-action flex-wrap">
+          <div className="field grid min-w-0 gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="field-label" htmlFor="inv-taxa-anual">Taxa anual (%)</label>
               {taxaInvestHistory.length > 0 && (
                 <div className="flex gap-1.5 flex-wrap">
@@ -147,8 +147,8 @@ export default function InvestmentProjection({ financingEntry }: InvestmentProje
             />
           </div>
 
-          <div className="field">
-            <div className="field-label-action flex-wrap">
+          <div className="field grid min-w-0 gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="field-label" htmlFor="inv-meses-proj">Meses para projetar</label>
               {mesesProjHistory.length > 0 && (
                 <div className="flex gap-1.5 flex-wrap">

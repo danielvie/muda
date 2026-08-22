@@ -353,8 +353,8 @@ function MonthlyDetailsTable({ data }: { data: FinanceVsInvestMonth[] }) {
   };
 
   return (
-    <div className="monthly-details">
-      <button className="field-chip monthly-details-toggle" type="button" onClick={() => setIsOpen((current) => !current)}>
+    <div className="monthly-details grid gap-2.5">
+      <button className="field-chip justify-self-start" type="button" onClick={() => setIsOpen((current) => !current)}>
         {isOpen ? "Ocultar tabela por ano" : "Mostrar tabela por ano"}
       </button>
       {isOpen && (
@@ -490,8 +490,8 @@ export default function FinanceVsInvest() {
   const winnerLabel = projection?.winner === "finance" ? "Financiar" : projection?.winner === "invest" ? "Investir" : "Empate";
   const finalDifference = projection ? Math.abs(projection.difference) : 0;
   const renderInputField = (field: (typeof numericFields)[number]) => (
-    <div className="field" key={field.key}>
-      <div className="field-label-with-help">
+    <div className="field grid min-w-0 gap-1.5" key={field.key}>
+      <div className="flex min-w-0 items-center gap-1.5">
         <label className="field-label" htmlFor={`compare-${field.key}`}>{field.label}</label>
         <HelpTip text={field.help} />
         {(fieldHistory[field.key] ?? []).map((value) => (
@@ -523,10 +523,10 @@ export default function FinanceVsInvest() {
   );
 
   return (
-    <section className="comparison-panel p-4" aria-labelledby="compare-title">
+    <section className="grid gap-3.5 p-4" aria-labelledby="compare-title">
       <h2 id="compare-title" className="sr-only">Financiar vs Investir</h2>
 
-      <div className="comparison-summary">
+      <div className="grid grid-cols-[1.25fr_1fr_1fr] gap-2.5 max-[559px]:grid-cols-1">
         <div className="metric-highlight">
           <div className="metric-label">Recomendação</div>
           <div className="metric-value">{projection ? winnerLabel : "Revise os campos"}</div>
@@ -541,27 +541,27 @@ export default function FinanceVsInvest() {
         </div>
       </div>
 
-      <div className="comparison-assumptions">
-        <div className="comparison-assumptions-header">
+      <div className="comparison-assumptions grid min-w-0 content-start gap-3 p-3">
+        <div className="flex items-start justify-between gap-3 max-[559px]:grid">
           <div>
             <div className="metric-label">Premissas</div>
             {Number.isFinite(automaticBudget) && !fields.monthlyBudget.trim() && (
-              <div className="comparison-note">Orçamento automático: {brl(automaticBudget)}</div>
+              <div className="text-text-muted text-[11px] font-bold">Orçamento automático: {brl(automaticBudget)}</div>
             )}
-            {importNote && <div className="comparison-note">{importNote}</div>}
+            {importNote && <div className="text-text-muted text-[11px] font-bold">{importNote}</div>}
           </div>
-          <div className="comparison-imports">
+          <div className="flex flex-wrap gap-2">
             <button className="field-chip" type="button" onClick={importFinancing}>Importar Financiamento</button>
             <button className="field-chip" type="button" onClick={importInvestment}>Importar Investimento</button>
           </div>
         </div>
 
-        <div className="comparison-primary-fields">
+        <div className="grid min-w-0 grid-cols-3 gap-2.5 max-[559px]:grid-cols-1">
           {primaryFieldKeys.map((key) => renderInputField(fieldsByKey[key]))}
         </div>
 
         <button
-          className="field-chip comparison-advanced-toggle"
+          className="field-chip justify-self-start"
           type="button"
           aria-expanded={isAdvancedOpen}
           onClick={toggleAdvanced}
@@ -570,9 +570,9 @@ export default function FinanceVsInvest() {
         </button>
 
         {isAdvancedOpen && (
-          <div className="comparison-advanced-fields">
-          <div className="field">
-            <div className="field-label-with-help">
+          <div className="comparison-advanced-fields grid min-w-0 grid-cols-3 gap-2.5 pt-3 max-[559px]:grid-cols-1">
+          <div className="field grid min-w-0 gap-1.5">
+            <div className="flex min-w-0 items-center gap-1.5">
               <label className="field-label">Método</label>
               <HelpTip text="Define como o financiamento amortiza a dívida: SAC começa mais caro e cai; PRICE mantém parcela constante." />
             </div>
@@ -598,10 +598,10 @@ export default function FinanceVsInvest() {
         )}
       </div>
 
-      <div className="comparison-main">
+      <div className="grid min-w-0 content-start gap-3">
         {projection ? (
           <>
-            <div className="comparison-charts-grid">
+            <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(430px,100%),1fr))] gap-3">
               <ChartLine
                 data={projection.months}
                 getA={(month) => month.financeNetWorth}
@@ -616,7 +616,7 @@ export default function FinanceVsInvest() {
                 help="Mostra quanto do orçamento mensal é consumido por moradia em cada caminho. Aluguel cresce pela inflação do aluguel; parcela + custos usa o financiamento e custo de posse. O que sobra do orçamento vira aporte no respectivo caminho."
               />
             </div>
-            <div className="comparison-table">
+            <div className="comparison-table grid grid-cols-[repeat(3,1fr)] gap-2.5 max-[559px]:grid-cols-1">
               <div>
                 <span>Final financiando</span>
                 <strong>{brl(projection.finalFinanceNetWorth)}</strong>

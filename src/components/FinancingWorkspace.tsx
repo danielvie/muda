@@ -8,7 +8,7 @@ import {
 } from "react";
 import FinanceVsInvest from "./FinanceVsInvest.tsx";
 import InvestmentProjection from "./InvestmentProjection.tsx";
-import "../financing-workspace.css";
+
 
 // Promoted financing workspace. The former I2-D study is now the production flow.
 // Palette C is the production theme: blue financing, green investment, blue comparison.
@@ -327,7 +327,7 @@ function sliderValue(key: SliderKey, state: FinancingState) {
 
 function Brand() {
   return (
-    <div className="lp-brand">
+    <div className="lp-brand flex shrink-0 items-center gap-1.75">
       <img src={`${BASE_URL}logo.svg`} alt="" />
       <span>muda</span>
     </div>
@@ -336,10 +336,10 @@ function Brand() {
 
 function TopBar({ caption, action }: { caption: string; action?: ReactNode }) {
   return (
-    <header className="lp-topbar">
+    <header className="lp-topbar sticky top-11.75 z-5 flex min-h-15.5 items-center gap-2.5 px-3.5 py-2.5">
       <Brand />
       <span className="lp-topbar-caption">{caption}</span>
-      <div className="lp-topbar-actions">
+      <div className="flex shrink-0 items-center gap-1.5">
         {action ?? (
           <button type="button" className="lp-quiet-button">
             ⋯
@@ -390,9 +390,9 @@ function NumberField({
 } & FieldInteractionProps) {
   const active = activeKey === sliderKey;
   return (
-    <label className={`lp-field${active ? " active" : ""}`}>
+    <label className={`lp-field grid min-w-0 gap-1.25${active ? " active" : ""}`}>
       <span>{label}</span>
-      <div>
+      <div className="flex min-w-0 items-center">
         <input
           type="number"
           inputMode="decimal"
@@ -430,7 +430,7 @@ function MethodToggle({
   onChange: (value: Method) => void;
 }) {
   return (
-    <div className="lp-method-toggle">
+    <div className="lp-method-toggle mt-4.25 flex items-center gap-1.25 pt-3.5">
       <span>Sistema de amortização</span>
       <button
         type="button"
@@ -465,8 +465,8 @@ function FinancingFields({
 }) {
   const fieldProps = { ...interaction };
   return (
-    <section className={`lp-financing-fields${compact ? " compact" : ""}`}>
-      <header>
+    <section className={`lp-financing-fields${compact ? " compact p-3.75" : " p-4.25 max-[420px]:p-3.75"}`}>
+      <header className="mb-4.25 flex items-start justify-between gap-3">
         <div>
           <span className="lp-kicker">CALCULADORA DE FINANCIAMENTO</span>
           <h2>
@@ -476,7 +476,7 @@ function FinancingFields({
         </div>
         <span className="lp-step">01</span>
       </header>
-      <div className="lp-fields-grid">
+      <div className="grid grid-cols-2 gap-x-2.25 gap-y-2.75">
         <NumberField
           label="Valor do imóvel"
           value={state.property}
@@ -554,9 +554,9 @@ function AdvancedFields({
   interaction?: FieldInteractionProps;
 }) {
   return (
-    <section className="lp-advanced-fields">
+    <section className="lp-advanced-fields grid gap-3.25 p-3.75">
       <span className="lp-kicker">DETALHES AVANÇADOS</span>
-      <div className="lp-fields-grid">
+      <div className="grid grid-cols-2 gap-x-2.25 gap-y-2.75">
         <NumberField
           label="Custo de posse"
           value={state.ownershipRate}
@@ -591,7 +591,7 @@ function AdvancedEditor({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="lp-advanced-editor">
+    <div className="grid gap-0">
       <button
         type="button"
         className="lp-advanced-trigger"
@@ -627,14 +627,14 @@ function StudyShelf({
   clearStudies: () => void;
 }) {
   return (
-    <div className="lp-study-shelf">
-      <header>
+    <div className="lp-study-shelf grid gap-2 pt-3">
+      <header className="flex items-center justify-between gap-3">
         <span className="lp-kicker">COMPARAR ESTUDOS</span>
         <button type="button" onClick={clearStudies}>
           Limpar
         </button>
       </header>
-      <div className="lp-study-list">
+      <div className="grid gap-1.5">
         {[...studies].reverse().map((study) => {
           const difference = study.payment - currentPayment;
           const differenceLabel =
@@ -642,13 +642,13 @@ function StudyShelf({
               ? "igual ao atual"
               : `${difference > 0 ? "+" : "−"}${money(Math.abs(difference))} vs atual`;
           return (
-            <article className="lp-study-card" key={study.id}>
+            <article className="lp-study-card flex min-w-0 items-stretch" key={study.id}>
               <button
                 type="button"
-                className="lp-study-load"
+                className="lp-study-load grid min-w-0 flex-1 grid-cols-[1fr_auto] gap-x-2.5 gap-y-1 p-2.5"
                 onClick={() => loadStudy(study.id)}
               >
-                <span>
+                <span className="grid min-w-0 gap-1">
                   <b>{study.label}</b>
                   <small>
                     {money(study.state.property, true)} · {study.state.method}
@@ -697,7 +697,7 @@ function QuickActionButton({
   return (
     <button
       type="button"
-      className={`lp-quick-action ${className}`}
+      className={`lp-quick-action max-[699px]:pr-8.5! ${className}`}
       disabled={action.disabled}
       onClick={action.onClick}
     >
@@ -728,8 +728,8 @@ function QuickActions({
   clearStudies: () => void;
 }) {
   return (
-    <section className="lp-quick-actions">
-      <header>
+    <section className="lp-quick-actions grid gap-2.75 p-4">
+      <header className="flex items-start justify-between gap-3">
         <div>
           <span className="lp-kicker">AÇÕES RÁPIDAS</span>
           <h3>{title}</h3>
@@ -739,13 +739,13 @@ function QuickActions({
         </span>
       </header>
       <p className="lp-quick-helper">{helper}</p>
-      <div className="lp-quick-action-grid">
-        <QuickActionButton action={actions[0]} className="wide" />
-        <QuickActionButton action={actions[1]} className="wide" />
-        <QuickActionButton action={actions[2]} className="term" />
-        <div className="lp-quick-interest-pair">
-          <QuickActionButton action={actions[3]} className="interest" />
-          <QuickActionButton action={actions[4]} className="interest" />
+      <div className="grid grid-cols-6 gap-1.75">
+        <QuickActionButton action={actions[0]} className="col-span-3" />
+        <QuickActionButton action={actions[1]} className="col-span-3" />
+        <QuickActionButton action={actions[2]} className="col-span-2" />
+        <div className="lp-quick-interest-pair col-span-4 grid min-w-0 grid-cols-2 overflow-hidden">
+          <QuickActionButton action={actions[3]} />
+          <QuickActionButton action={actions[4]} />
         </div>
       </div>
       {studies.length > 0 ? (
@@ -778,7 +778,7 @@ function ResultNumber({
   tone?: string;
 }) {
   return (
-    <div className={`lp-result-number ${tone}`}>
+    <div className={`lp-result-number grid min-w-0 gap-1 p-3.25 ${tone}`}>
       <span>{label}</span>
       <strong>{value}</strong>
       {note && <small>{note}</small>}
@@ -794,7 +794,7 @@ function FinancingSummary({
   state: FinancingState;
 }) {
   return (
-    <div className="lp-financing-summary">
+    <div className="mt-2 grid grid-cols-2 gap-2 min-[700px]:grid-cols-4">
       <ResultNumber
         label="Valor financiado"
         value={money(result.financedAmount, true)}
@@ -832,13 +832,13 @@ function InstallmentList({ result }: { result: Calculation }) {
           (row) => row.month <= 12 || row.month % 12 === 0,
         );
   return (
-    <div className="lp-installment-list">
-      <header>
+    <div className="lp-installment-list mt-1.25 px-3.5 pt-3.75 pb-2">
+      <header className="mb-3.25 flex items-end justify-between gap-3 max-[420px]:items-start max-[420px]:flex-col">
         <div>
           <span className="lp-kicker">DETALHES DO FINANCIAMENTO</span>
           <h3>{mode === "yearly" ? "Resumo anual" : "Todas as parcelas"}</h3>
         </div>
-        <div className="lp-list-toggle">
+        <div className="lp-list-toggle flex shrink-0 gap-0.75">
           <button
             type="button"
             className={mode === "yearly" ? "active" : ""}
@@ -898,8 +898,8 @@ function FinancingResult({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <section className="lp-financing-result">
-      <div className="lp-payment-hero">
+    <section>
+      <div className="lp-payment-hero p-5 max-[420px]:p-3.75">
         <span className="lp-kicker">PRESTAÇÃO ESTIMADA</span>
         <strong>{money(result.financingPayment)}</strong>
         <p>
@@ -1034,7 +1034,7 @@ function SliderPanel({
     update(spec.patch(clampSliderValue(spec, nextValue)));
   const nudge = (direction: number) => change(value + direction * spec.step);
   return (
-    <section className={`lp-slider-panel lp-slider-${mode}`}>
+    <section className={`lp-slider-panel lp-slider-${mode} grid gap-3.25 p-4.25 max-[420px]:p-3.75`}>
       <header>
         <div>
           <span className="lp-kicker">BARRA DE AJUSTE</span>
@@ -1051,7 +1051,7 @@ function SliderPanel({
           keys={targetKeys ?? PRIMARY_SLIDER_KEYS}
         />
       )}
-      <div className="lp-slider-current">
+      <div className="lp-slider-current flex items-baseline justify-between gap-2.5 px-2.75 py-2.25">
         <span>Ajustando</span>
         <strong>{spec.label}</strong>
       </div>
@@ -1065,12 +1065,12 @@ function SliderPanel({
         aria-label={`Ajustar ${spec.label}`}
         onChange={(event) => change(Number(event.currentTarget.value))}
       />
-      <div className="lp-slider-scale">
+      <div className="lp-slider-scale -mt-2 flex justify-between gap-2.5">
         <span>{spec.format(spec.min)}</span>
         <span>{spec.format(spec.max)}</span>
       </div>
       {showNudge && (
-        <div className="lp-slider-nudge">
+        <div className="lp-slider-nudge -mt-0.5 flex items-center justify-center gap-3">
           <button
             type="button"
             onClick={() => nudge(-1)}
@@ -1102,7 +1102,7 @@ function Heading({
   description: string;
 }) {
   return (
-    <header className="lp-mobile-heading">
+    <header className="lp-mobile-heading px-0.5 pt-5.25 pb-4.75">
       <span className="lp-kicker">{kicker}</span>
       <h1>{title}</h1>
       <p>{description}</p>
@@ -1121,7 +1121,7 @@ function EnvironmentTabs({
 }) {
   return (
     <nav
-      className="lp-environment-tabs"
+      className="lp-environment-tabs sticky top-0 z-10 flex gap-1 px-3 py-1.25"
       role="tablist"
       aria-label="Ambientes financeiros"
     >
@@ -1158,12 +1158,12 @@ function EnvironmentTabs({
 
 function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
   return (
-    <div className="lp-layout lp-layout-investment">
+    <div className="lp-layout-investment min-h-[calc(100vh-47px)]">
       <TopBar
         caption="Ambiente · investimento de renda fixa"
         action={<span className="lp-topbar-mode">RENDA FIXA</span>}
       />
-      <main className="lp-mobile-main lp-investment-main">
+      <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <Heading
           kicker="INVESTIR · RENDA FIXA"
           title={
@@ -1185,12 +1185,12 @@ function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
 
 function ComparisonEnvironment() {
   return (
-    <div className="lp-layout lp-layout-comparison">
+    <div className="lp-layout-comparison min-h-[calc(100vh-47px)]">
       <TopBar
         caption="Ambiente · financiar vs investir"
         action={<span className="lp-topbar-mode">COMPARAÇÃO</span>}
       />
-      <main className="lp-mobile-main lp-comparison-main">
+      <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <Heading
           kicker="COMPARAR ESTRATÉGIAS"
           title={
@@ -1261,7 +1261,7 @@ function FinancingView({ props }: { props: LayoutProps }) {
   ];
 
   return (
-    <div className="lp-layout lp-layout-financing">
+    <div className="lp-layout-financing min-h-[calc(100vh-47px)]">
       <TopBar
         caption="Ambiente · financiamento"
         action={
@@ -1270,7 +1270,7 @@ function FinancingView({ props }: { props: LayoutProps }) {
           </Button>
         }
       />
-      <main className="lp-mobile-main">
+      <main className="mx-auto flex w-[calc(100%-24px)] max-w-170 flex-col gap-2 pt-4.5 pb-27.5 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <Heading
           kicker="FINANCIAMENTO · SAC OU PRICE"
           title={
