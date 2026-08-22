@@ -23,22 +23,10 @@ export default defineConfig({
         display: "fullscreen",
         icons: [
           {
-            src: "icons/128.png",
-            sizes: "128x128",
-            type: "image/png",
+            src: "logo.svg",
+            sizes: "any",
+            type: "image/svg+xml",
             purpose: "any",
-          },
-          {
-            src: "icons/192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any",
-          },
-          {
-            src: "icons/512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
           },
         ],
       },

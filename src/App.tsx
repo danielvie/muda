@@ -8,8 +8,13 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="brand-header">
-        <h1>muda</h1>
-        <span className="brand-subtitle">investimento + SAC</span>
+        <div className="brand-lockup">
+          <img className="brand-logo" src={`${import.meta.env.BASE_URL}logo.svg`} alt="" />
+          <div>
+            <h1>muda</h1>
+            <span className="brand-subtitle">investimento + SAC</span>
+          </div>
+        </div>
       </header>
 
       <div className="w-full mx-auto flex-1">
