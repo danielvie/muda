@@ -380,7 +380,8 @@
   border-radius: 8px;
 }
 
-.lp-range-input-row input {
+.lp-range-input-row input,
+.lp-main-slider {
   width: 100%;
   min-height: 24px;
   padding-inline: 8px;
@@ -523,53 +524,11 @@
 }
 
 .lp-main-slider {
-  width: 100%;
-  height: 28px;
-  margin: -1px 0;
-  padding-inline: 12px;
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
-  accent-color: var(--lp-accent);
   cursor: grab;
 }
 
 .lp-main-slider:active {
   cursor: grabbing;
-}
-
-.lp-main-slider::-webkit-slider-runnable-track {
-  height: 7px;
-  border-radius: 99px;
-  background: color-mix(in srgb, var(--lp-accent) 20%, var(--lp-line));
-}
-
-.lp-main-slider::-webkit-slider-thumb {
-  width: 25px;
-  height: 25px;
-  margin-top: -9px;
-  border: 3px solid var(--lp-paper);
-  border-radius: 50%;
-  background: var(--lp-accent);
-  box-shadow: 0 2px 8px rgba(20, 32, 32, .2);
-  appearance: none;
-  transform: translateY(4px);
-}
-
-.lp-main-slider::-moz-range-track {
-  height: 7px;
-  border-radius: 99px;
-  background: color-mix(in srgb, var(--lp-accent) 20%, var(--lp-line));
-}
-
-.lp-main-slider::-moz-range-thumb {
-  width: 19px;
-  height: 19px;
-  border: 3px solid var(--lp-paper);
-  border-radius: 50%;
-  background: var(--lp-accent);
-  box-shadow: 0 2px 8px rgba(20, 32, 32, .2);
-  transform: translateY(4px);
 }
 
 .lp-slider-scale {
