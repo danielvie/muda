@@ -668,7 +668,7 @@ function StudyShelf({
               ? "igual ao atual"
               : `${difference > 0 ? "+" : "−"}${money(Math.abs(difference))} vs atual`;
           return (
-            <article className="flex min-w-0 items-stretch rounded-lg border border-(--lp-line) bg-(--lp-paper)" key={study.id}>
+            <article className="flex min-w-0 items-stretch rounded-[5px] border border-(--lp-line) bg-(--lp-paper)" key={study.id}>
               <button
                 type="button"
                 className="grid min-w-0 flex-1 grid-cols-[1fr_auto] gap-x-2.5 gap-y-1 border-0 bg-transparent p-2.5 text-(--lp-ink) text-left"
