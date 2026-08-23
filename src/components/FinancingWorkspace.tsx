@@ -402,7 +402,7 @@ function NumberField({
     <label className="grid min-w-0 gap-1.25">
       <span className="text-(--lp-muted) text-[9px] font-extrabold">{label}</span>
       <div
-        className={`flex min-h-12 min-w-0 items-center rounded-lg border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_76%,transparent)] transition-[border-color,box-shadow] duration-150 ease-[ease]${active ? " border-(--lp-accent)!" : ""}`}
+        className={`flex min-h-12 min-w-0 items-center rounded-[5px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_76%,transparent)] transition-[border-color,box-shadow] duration-150 ease-[ease]${active ? " border-(--lp-accent)!" : ""}`}
       >
         <input
           type="number"
@@ -725,7 +725,7 @@ function QuickActionButton({
   return (
     <button
       type="button"
-      className={`group relative grid min-h-18.5 content-start gap-1.75 rounded-[9px] border border-(--lp-tab-financing) bg-(--lp-tab-financing) p-3 text-(--lp-accent-ink) text-left transition-[transform,border-color,background] duration-150 ease-[ease] hover:border-(--lp-tab-financing) hover:bg-[color-mix(in_srgb,var(--lp-tab-financing)_88%,black)] hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-(--lp-tab-financing) focus-visible:outline-offset-2 active:translate-y-px max-[699px]:pr-8.5! disabled:cursor-not-allowed disabled:opacity-[.48] disabled:transform-none ${paired ? "min-h-18.5 rounded-none! [border:0]! bg-(--lp-tab-financing) hover:bg-[color-mix(in_srgb,var(--lp-tab-financing)_88%,black)]" : ""} ${className}`}
+      className={`group relative grid min-h-18.5 content-start gap-1.75 rounded-[5px] border border-(--lp-tab-financing) bg-(--lp-tab-financing) p-3 text-(--lp-accent-ink) text-left transition-[transform,border-color,background] duration-150 ease-[ease] hover:border-(--lp-tab-financing) hover:bg-[color-mix(in_srgb,var(--lp-tab-financing)_88%,black)] hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-(--lp-tab-financing) focus-visible:outline-offset-2 active:translate-y-px max-[699px]:pr-8.5! disabled:cursor-not-allowed disabled:opacity-[.48] disabled:transform-none ${paired ? "min-h-18.5 rounded-none! [border:0]! bg-(--lp-tab-financing) hover:bg-[color-mix(in_srgb,var(--lp-tab-financing)_88%,black)]" : ""} ${className}`}
       disabled={action.disabled}
       onClick={action.onClick}
     >
@@ -771,7 +771,7 @@ function QuickActions({
         <QuickActionButton action={actions[0]} className="col-span-3" />
         <QuickActionButton action={actions[1]} className="col-span-3" />
         <QuickActionButton action={actions[2]} className="col-span-2" />
-        <div className="col-span-4 grid min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-(--lp-line) bg-transparent">
+        <div className="col-span-4 grid min-w-0 grid-cols-2 overflow-hidden rounded-[5px] border border-(--lp-line) bg-transparent">
           <QuickActionButton action={actions[3]} paired />
           <QuickActionButton
             action={actions[4]}
@@ -943,27 +943,63 @@ function FinancingResult({
   state: FinancingState;
 }) {
   const [open, setOpen] = useState(false);
+  const [compact, setCompact] = useState(false);
+  const stickyTop = 109;
+  const stickySentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sentinel = stickySentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setCompact(!entry.isIntersecting),
+      { rootMargin: `-${stickyTop}px 0px 0px 0px` },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section>
-      <div className="rounded-[14px] bg-(--lp-hero) p-5 text-white max-[420px]:p-3.75">
-        <span className="text-[color-mix(in_srgb,#fff_68%,transparent)] text-[9px] font-black tracking-[.14em] uppercase">PRESTAÇÃO ESTIMADA</span>
-        <strong className="mt-2.5 mb-1.5 block text-(--lp-yellow) text-[clamp(38px,12vw,60px)] -tracking-widest leading-[.9]">{money(result.financingPayment)}</strong>
-        <p className="text-[color-mix(in_srgb,#fff_68%,transparent)] text-[10px] leading-[1.4]">
-          {state.method} · primeira parcela ·{" "}
-          {money(result.financingPaymentEnd)} na última parcela do prazo
-        </p>
+    <>
+      <div ref={stickySentinelRef} className="h-px" aria-hidden="true" />
+      <div
+        className={`sticky z-20 rounded-[14px] bg-(--lp-hero) text-white transition-[padding] duration-150 ${compact ? "flex items-center gap-3 px-3 py-2.5" : "p-5 max-[420px]:p-3.75"}`}
+        style={{ top: stickyTop }}
+      >
+        {compact ? (
+          <>
+            <div className="min-w-0 flex-1">
+              <span className="text-[color-mix(in_srgb,#fff_68%,transparent)] text-[8px] font-black tracking-[.14em] uppercase">PRESTAÇÃO ESTIMADA</span>
+              <p className="mt-0.5 overflow-hidden text-[color-mix(in_srgb,#fff_68%,transparent)] text-[9px] text-ellipsis whitespace-nowrap">{state.method} · primeira parcela</p>
+            </div>
+            <strong className="shrink-0 text-(--lp-yellow) text-[clamp(24px,7vw,34px)] -tracking-widest leading-none">{money(result.financingPayment)}</strong>
+          </>
+        ) : (
+          <>
+            <span className="text-[color-mix(in_srgb,#fff_68%,transparent)] text-[9px] font-black tracking-[.14em] uppercase">PRESTAÇÃO ESTIMADA</span>
+            <strong className="mt-2.5 mb-1.5 block text-(--lp-yellow) text-[clamp(38px,12vw,60px)] -tracking-widest leading-[.9]">{money(result.financingPayment)}</strong>
+            <p className="text-[color-mix(in_srgb,#fff_68%,transparent)] text-[10px] leading-[1.4]">
+              {state.method} · primeira parcela ·{" "}
+              {money(result.financingPaymentEnd)} na última parcela do prazo
+            </p>
+          </>
+        )}
         <button
           type="button"
-          className="mt-5 flex min-h-12 w-full items-center justify-between border-0 border-t border-[#3d4847] bg-transparent pt-3 text-[10px] font-black text-white text-left"
+          className={compact ? "grid size-9 shrink-0 place-items-center rounded-[5px] border border-[#3d4847] bg-transparent text-white" : "mt-5 flex min-h-12 w-full items-center justify-between border-0 border-t border-[#3d4847] bg-transparent pt-3 text-[10px] font-black text-white text-left"}
+          aria-label={open ? "Fechar lista de parcelas" : "Abrir lista de parcelas"}
+          aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
-          {open ? "Fechar detalhes" : "Abrir lista de parcelas"}
+          {!compact && (open ? "Fechar detalhes" : "Abrir lista de parcelas")}
           <b className="text-(--lp-yellow) text-[17px]">{open ? "↑" : "↓"}</b>
         </button>
       </div>
-      <FinancingSummary result={result} state={state} />
-      {open && <InstallmentList result={result} />}
-    </section>
+      <section>
+        <FinancingSummary result={result} state={state} />
+        {open && <InstallmentList result={result} />}
+      </section>
+    </>
   );
 }
 
@@ -1035,7 +1071,7 @@ function SliderTargets({
 }) {
   return (
     <div
-      className="flex gap-1.5 overflow-x-auto -mt-0.5 mb-px min-w-0 px-px pt-0.5 pb-1.25 [scrollbar-width:thin]"
+      className="grid grid-cols-2 gap-1.5 -mt-0.5 mb-px min-w-0 px-px pt-0.5 pb-1.25"
       role="tablist"
       aria-label="Variável controlada pela barra"
     >
@@ -1045,7 +1081,7 @@ function SliderTargets({
           <button
             type="button"
             key={key}
-            className={`grid min-w-21.75 gap-1 rounded-lg border border-(--lp-line) bg-transparent p-[9px_10px] text-(--lp-muted) text-left ${
+            className={`grid w-full min-w-0 gap-1 rounded-[5px] border border-(--lp-line) bg-transparent p-[9px_10px] text-(--lp-muted) text-left ${
               activeKey === key
                 ? "border-(--lp-accent)! bg-[color-mix(in_srgb,var(--lp-accent)_13%,var(--lp-paper))]! text-(--lp-accent)!"
                 : ""
@@ -1065,6 +1101,49 @@ function SliderTargets({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function SliderControl({
+  spec,
+  value,
+  onChange,
+}: {
+  spec: SliderSpec;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const percentage = ((value - spec.min) / Math.max(1, spec.max - spec.min)) * 100;
+
+  return (
+    <div className="relative mx-3 h-12" aria-label={`${spec.label}: ${value}`}>
+      <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-(--lp-line)" />
+      <div
+        className="absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-(--lp-tab-financing)"
+        style={{ width: `${percentage}%` }}
+      />
+      <input
+        className="absolute inset-0 z-10 h-full w-full cursor-grab opacity-0 active:cursor-grabbing"
+        type="range"
+        min={spec.min}
+        max={spec.max}
+        step={spec.step}
+        value={value}
+        aria-label={`Ajustar ${spec.label}`}
+        onChange={(event) => onChange(Number(event.currentTarget.value))}
+      />
+      <span
+        className="pointer-events-none absolute top-1/2 border-[3px] border-(--lp-paper) bg-(--lp-tab-financing) shadow-[0_0_0_1px_var(--lp-tab-financing)]"
+        style={{
+          left: `${percentage}%`,
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          transform: "translate(-50%, -50%)",
+        }}
+        aria-hidden="true"
+      />
     </div>
   );
 }
@@ -1117,16 +1196,7 @@ function SliderPanel({
         <span>Ajustando</span>
         <strong className="text-(--lp-ink) text-[10px]">{spec.label}</strong>
       </div>
-      <input
-        className="w-full min-h-6 px-2 accent-(--lp-accent) cursor-grab active:cursor-grabbing"
-        type="range"
-        min={spec.min}
-        max={spec.max}
-        step={spec.step}
-        value={value}
-        aria-label={`Ajustar ${spec.label}`}
-        onChange={(event) => change(Number(event.currentTarget.value))}
-      />
+      <SliderControl spec={spec} value={value} onChange={change} />
       <div className="-mt-2 flex justify-between gap-2.5 text-(--lp-muted) font-mono text-[8px]">
         <span>{spec.format(spec.min)}</span>
         <span>{spec.format(spec.max)}</span>
@@ -1346,6 +1416,7 @@ function FinancingView({ props }: { props: LayoutProps }) {
           }
           description="O botão rápido alterna SAC e PRICE sem abrir detalhes; salve os dois para comparar depois."
         />
+        <FinancingResult result={result} state={state} />
         <QuickActions
           title="Compare mecanismos"
           helper="A prestação muda de forma diferente em cada sistema. Guarde os dois estados."
@@ -1378,7 +1449,6 @@ function FinancingView({ props }: { props: LayoutProps }) {
           update={update}
           interaction={{ activeKey, onSelectSlider: setActiveKey }}
         />
-        <FinancingResult result={result} state={state} />
         <PaymentChart result={result} />
       </main>
     </div>
