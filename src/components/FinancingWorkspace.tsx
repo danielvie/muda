@@ -13,26 +13,19 @@ import InvestmentProjection from "./InvestmentProjection.tsx";
 // Promoted financing workspace. The former I2-D study is now the production flow.
 // Palette C is the production theme: blue financing, green investment, blue comparison.
 
-const BASE_URL = import.meta.env.BASE_URL;
 
 type Method = "SAC" | "PRICE";
 type SliderKey =
   | "property"
   | "entry"
   | "financingRate"
-  | "ownershipRate"
-  | "budget"
-  | "termMonths"
-  | "analysisYears";
+  | "termMonths";
 
 type FinancingState = {
   property: number;
   entry: number;
   financingRate: number;
-  ownershipRate: number;
-  budget: number;
   termMonths: number;
-  analysisYears: number;
   method: Method;
 };
 
@@ -47,16 +40,10 @@ type Calculation = {
   financedAmount: number;
   financingPayment: number;
   financingPaymentEnd: number;
-  initialHousingCost: number;
-  budgetRemaining: number;
   totalPaid: number;
   totalInterest: number;
   termEndBalance: number;
-  analysisDebt: number;
-  analysisProperty: number;
   schedule: ScheduleRow[];
-  balancePoints: number[];
-  paymentPoints: number[];
 };
 
 type Study = {
@@ -64,7 +51,6 @@ type Study = {
   label: string;
   state: FinancingState;
   payment: number;
-  housingCost: number;
 };
 
 type QuickAction = {
@@ -78,8 +64,6 @@ type LayoutProps = {
   state: FinancingState;
   result: Calculation;
   update: (patch: Partial<FinancingState>) => void;
-  reset: () => void;
-  fitBudget: () => void;
   studies: Study[];
   saveStudy: (label?: string) => void;
   loadStudy: (id: number) => void;
@@ -109,10 +93,7 @@ const DEFAULTS: FinancingState = {
   property: 600000,
   entry: 120000,
   financingRate: 10,
-  ownershipRate: 0.4,
-  budget: 4200,
   termMonths: 420,
-  analysisYears: 35,
   method: "SAC",
 };
 
@@ -166,28 +147,7 @@ const SLIDER_SPECS: Record<SliderKey, SliderSpec> = {
     patch: (value) => ({ financingRate: value }),
     format: (value) => `${decimal(value)}% a.a.`,
   },
-  ownershipRate: {
-    key: "ownershipRate",
-    label: "Custo de posse",
-    short: "Posse",
-    min: 0,
-    max: 2,
-    step: 0.1,
-    get: (state) => state.ownershipRate,
-    patch: (value) => ({ ownershipRate: value }),
-    format: (value) => `${decimal(value)}% a.a.`,
-  },
-  budget: {
-    key: "budget",
-    label: "Orçamento mensal",
-    short: "Orçamento",
-    min: 1500,
-    max: 12000,
-    step: 100,
-    get: (state) => state.budget,
-    patch: (value) => ({ budget: value }),
-    format: (value) => money(value, true),
-  },
+
   termMonths: {
     key: "termMonths",
     label: "Prazo do financiamento",
@@ -199,17 +159,7 @@ const SLIDER_SPECS: Record<SliderKey, SliderSpec> = {
     patch: (value) => ({ termMonths: value * 12 }),
     format: (value) => `${value} anos`,
   },
-  analysisYears: {
-    key: "analysisYears",
-    label: "Horizonte para avaliar",
-    short: "Horizonte",
-    min: 1,
-    max: 40,
-    step: 1,
-    get: (state) => state.analysisYears,
-    patch: (value) => ({ analysisYears: value }),
-    format: (value) => `${value} anos`,
-  },
+
 };
 
 const PRIMARY_SLIDER_KEYS: SliderKey[] = [
@@ -220,9 +170,7 @@ const PRIMARY_SLIDER_KEYS: SliderKey[] = [
 ];
 
 function calculate(state: FinancingState): Calculation {
-  const analysisMonths = Math.max(12, Math.round(state.analysisYears * 12));
   const termMonths = Math.max(12, Math.round(state.termMonths));
-  const monthsToCalculate = Math.max(analysisMonths, termMonths);
   const financedAmount = Math.max(0, state.property - state.entry);
   const monthlyRate = state.financingRate / 100 / 12;
   const pricePayment =
@@ -233,85 +181,36 @@ function calculate(state: FinancingState): Calculation {
         (Math.pow(1 + monthlyRate, termMonths) - 1);
   const fixedAmortization = financedAmount / termMonths;
   let debt = financedAmount;
-  let propertyValue = state.property;
   let firstPayment = 0;
   let finalPayment = 0;
   let totalPaid = 0;
   let totalInterest = 0;
-  let analysisDebt = financedAmount;
-  let analysisProperty = state.property;
   const schedule: ScheduleRow[] = [];
-  const balancePoints: number[] = [];
-  const paymentPoints: number[] = [];
 
-  for (let month = 1; month <= monthsToCalculate; month += 1) {
-    propertyValue *= 1 + (Math.pow(1 + 5 / 100, 1 / 12) - 1);
-    const interest = month <= termMonths ? debt * monthlyRate : 0;
+  for (let month = 1; month <= termMonths; month += 1) {
+    const interest = debt * monthlyRate;
     const amortization =
-      month <= termMonths
-        ? state.method === "SAC"
-          ? Math.min(debt, fixedAmortization)
-          : Math.min(debt, Math.max(0, pricePayment - interest))
-        : 0;
-    const payment = month <= termMonths ? amortization + interest : 0;
+      state.method === "SAC"
+        ? Math.min(debt, fixedAmortization)
+        : Math.min(debt, Math.max(0, pricePayment - interest));
+    const payment = amortization + interest;
     debt = Math.max(0, debt - amortization);
     if (month === 1) firstPayment = payment;
     if (month === termMonths) finalPayment = payment;
-    if (month <= termMonths) {
-      totalPaid += payment;
-      totalInterest += interest;
-      schedule.push({ month, payment, interest, amortization, balance: debt });
-    }
-    if (month === analysisMonths) {
-      analysisDebt = debt;
-      analysisProperty = propertyValue;
-    }
-    if (month === 1 || month % 12 === 0) {
-      balancePoints.push(debt);
-      paymentPoints.push(payment);
-    }
+    totalPaid += payment;
+    totalInterest += interest;
+    schedule.push({ month, payment, interest, amortization, balance: debt });
   }
 
   return {
     financedAmount,
     financingPayment: firstPayment,
     financingPaymentEnd: finalPayment,
-    initialHousingCost:
-      firstPayment + (state.property * state.ownershipRate) / 100 / 12,
-    budgetRemaining:
-      state.budget -
-      firstPayment -
-      (state.property * state.ownershipRate) / 100 / 12,
     totalPaid,
     totalInterest,
     termEndBalance: schedule[schedule.length - 1]?.balance ?? 0,
-    analysisDebt,
-    analysisProperty,
     schedule,
-    balancePoints,
-    paymentPoints,
   };
-}
-
-function budgetPatch(state: FinancingState) {
-  const termMonths = Math.max(12, Math.round(state.termMonths));
-  const monthlyRate = state.financingRate / 100 / 12;
-  const ownershipCost = (state.property * state.ownershipRate) / 100 / 12;
-  const availableForPayment = Math.max(0, state.budget - ownershipCost);
-  const paymentFactor =
-    state.method === "SAC"
-      ? 1 / termMonths + monthlyRate
-      : monthlyRate === 0
-        ? 1 / termMonths
-        : (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) /
-          (Math.pow(1 + monthlyRate, termMonths) - 1);
-  const financedAmount =
-    availableForPayment / Math.max(paymentFactor, Number.EPSILON);
-  const entry = Math.min(
-    state.property,
-    Math.max(0, state.property - financedAmount),
-  );
-  return { entry };
 }
 
 function clampSliderValue(spec: SliderSpec, value: number) {
@@ -328,11 +227,20 @@ function sliderValue(key: SliderKey, state: FinancingState) {
 function Brand() {
   return (
     <div className="flex shrink-0 items-center gap-1.75 text-(--lp-heading)">
-      <img
-        className="size-7.5 shrink-0 object-contain"
-        src={`${BASE_URL}logo.svg`}
-        alt=""
-      />
+      <svg
+        className="size-7.5 shrink-0"
+        viewBox="0 0 64 64"
+        aria-hidden="true"
+      >
+        <path d="M9 24 32 6l23 18M14 22v37h36V22" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="21" y="27" width="22" height="8" rx="1" fill="currentColor" />
+        <circle cx="23" cy="43" r="3" fill="currentColor" />
+        <circle cx="32" cy="43" r="3" fill="currentColor" />
+        <circle cx="41" cy="43" r="3" fill="currentColor" />
+        <circle cx="23" cy="52" r="3" fill="currentColor" />
+        <circle cx="32" cy="52" r="3" fill="currentColor" />
+        <circle cx="41" cy="52" r="3" fill="currentColor" />
+      </svg>
       <span className="text-[21px] font-black tracking-[-.07em]">muda</span>
     </div>
   );
@@ -359,25 +267,6 @@ function TopBar({ caption, action }: { caption: string; action?: ReactNode }) {
   );
 }
 
-function Button({
-  children,
-  onClick,
-  secondary = false,
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-  secondary?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`min-h-10 rounded-lg border px-3 text-[10px] font-extrabold ${secondary ? "border-(--lp-line) bg-(--lp-paper) text-(--lp-ink)" : "border-(--lp-ink) bg-(--lp-ink) text-white"}`}
-    >
-      {children}
-    </button>
-  );
-}
 
 function NumberField({
   label,
@@ -474,13 +363,11 @@ function FinancingFields({
   state,
   update,
   compact = false,
-  title,
   interaction = {},
 }: {
   state: FinancingState;
   update: (patch: Partial<FinancingState>) => void;
   compact?: boolean;
-  title?: string;
   interaction?: FieldInteractionProps;
 }) {
   const fieldProps = { ...interaction };
@@ -491,10 +378,6 @@ function FinancingFields({
       <header className="mb-4.25 flex items-start justify-between gap-3">
         <div>
           <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">CALCULADORA DE FINANCIAMENTO</span>
-          <h2 className="mt-1.25 text-[20px] tracking-[-.06em]">
-            {title ??
-              (compact ? "Comece pelo essencial" : "Defina o empréstimo")}
-          </h2>
         </div>
         <span className="grid size-7 place-items-center rounded-full bg-(--lp-accent) text-(--lp-accent-ink) font-mono text-[10px] font-black">01</span>
       </header>
@@ -535,28 +418,7 @@ function FinancingFields({
           sliderKey="termMonths"
           {...fieldProps}
         />
-        {!compact && (
-          <NumberField
-            label="Custo de posse"
-            value={state.ownershipRate}
-            onChange={(ownershipRate) => update({ ownershipRate })}
-            suffix="% a.a."
-            step={0.1}
-            sliderKey="ownershipRate"
-            {...fieldProps}
-          />
-        )}
-        {!compact && (
-          <NumberField
-            label="Orçamento mensal"
-            value={state.budget}
-            onChange={(budget) => update({ budget })}
-            suffix="R$/mês"
-            step={100}
-            sliderKey="budget"
-            {...fieldProps}
-          />
-        )}
+
       </div>
       <MethodToggle
         value={state.method}
@@ -566,74 +428,6 @@ function FinancingFields({
   );
 }
 
-function AdvancedFields({
-  state,
-  update,
-  interaction = {},
-}: {
-  state: FinancingState;
-  update: (patch: Partial<FinancingState>) => void;
-  interaction?: FieldInteractionProps;
-}) {
-  return (
-    <section className="grid gap-3.25 rounded-b-[11px] border border-t-0 border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_70%,transparent)] p-3.75">
-      <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">DETALHES AVANÇADOS</span>
-      <div className="grid grid-cols-2 gap-x-2.25 gap-y-2.75">
-        <NumberField
-          label="Custo de posse"
-          value={state.ownershipRate}
-          onChange={(ownershipRate) => update({ ownershipRate })}
-          suffix="% a.a."
-          step={0.1}
-          sliderKey="ownershipRate"
-          {...interaction}
-        />
-        <NumberField
-          label="Orçamento mensal"
-          value={state.budget}
-          onChange={(budget) => update({ budget })}
-          suffix="R$/mês"
-          step={100}
-          sliderKey="budget"
-          {...interaction}
-        />
-      </div>
-    </section>
-  );
-}
-
-function AdvancedEditor({
-  state,
-  update,
-  interaction = {},
-}: {
-  state: FinancingState;
-  update: (patch: Partial<FinancingState>) => void;
-  interaction?: FieldInteractionProps;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="grid gap-0">
-      <button
-        type="button"
-        className="flex min-h-12 w-full items-center justify-between rounded-[9px] border border-(--lp-line) bg-transparent px-3.5 text-(--lp-ink) text-[10px] font-black text-left"
-        onClick={() => setOpen(!open)}
-      >
-        <span>
-          {open ? "Fechar detalhes avançados" : "Abrir detalhes avançados"}
-        </span>
-        <b className="text-(--lp-accent) text-[16px]">{open ? "↑" : "↓"}</b>
-      </button>
-      {open && (
-        <AdvancedFields
-          state={state}
-          update={update}
-          interaction={interaction}
-        />
-      )}
-    </div>
-  );
-}
 
 function StudyShelf({
   studies,
@@ -737,7 +531,6 @@ function QuickActionButton({
 }
 
 function QuickActions({
-  title,
   helper,
   actions,
   studies,
@@ -746,7 +539,6 @@ function QuickActions({
   removeStudy,
   clearStudies,
 }: {
-  title: string;
   helper: string;
   actions: QuickAction[];
   studies: Study[];
@@ -760,7 +552,6 @@ function QuickActions({
       <header className="flex items-start justify-between gap-3">
         <div>
           <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">AÇÕES RÁPIDAS</span>
-          <h3 className="mt-1.25 text-[18px] tracking-[-.06em]">{title}</h3>
         </div>
         <span className="whitespace-nowrap rounded-[99px] bg-[color-mix(in_srgb,var(--lp-accent)_12%,transparent)] px-1.75 py-1.25 text-(--lp-accent) font-mono text-[8px] font-black">
           {studies.length ? `${studies.length} salvos` : "sem estudos"}
@@ -832,21 +623,12 @@ function FinancingSummary({
   state: FinancingState;
 }) {
   return (
-    <div className="mt-2 grid grid-cols-2 gap-2 min-[700px]:grid-cols-4">
+    <div className="mt-2 grid grid-cols-2 gap-2 min-[700px]:grid-cols-3">
       <ResultNumber
         label="Valor financiado"
         value={money(result.financedAmount, true)}
       />
-      <ResultNumber
-        label="Custo mensal inicial"
-        value={money(result.initialHousingCost)}
-        note={
-          result.budgetRemaining >= 0
-            ? `${money(result.budgetRemaining)} livres no orçamento`
-            : `${money(Math.abs(result.budgetRemaining))} acima do orçamento`
-        }
-        tone={result.budgetRemaining >= 0 ? "positive" : "warning"}
-      />
+
       <ResultNumber
         label="Juros totais"
         value={money(result.totalInterest, true)}
@@ -1003,60 +785,6 @@ function FinancingResult({
   );
 }
 
-function PaymentChart({ result }: { result: Calculation }) {
-  const [open, setOpen] = useState(false);
-  const values = [...result.balancePoints, ...result.paymentPoints];
-  const min = Math.min(...values) * 0.88;
-  const max = Math.max(...values) * 1.03;
-  const points = (series: number[]) =>
-    series
-      .map(
-        (value, index) =>
-          `${(index / Math.max(1, series.length - 1)) * 520},${165 - ((value - min) / Math.max(1, max - min)) * 140}`,
-      )
-      .join(" ");
-  return (
-    <section className="rounded-[11px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_60%,transparent)]">
-      <button
-        type="button"
-        className="flex min-h-12.75 w-full items-center justify-between border-0 bg-transparent p-[14px_15px] text-(--lp-ink) text-[10px] font-black text-left"
-        onClick={() => setOpen(!open)}
-      >
-        <span>
-          {open ? "Ocultar evolução" : "Ver evolução do saldo e da parcela"}
-        </span>
-        <b className="text-(--lp-accent) text-[18px]">{open ? "−" : "+"}</b>
-      </button>
-      {open && (
-        <div className="px-3.5 pb-3.75">
-          <svg className="block h-auto w-full"
-            viewBox="0 0 520 180"
-            role="img"
-            aria-label="Evolução do saldo devedor e da prestação"
-          >
-            <path className="chart-grid" d="M0 25H520M0 80H520M0 135H520" />
-            <polyline
-              className="chart-balance"
-              points={points(result.balancePoints)}
-            />
-            <polyline
-              className="chart-payment"
-              points={points(result.paymentPoints)}
-            />
-          </svg>
-          <div className="mt-2 flex flex-wrap gap-3 text-(--lp-muted) text-[9px] font-extrabold">
-            <span className="flex items-center gap-1.25">
-              <i className="size-1.75 rounded-full bg-(--lp-orange)" /> Saldo devedor
-            </span>
-            <span className="flex items-center gap-1.25">
-              <i className="size-1.75 rounded-full bg-(--lp-accent)" /> Prestação
-            </span>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
 
 function SliderTargets({
   state,
@@ -1154,7 +882,6 @@ function SliderPanel({
   activeKey,
   onChangeActive,
   targetKeys,
-  title,
   helper,
   showTargets = false,
   showNudge = false,
@@ -1164,7 +891,6 @@ function SliderPanel({
   activeKey: SliderKey;
   onChangeActive?: (key: SliderKey) => void;
   targetKeys?: readonly SliderKey[];
-  title: string;
   helper: string;
   showTargets?: boolean;
   showNudge?: boolean;
@@ -1179,7 +905,6 @@ function SliderPanel({
       <header className="flex items-start justify-between gap-3.5">
         <div>
           <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">BARRA DE AJUSTE</span>
-          <h3 className="mt-1.25 text-[18px] tracking-[-.06em]">{title}</h3>
           <p className="mt-1.25 max-w-70 text-(--lp-muted) text-[10px] leading-[1.35]">{helper}</p>
         </div>
         <output className="shrink-0 text-(--lp-accent) font-mono text-[15px] font-black text-right">{spec.format(value)}</output>
@@ -1205,7 +930,7 @@ function SliderPanel({
         <div className="-mt-0.5 flex items-center justify-center gap-3">
           <button
             type="button"
-            className="grid h-8.5 w-9.5 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[18px] leading-none active:scale-[.96]"
+            className="grid size-14 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[24px] leading-none active:scale-[.96]"
             onClick={() => nudge(-1)}
             aria-label={`Diminuir ${spec.label}`}
           >
@@ -1214,7 +939,7 @@ function SliderPanel({
           <span className="min-w-25 text-(--lp-muted) font-mono text-[8px] text-center">{spec.format(spec.step)} por toque</span>
           <button
             type="button"
-            className="grid h-8.5 w-9.5 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[18px] leading-none active:scale-[.96]"
+            className="grid size-14 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[24px] leading-none active:scale-[.96]"
             onClick={() => nudge(1)}
             aria-label={`Aumentar ${spec.label}`}
           >
@@ -1294,7 +1019,7 @@ function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
   return (
     <div data-environment="investment" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
       <TopBar
-        caption="Ambiente · investimento de renda fixa"
+        caption="investimento de renda fixa"
         action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">RENDA FIXA</span>}
       />
       <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
@@ -1321,7 +1046,7 @@ function ComparisonEnvironment() {
   return (
     <div data-environment="comparison" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
       <TopBar
-        caption="Ambiente · financiar vs investir"
+        caption="financiar vs investir"
         action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">COMPARAÇÃO</span>}
       />
       <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
@@ -1349,8 +1074,6 @@ function FinancingView({ props }: { props: LayoutProps }) {
     state,
     result,
     update,
-    reset,
-    fitBudget,
     studies,
     saveStudy,
     loadStudy,
@@ -1397,28 +1120,23 @@ function FinancingView({ props }: { props: LayoutProps }) {
   return (
     <div data-environment="financing" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
       <TopBar
-        caption="Ambiente · financiamento"
-        action={
-          <Button secondary onClick={reset}>
-            Novo cenário
-          </Button>
-        }
+        caption="financiamento"
+        action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">FINANCIAMENTO</span>}
       />
       <main className="mx-auto flex w-[calc(100%-24px)] max-w-170 flex-col gap-2 pt-4.5 pb-27.5 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <Heading
           kicker="FINANCIAMENTO · SAC OU PRICE"
           title={
             <>
-              Troque o método.
+              Calcule a parcela do
               <br />
-              Veja a parcela.
+              seu financiamento.
             </>
           }
-          description="O botão rápido alterna SAC e PRICE sem abrir detalhes; salve os dois para comparar depois."
+          description="Ajuste o valor do imóvel, a entrada, os juros e o prazo para montar seu cenário."
         />
         <FinancingResult result={result} state={state} />
         <QuickActions
-          title="Compare mecanismos"
           helper="A prestação muda de forma diferente em cada sistema. Guarde os dois estados."
           actions={actions}
           studies={studies}
@@ -1431,7 +1149,6 @@ function FinancingView({ props }: { props: LayoutProps }) {
           state={state}
           update={update}
           compact
-          title="Defina o essencial"
           interaction={{ activeKey, onSelectSlider: setActiveKey }}
         />
         <SliderPanel
@@ -1440,16 +1157,11 @@ function FinancingView({ props }: { props: LayoutProps }) {
           activeKey={activeKey}
           onChangeActive={setActiveKey}
           targetKeys={["termMonths", "entry", "property", "financingRate"]}
-          title="Controle escolhido"
           helper="A barra ajusta a variável marcada nos campos ou na faixa."
           showTargets
+          showNudge
         />
-        <AdvancedEditor
-          state={state}
-          update={update}
-          interaction={{ activeKey, onSelectSlider: setActiveKey }}
-        />
-        <PaymentChart result={result} />
+
       </main>
     </div>
   );
@@ -1465,10 +1177,7 @@ function isFinancingState(value: unknown): value is FinancingState {
       state.property,
       state.entry,
       state.financingRate,
-      state.ownershipRate,
-      state.budget,
       state.termMonths,
-      state.analysisYears,
     ].every(Number.isFinite) &&
     (state.method === "SAC" || state.method === "PRICE")
   );
@@ -1488,8 +1197,7 @@ function readSavedStudies(): Study[] {
           Number.isFinite(study.id) &&
           typeof study.label === "string" &&
           isFinancingState(study.state) &&
-          Number.isFinite(study.payment) &&
-          Number.isFinite(study.housingCost)
+          Number.isFinite(study.payment)
         );
       })
       .slice(-8);
@@ -1519,11 +1227,8 @@ export default function FinancingWorkspace() {
       setState((previous) => ({ ...previous, ...patch })),
     [],
   );
-  const reset = useCallback(() => setState(DEFAULTS), []);
-  const fitBudget = useCallback(
-    () => setState((previous) => ({ ...previous, ...budgetPatch(previous) })),
-    [],
-  );
+
+
   const saveStudy = useCallback(
     (label = "Estudo") => {
       nextStudyId.current += 1;
@@ -1536,7 +1241,6 @@ export default function FinancingWorkspace() {
             label: `${label} ${String(id).padStart(2, "0")}`,
             state,
             payment: result.financingPayment,
-            housingCost: result.initialHousingCost,
           },
         ].slice(-8),
       );
@@ -1565,8 +1269,6 @@ export default function FinancingWorkspace() {
     state,
     result,
     update,
-    reset,
-    fitBudget,
     studies,
     saveStudy,
     loadStudy,

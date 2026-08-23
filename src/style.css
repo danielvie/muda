@@ -2,7 +2,7 @@
 @import "react-grid-layout/css/styles.css";
 
 @theme {
-    --color-bg: #E8F500;
+    --color-bg: #EAF4F8;
     --color-surface: #111111;
     --color-surface-alt: #1a1a1a;
     --color-border: #333333;
@@ -622,24 +622,4 @@ button:disabled {
     color: var(--lp-orange);
 }
 
-.chart-grid {
-    fill: none;
-    stroke: var(--lp-line, var(--color-border));
-    stroke-dasharray: 3 5;
-    stroke-width: 1;
-}
 
-.chart-balance,
-.chart-payment {
-    fill: none;
-    stroke-linecap: round;
-    stroke-width: 4;
-}
-
-.chart-balance {
-    stroke: var(--lp-orange, var(--color-warm));
-}
-
-.chart-payment {
-    stroke: var(--lp-payment, var(--color-accent));
-}
