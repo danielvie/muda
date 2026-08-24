@@ -8,6 +8,11 @@ import {
 } from "react";
 import FinanceVsInvest from "./FinanceVsInvest.tsx";
 import InvestmentProjection from "./InvestmentProjection.tsx";
+import FgtsComparison from "./FgtsComparison.tsx";
+import {
+  buildFgtsComparison,
+  type FgtsComparison as FgtsComparisonData,
+} from "../fgtsSchedule.ts";
 
 
 // Promoted financing workspace. The former I2-D study is now the production flow.
@@ -26,6 +31,7 @@ type FinancingState = {
   entry: number;
   financingRate: number;
   termMonths: number;
+  fgtsSalary: number;
   method: Method;
 };
 
@@ -63,6 +69,7 @@ type QuickAction = {
 type LayoutProps = {
   state: FinancingState;
   result: Calculation;
+  fgtsComparison: FgtsComparisonData | null;
   update: (patch: Partial<FinancingState>) => void;
   studies: Study[];
   saveStudy: (label?: string) => void;
@@ -94,6 +101,7 @@ const DEFAULTS: FinancingState = {
   entry: 120000,
   financingRate: 10,
   termMonths: 420,
+  fgtsSalary: 0,
   method: "SAC",
 };
 
@@ -1073,6 +1081,7 @@ function FinancingView({ props }: { props: LayoutProps }) {
   const {
     state,
     result,
+    fgtsComparison,
     update,
     studies,
     saveStudy,
@@ -1161,6 +1170,11 @@ function FinancingView({ props }: { props: LayoutProps }) {
           showTargets
           showNudge
         />
+        <FgtsComparison
+          comparison={fgtsComparison}
+          salary={state.fgtsSalary}
+          onSalaryChange={(salary) => update({ fgtsSalary: salary })}
+        />
 
       </main>
     </div>
@@ -1222,6 +1236,16 @@ export default function FinancingWorkspace() {
     studies.reduce((highest, study) => Math.max(highest, study.id), 0),
   );
   const result = useMemo(() => calculate(state), [state]);
+  const fgtsComparison = useMemo(
+    () => buildFgtsComparison({
+      valorImovel: state.property,
+      entrada: state.entry,
+      taxaAnual: state.financingRate / 100,
+      prazoMeses: state.termMonths,
+      salarioMensal: state.fgtsSalary,
+    }),
+    [state],
+  );
   const update = useCallback(
     (patch: Partial<FinancingState>) =>
       setState((previous) => ({ ...previous, ...patch })),
@@ -1250,7 +1274,7 @@ export default function FinancingWorkspace() {
   const loadStudy = useCallback(
     (id: number) => {
       const study = studies.find((candidate) => candidate.id === id);
-      if (study) setState(study.state);
+      if (study) setState({ ...study.state, fgtsSalary: study.state.fgtsSalary ?? 0 });
     },
     [studies],
   );
@@ -1268,6 +1292,7 @@ export default function FinancingWorkspace() {
   const props: LayoutProps = {
     state,
     result,
+    fgtsComparison,
     update,
     studies,
     saveStudy,

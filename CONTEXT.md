@@ -76,6 +76,14 @@ _Avoid_: Decreasing-payment loan
 The amortization method with a constant Prestação and changing portions of interest and Amortização over time.
 _Avoid_: Fixed-interest loan
 
+**FGTS**:
+An employment-linked fund balance that may be used to reduce the Saldo devedor under the applicable housing-financing rules.
+_Avoid_: Income, investment return
+
+**Amortização extraordinária**:
+A payment beyond the scheduled Prestação that reduces the Saldo devedor and can shorten the Prazo.
+_Avoid_: Aporte mensal
+
 **Custo de posse**:
 Recurring monthly costs of owning the Imóvel beyond the Prestação, such as condominium fees, property tax, insurance, or maintenance.
 _Avoid_: Property price, financing cost
