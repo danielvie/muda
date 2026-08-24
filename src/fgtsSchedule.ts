@@ -38,7 +38,9 @@ export type FgtsMethodProjection = {
   juros: number;
   fgtsGerado: number;
   fgtsAmortizacao: number;
+  fgtsAcionamentos: number;
   fgtsNaoUtilizado: number;
+  valorEfetivoImovel: number;
   yearBlocks: FgtsYearBlock[];
 };
 
@@ -89,6 +91,7 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
   let juros = 0;
   let fgtsGerado = 0;
   let fgtsAmortizacao = 0;
+  let fgtsAcionamentos = 0;
   const yearBlocks: FgtsYearBlock[] = [];
 
   for (let mes = 1; mes <= prazoOriginalMeses && saldo > BALANCE_TOLERANCE; mes += 1) {
@@ -110,6 +113,7 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
     let amortizacaoComFgts = 0;
     if (mes % FGTS_USE_INTERVAL_MONTHS === 0 && saldo > BALANCE_TOLERANCE) {
       amortizacaoComFgts = Math.min(saldo, fgtsDisponivel);
+      if (amortizacaoComFgts > BALANCE_TOLERANCE) fgtsAcionamentos += 1;
       fgtsDisponivel -= amortizacaoComFgts;
       fgtsAmortizacao += amortizacaoComFgts;
       saldo = Math.max(0, saldo - amortizacaoComFgts);
@@ -137,7 +141,9 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
     juros,
     fgtsGerado,
     fgtsAmortizacao,
+    fgtsAcionamentos,
     fgtsNaoUtilizado: fgtsDisponivel,
+    valorEfetivoImovel: input.entrada + prestacoes + fgtsAmortizacao,
     yearBlocks,
   };
 }

@@ -19,6 +19,10 @@ function formatValue(value: number | undefined) {
   return value === undefined ? "-" : brl(value);
 }
 
+function formatUses(count: number) {
+  return `${count} ${count === 1 ? "vez" : "vezes"}`;
+}
+
 function MethodCard({ projection }: { projection: FgtsMethodProjection }) {
   return (
     <article className="grid gap-2 rounded-[7px] border border-(--lp-line) bg-(--lp-paper) p-3">
@@ -40,10 +44,21 @@ function MethodCard({ projection }: { projection: FgtsMethodProjection }) {
           <dd className="mt-1 text-sm font-black text-(--lp-heading)">{brl(projection.fgtsAmortizacao)}</dd>
         </div>
         <div className="rounded-[7px] bg-[color-mix(in_srgb,var(--lp-paper)_88%,var(--lp-line))] p-2">
-          <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">Prestações</dt>
+          <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">Prestações Pagas</dt>
           <dd className="mt-1 text-sm font-black text-(--lp-heading)">{brl(projection.prestacoes)}</dd>
         </div>
+        <div className="rounded-[7px] bg-[color-mix(in_srgb,var(--lp-paper)_88%,var(--lp-line))] p-2">
+          <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">Acionamentos FGTS</dt>
+          <dd className="mt-1 text-sm font-black text-(--lp-heading)">{formatUses(projection.fgtsAcionamentos)}</dd>
+        </div>
+        <div className="rounded-[7px] bg-[color-mix(in_srgb,var(--lp-paper)_88%,var(--lp-line))] p-2">
+          <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">Valor efetivo do imóvel</dt>
+          <dd className="mt-1 text-[clamp(14px,4vw,18px)] font-black text-(--lp-heading)">{brl(projection.valorEfetivoImovel)}</dd>
+        </div>
       </dl>
+      <p className="text-[11px] leading-[1.35] text-(--lp-muted)">
+        Valor efetivo = entrada + prestações pagas + FGTS aplicado. Não inclui taxas ou custos de posse.
+      </p>
       {projection.fgtsNaoUtilizado > 0.005 && (
         <p className="text-[11px] leading-[1.35] text-(--lp-muted)">
           FGTS estimado não utilizado ao quitar: {brl(projection.fgtsNaoUtilizado)}.

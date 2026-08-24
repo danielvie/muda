@@ -171,3 +171,7 @@ _Avoid_: Break-even, first crossing
 **Total pago**:
 The sum of scheduled financing Prestação amounts across the full Prazo. It excludes Entrada and Custo de posse.
 _Avoid_: Total acquisition cost, total housing cost
+
+**Valor efetivo do imóvel**:
+The amount attributed to acquiring the Imóvel in a financing scenario: Entrada, scheduled Prestação amounts, and Amortização extraordinária made with FGTS. It excludes unused FGTS, fees, and Custo de posse.
+_Avoid_: Property price, market value
