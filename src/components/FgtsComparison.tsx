@@ -155,7 +155,7 @@ function ComparisonResults({ comparison }: { comparison: FgtsComparisonData }) {
     <>
       <div className="grid gap-1">
         <p className="text-[11px] leading-[1.4] text-(--lp-muted)">
-          O salário cresce {comparison.crescimentoSalarioAnual.toLocaleString("pt-BR")}% ao ano. O saldo acumulado é usado a cada {comparison.intervaloUsoMeses} meses para reduzir o prazo.
+          O salário cresce {(comparison.crescimentoSalarioAnual * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% ao ano. O saldo acumulado é usado a cada {comparison.intervaloUsoMeses} meses para reduzir o prazo.
         </p>
         <p className="text-[11px] font-bold text-(--lp-muted)">
           FGTS no primeiro ano: {brl(comparison.fgtsMensalEstimado)} por mês · {brl(comparison.fgtsMensalEstimado * 12)} por ano.

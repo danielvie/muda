@@ -1247,7 +1247,7 @@ export default function FinancingWorkspace() {
       taxaAnual: state.financingRate / 100,
       prazoMeses: state.termMonths,
       salarioMensal: state.fgtsSalary,
-      crescimentoSalarioAnual: state.fgtsSalaryGrowth,
+      crescimentoSalarioAnual: state.fgtsSalaryGrowth / 100,
     }),
     [state],
   );
