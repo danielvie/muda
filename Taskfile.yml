@@ -9,7 +9,7 @@ tasks:
     aliases: [r]
     desc: "run main app"
     cmds:
-     - bun run dev
+     - pnpm run dev
 
   init:
     aliases: [i]
@@ -21,19 +21,25 @@ tasks:
     aliases: [i]
     desc: "run main app"
     cmds:
-     - bun install
+     - pnpm install
 
   check:
     aliases: [c]
     desc: "type-check the app"
     cmds:
-     - bun run check
+     - pnpm run check
 
   build:
     aliases: [b]
     desc: "build the app"
     cmds:
-     - bun run build
+     - pnpm run build
+
+  test:
+    aliases: [t]
+    desc: "test the app"
+    cmds:
+     - pnpm test
 
   clear:
     desc: "remove generated build outputs"

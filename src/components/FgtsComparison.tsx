@@ -4,6 +4,7 @@ import {
   FGTS_DEPOSIT_RATE,
   type FgtsComparison as FgtsComparisonData,
   type FgtsMethodProjection,
+  type FgtsMode,
 } from "../fgtsSchedule.ts";
 
 function formatMonths(months: number) {
@@ -23,12 +24,19 @@ function formatUses(count: number) {
   return `${count} ${count === 1 ? "vez" : "vezes"}`;
 }
 
+function formatInstallment(value: number | null) {
+  if (value === null) return "-";
+  return value <= 0.005 ? "Quitado" : brl(value);
+}
+
 function MethodCard({ projection }: { projection: FgtsMethodProjection }) {
   return (
     <article className="grid gap-2 rounded-[7px] border border-(--lp-line) bg-(--lp-paper) p-3">
       <div className="flex items-baseline justify-between gap-2">
         <h4 className="text-sm font-black text-(--lp-heading)">{projection.metodo}</h4>
-        <span className="text-[11px] font-bold uppercase tracking-wider text-(--lp-muted)">amortização em prazo</span>
+        <span className="text-[11px] font-bold uppercase tracking-wider text-(--lp-muted)">
+          {projection.modo === "PRAZO" ? "redução de prazo" : "redução da prestação"}
+        </span>
       </div>
       <dl className="grid grid-cols-2 gap-2">
         <div className="rounded-[7px] bg-[color-mix(in_srgb,var(--lp-paper)_88%,var(--lp-line))] p-2">
@@ -38,6 +46,14 @@ function MethodCard({ projection }: { projection: FgtsMethodProjection }) {
         <div className="rounded-[7px] bg-[color-mix(in_srgb,var(--lp-paper)_88%,var(--lp-line))] p-2">
           <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">Juros totais</dt>
           <dd className="mt-1 text-sm font-black text-(--lp-heading)">{brl(projection.juros)}</dd>
+        </div>
+        <div className="rounded-[7px] bg-[color-mix(in_srgb,var(--lp-paper)_88%,var(--lp-line))] p-2">
+          <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">1ª prestação</dt>
+          <dd className="mt-1 text-sm font-black text-(--lp-heading)">{brl(projection.primeiraPrestacao)}</dd>
+        </div>
+        <div className="rounded-[7px] bg-[color-mix(in_srgb,var(--lp-paper)_88%,var(--lp-line))] p-2">
+          <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">Após o 1º FGTS</dt>
+          <dd className="mt-1 text-sm font-black text-(--lp-heading)">{formatInstallment(projection.prestacaoAposPrimeiroFgts)}</dd>
         </div>
         <div className="rounded-[7px] bg-[color-mix(in_srgb,var(--lp-paper)_88%,var(--lp-line))] p-2">
           <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">FGTS usado</dt>
@@ -72,16 +88,20 @@ type FgtsComparisonProps = {
   comparison: FgtsComparisonData | null;
   salary: number;
   salaryGrowth: number;
+  mode: FgtsMode;
   onSalaryChange: (salary: number) => void;
   onSalaryGrowthChange: (salaryGrowth: number) => void;
+  onModeChange: (mode: FgtsMode) => void;
 };
 
 export default function FgtsComparison({
   comparison,
   salary,
   salaryGrowth,
+  mode,
   onSalaryChange,
   onSalaryGrowthChange,
+  onModeChange,
 }: FgtsComparisonProps) {
   return (
     <section className="grid gap-3 rounded-[10px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_80%,var(--lp-accent)_5%)] p-3.5" aria-labelledby="fgts-comparison-title">
@@ -92,6 +112,30 @@ export default function FgtsComparison({
           Simule o uso do FGTS no financiamento sem alterar os comandos da simulação principal.
         </p>
       </header>
+
+      <fieldset className="grid gap-2">
+        <legend className="text-(--lp-muted) text-[9px] font-extrabold">Como usar o FGTS</legend>
+        <div className="grid grid-cols-2 gap-2 max-[499px]:grid-cols-1">
+          <button
+            type="button"
+            aria-pressed={mode === "PRAZO"}
+            className={`rounded-[7px] border px-3 py-2.5 text-left transition-colors ${mode === "PRAZO" ? "border-(--lp-accent) bg-[color-mix(in_srgb,var(--lp-accent)_10%,var(--lp-paper))]" : "border-(--lp-line) bg-(--lp-paper)"}`}
+            onClick={() => onModeChange("PRAZO")}
+          >
+            <strong className="block text-[11px] text-(--lp-heading)">Reduzir prazo</strong>
+            <span className="mt-1 block text-[9px] leading-[1.35] text-(--lp-muted)">Mantém o cálculo original e elimina parcelas do final.</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={mode === "PRESTACAO"}
+            className={`rounded-[7px] border px-3 py-2.5 text-left transition-colors ${mode === "PRESTACAO" ? "border-(--lp-accent) bg-[color-mix(in_srgb,var(--lp-accent)_10%,var(--lp-paper))]" : "border-(--lp-line) bg-(--lp-paper)"}`}
+            onClick={() => onModeChange("PRESTACAO")}
+          >
+            <strong className="block text-[11px] text-(--lp-heading)">Reduzir prestação</strong>
+            <span className="mt-1 block text-[9px] leading-[1.35] text-(--lp-muted)">Recalcula as próximas parcelas pelo prazo restante.</span>
+          </button>
+        </div>
+      </fieldset>
 
       <div className="grid grid-cols-2 gap-3 max-[699px]:grid-cols-1">
         <label className="grid gap-1.25">
@@ -155,7 +199,7 @@ function ComparisonResults({ comparison }: { comparison: FgtsComparisonData }) {
     <>
       <div className="grid gap-1">
         <p className="text-[11px] leading-[1.4] text-(--lp-muted)">
-          O salário cresce {(comparison.crescimentoSalarioAnual * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% ao ano. O saldo acumulado é usado a cada {comparison.intervaloUsoMeses} meses para reduzir o prazo.
+          O salário cresce {(comparison.crescimentoSalarioAnual * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% ao ano. O saldo acumulado é usado a cada {comparison.intervaloUsoMeses} meses para {comparison.modo === "PRAZO" ? "reduzir o prazo" : "reduzir as próximas prestações"}.
         </p>
         <p className="text-[11px] font-bold text-(--lp-muted)">
           FGTS no primeiro ano: {brl(comparison.fgtsMensalEstimado)} por mês · {brl(comparison.fgtsMensalEstimado * 12)} por ano.

@@ -1,4 +1,4 @@
-import { annualToMonthlyRate } from "./finance";
+import { annualToMonthlyRate } from "./finance.ts";
 
 export const FGTS_DEPOSIT_RATE = 0.08;
 export const FGTS_USE_INTERVAL_MONTHS = 24;
@@ -7,6 +7,8 @@ const BALANCE_TOLERANCE = 0.005;
 
 type FinancingMethod = "SAC" | "PRICE";
 
+export type FgtsMode = "PRAZO" | "PRESTACAO";
+
 export type FgtsScheduleInput = {
   valorImovel: number;
   entrada: number;
@@ -14,6 +16,7 @@ export type FgtsScheduleInput = {
   prazoMeses: number;
   salarioMensal: number;
   crescimentoSalarioAnual: number;
+  modo: FgtsMode;
 };
 
 export type FgtsYearBlock = {
@@ -33,8 +36,11 @@ export type FgtsYearBlock = {
 
 export type FgtsMethodProjection = {
   metodo: FinancingMethod;
+  modo: FgtsMode;
   prazoOriginalMeses: number;
   prazoFinalMeses: number;
+  primeiraPrestacao: number;
+  prestacaoAposPrimeiroFgts: number | null;
   prestacoes: number;
   juros: number;
   fgtsGerado: number;
@@ -46,6 +52,7 @@ export type FgtsMethodProjection = {
 };
 
 export type FgtsComparison = {
+  modo: FgtsMode;
   salarioMensal: number;
   crescimentoSalarioAnual: number;
   fgtsMensalEstimado: number;
@@ -83,8 +90,8 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
   const prazoOriginalMeses = Math.max(1, Math.trunc(input.prazoMeses));
   const pv = Math.max(0, input.valorImovel - input.entrada);
   const taxaMensal = annualToMonthlyRate(input.taxaAnual);
-  const amortizacaoSac = pv / prazoOriginalMeses;
-  const prestacaoPrice = pricePayment(pv, taxaMensal, prazoOriginalMeses);
+  let amortizacaoSac = pv / prazoOriginalMeses;
+  let prestacaoPrice = pricePayment(pv, taxaMensal, prazoOriginalMeses);
 
   let saldo = pv;
   let fgtsDisponivel = 0;
@@ -93,6 +100,8 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
   let fgtsGerado = 0;
   let fgtsAmortizacao = 0;
   let fgtsAcionamentos = 0;
+  let primeiraPrestacao = 0;
+  let prestacaoAposPrimeiroFgts: number | null = null;
   const yearBlocks: FgtsYearBlock[] = [];
 
   for (let mes = 1; mes <= prazoOriginalMeses && saldo > BALANCE_TOLERANCE; mes += 1) {
@@ -108,6 +117,7 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
       : prestacaoPrice - taxaJuros;
     const amortizacaoProgramada = Math.min(saldoInicial, Math.max(0, amortizacaoPlanejada));
     const prestacao = amortizacaoProgramada + taxaJuros;
+    if (mes === 1) primeiraPrestacao = prestacao;
 
     saldo = Math.max(0, saldoInicial - amortizacaoProgramada);
     fgtsDisponivel += fgtsDoMes;
@@ -122,6 +132,20 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
       fgtsDisponivel -= amortizacaoComFgts;
       fgtsAmortizacao += amortizacaoComFgts;
       saldo = Math.max(0, saldo - amortizacaoComFgts);
+
+      const mesesRestantes = prazoOriginalMeses - mes;
+      if (input.modo === "PRESTACAO" && saldo > BALANCE_TOLERANCE && mesesRestantes > 0) {
+        amortizacaoSac = saldo / mesesRestantes;
+        prestacaoPrice = pricePayment(saldo, taxaMensal, mesesRestantes);
+      }
+
+      if (fgtsAcionamentos === 1) {
+        const proximoJuro = saldo * taxaMensal;
+        const proximaAmortizacao = metodo === "SAC"
+          ? Math.min(saldo, amortizacaoSac)
+          : Math.min(saldo, Math.max(0, prestacaoPrice - proximoJuro));
+        prestacaoAposPrimeiroFgts = proximaAmortizacao + proximoJuro;
+      }
     }
 
     const ano = Math.ceil(mes / 12);
@@ -140,8 +164,11 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
 
   return {
     metodo,
+    modo: input.modo,
     prazoOriginalMeses,
     prazoFinalMeses: yearBlocks.at(-1)?.mesFim ?? 0,
+    primeiraPrestacao,
+    prestacaoAposPrimeiroFgts,
     prestacoes,
     juros,
     fgtsGerado,
@@ -164,12 +191,14 @@ export function buildFgtsComparison(
     !Number.isFinite(input.salarioMensal) ||
     input.salarioMensal <= 0 ||
     !Number.isFinite(input.crescimentoSalarioAnual) ||
-    input.crescimentoSalarioAnual < 0
+    input.crescimentoSalarioAnual < 0 ||
+    (input.modo !== "PRAZO" && input.modo !== "PRESTACAO")
   ) {
     return null;
   }
 
   return {
+    modo: input.modo,
     salarioMensal: input.salarioMensal,
     crescimentoSalarioAnual: input.crescimentoSalarioAnual,
     fgtsMensalEstimado: input.salarioMensal * FGTS_DEPOSIT_RATE,

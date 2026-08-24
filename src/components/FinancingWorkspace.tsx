@@ -14,6 +14,7 @@ import {
   FGTS_DEPOSIT_RATE,
   FGTS_USE_INTERVAL_MONTHS,
   type FgtsComparison as FgtsComparisonData,
+  type FgtsMode,
 } from "../fgtsSchedule.ts";
 
 
@@ -35,6 +36,7 @@ type FinancingState = {
   termMonths: number;
   fgtsSalary: number;
   fgtsSalaryGrowth: number;
+  fgtsMode: FgtsMode;
   method: Method;
 };
 
@@ -120,6 +122,7 @@ const DEFAULTS: FinancingState = {
   termMonths: 420,
   fgtsSalary: 0,
   fgtsSalaryGrowth: 0,
+  fgtsMode: "PRAZO",
   method: "SAC",
 };
 
@@ -199,13 +202,14 @@ function calculate(state: FinancingState, includeFgts = false): Calculation {
   const termMonths = Math.max(12, Math.round(state.termMonths));
   const financedAmount = Math.max(0, state.property - state.entry);
   const monthlyRate = state.financingRate / 100 / 12;
-  const pricePayment =
+  const pricePaymentFor = (balance: number, months: number) =>
     monthlyRate === 0
-      ? financedAmount / termMonths
-      : (financedAmount *
-          (monthlyRate * Math.pow(1 + monthlyRate, termMonths))) /
-        (Math.pow(1 + monthlyRate, termMonths) - 1);
-  const fixedAmortization = financedAmount / termMonths;
+      ? balance / months
+      : (balance *
+          (monthlyRate * Math.pow(1 + monthlyRate, months))) /
+        (Math.pow(1 + monthlyRate, months) - 1);
+  let pricePayment = pricePaymentFor(financedAmount, termMonths);
+  let fixedAmortization = financedAmount / termMonths;
   let debt = financedAmount;
   let firstPayment = 0;
   let finalPayment = 0;
@@ -215,7 +219,7 @@ function calculate(state: FinancingState, includeFgts = false): Calculation {
   let fgtsAmortization = 0;
   const schedule: ScheduleRow[] = [];
 
-  for (let month = 1; month <= termMonths; month += 1) {
+  for (let month = 1; month <= termMonths && debt > 0.005; month += 1) {
     if (includeFgts && state.fgtsSalary > 0) {
       const salary = state.fgtsSalary * Math.pow(
         1 + state.fgtsSalaryGrowth / 100,
@@ -236,6 +240,12 @@ function calculate(state: FinancingState, includeFgts = false): Calculation {
       fgtsAvailable -= applied;
       fgtsAmortization += applied;
       debt = Math.max(0, debt - applied);
+
+      const remainingMonths = termMonths - month;
+      if (state.fgtsMode === "PRESTACAO" && debt > 0.005 && remainingMonths > 0) {
+        fixedAmortization = debt / remainingMonths;
+        pricePayment = pricePaymentFor(debt, remainingMonths);
+      }
     }
     if (month === 1) firstPayment = payment;
     if (payment > 0 && debt <= 0.005) finalPayment = payment;
@@ -1042,7 +1052,7 @@ function SacPriceScenario({ state }: { state: FinancingState }) {
         </label>
         <span className="text-(--lp-muted) text-[8px]">
           {includeFgts
-            ? `Aplicado a cada ${FGTS_USE_INTERVAL_MONTHS} meses`
+            ? `Aplicado a cada ${FGTS_USE_INTERVAL_MONTHS} meses para reduzir ${state.fgtsMode === "PRAZO" ? "o prazo" : "a prestação"}`
             : "FGTS desligado nesta comparação"}
         </span>
       </div>
@@ -1061,7 +1071,7 @@ function SacPriceScenario({ state }: { state: FinancingState }) {
         <ScenarioCard title="PRICE" description="Parcela fixa; amortização cresce ao longo do prazo.">
           <div className="grid gap-2.5">
             <ScenarioStat label="Parcela fixa" value={money(scenario.price.financingPayment)} />
-            <ScenarioStat label="Quitação" value={loanPeriodLabel(state.termMonths)} />
+            <ScenarioStat label="Quitação" value={loanPeriodLabel(scenario.price.schedule.length)} />
             <ScenarioStat label="FGTS aplicado" value={money(scenario.price.fgtsAmortization, true)} />
             <ScenarioStat label="Juros totais" value={money(scenario.price.totalInterest, true)} />
           </div>
@@ -1398,8 +1408,10 @@ function FinancingView({ props }: { props: LayoutProps }) {
           comparison={fgtsComparison}
           salary={state.fgtsSalary}
           salaryGrowth={state.fgtsSalaryGrowth}
+          mode={state.fgtsMode}
           onSalaryChange={(salary) => update({ fgtsSalary: salary })}
           onSalaryGrowthChange={(salaryGrowth) => update({ fgtsSalaryGrowth: salaryGrowth })}
+          onModeChange={(fgtsMode) => update({ fgtsMode })}
         />
 
       </main>
@@ -1470,6 +1482,7 @@ export default function FinancingWorkspace() {
       prazoMeses: state.termMonths,
       salarioMensal: state.fgtsSalary,
       crescimentoSalarioAnual: state.fgtsSalaryGrowth / 100,
+      modo: state.fgtsMode,
     }),
     [state],
   );
@@ -1506,6 +1519,7 @@ export default function FinancingWorkspace() {
           ...study.state,
           fgtsSalary: study.state.fgtsSalary ?? 0,
           fgtsSalaryGrowth: study.state.fgtsSalaryGrowth ?? 0,
+          fgtsMode: study.state.fgtsMode === "PRESTACAO" ? "PRESTACAO" : "PRAZO",
         });
       }
     },

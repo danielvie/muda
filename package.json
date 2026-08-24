@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "check": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types src/fgtsSchedule.test.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -22,7 +23,8 @@
     "tslib": "^2.8.1",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-window": "^7.4.1"
   },
   "dependencies": {
     "react": "^19.2.5",
