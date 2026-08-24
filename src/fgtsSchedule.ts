@@ -1,7 +1,7 @@
 import { annualToMonthlyRate } from "./finance";
 
 export const FGTS_DEPOSIT_RATE = 0.08;
-export const FGTS_USE_INTERVAL_MONTHS = 6;
+export const FGTS_USE_INTERVAL_MONTHS = 24;
 
 const BALANCE_TOLERANCE = 0.005;
 

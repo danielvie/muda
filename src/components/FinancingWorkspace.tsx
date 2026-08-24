@@ -11,6 +11,8 @@ import InvestmentProjection from "./InvestmentProjection.tsx";
 import FgtsComparison from "./FgtsComparison.tsx";
 import {
   buildFgtsComparison,
+  FGTS_DEPOSIT_RATE,
+  FGTS_USE_INTERVAL_MONTHS,
   type FgtsComparison as FgtsComparisonData,
 } from "../fgtsSchedule.ts";
 
@@ -50,7 +52,21 @@ type Calculation = {
   totalPaid: number;
   totalInterest: number;
   termEndBalance: number;
+  fgtsAmortization: number;
   schedule: ScheduleRow[];
+};
+
+type SacPriceScenarioCalculation = {
+  sac: Calculation;
+  price: Calculation;
+  equalizationMonth: number | null;
+  payoffMonth: number;
+  extraAmortization: number;
+  totalPaid: number;
+  totalInterest: number;
+  fgtsAmortization: number;
+  sacFirstPayment: number;
+  priceFirstPayment: number;
 };
 
 type Study = {
@@ -98,7 +114,7 @@ type FieldInteractionProps = {
 };
 
 const DEFAULTS: FinancingState = {
-  property: 600000,
+  property: 800000,
   entry: 120000,
   financingRate: 10,
   termMonths: 420,
@@ -179,7 +195,7 @@ const PRIMARY_SLIDER_KEYS: SliderKey[] = [
   "termMonths",
 ];
 
-function calculate(state: FinancingState): Calculation {
+function calculate(state: FinancingState, includeFgts = false): Calculation {
   const termMonths = Math.max(12, Math.round(state.termMonths));
   const financedAmount = Math.max(0, state.property - state.entry);
   const monthlyRate = state.financingRate / 100 / 12;
@@ -195,9 +211,19 @@ function calculate(state: FinancingState): Calculation {
   let finalPayment = 0;
   let totalPaid = 0;
   let totalInterest = 0;
+  let fgtsAvailable = 0;
+  let fgtsAmortization = 0;
   const schedule: ScheduleRow[] = [];
 
   for (let month = 1; month <= termMonths; month += 1) {
+    if (includeFgts && state.fgtsSalary > 0) {
+      const salary = state.fgtsSalary * Math.pow(
+        1 + state.fgtsSalaryGrowth / 100,
+        Math.floor((month - 1) / 12),
+      );
+      fgtsAvailable += salary * FGTS_DEPOSIT_RATE;
+    }
+
     const interest = debt * monthlyRate;
     const amortization =
       state.method === "SAC"
@@ -205,8 +231,15 @@ function calculate(state: FinancingState): Calculation {
         : Math.min(debt, Math.max(0, pricePayment - interest));
     const payment = amortization + interest;
     debt = Math.max(0, debt - amortization);
+    if (includeFgts && month % FGTS_USE_INTERVAL_MONTHS === 0 && debt > 0.005) {
+      const applied = Math.min(debt, fgtsAvailable);
+      fgtsAvailable -= applied;
+      fgtsAmortization += applied;
+      debt = Math.max(0, debt - applied);
+    }
     if (month === 1) firstPayment = payment;
-    if (month === termMonths) finalPayment = payment;
+    if (payment > 0 && debt <= 0.005) finalPayment = payment;
+    if (month === termMonths && finalPayment === 0) finalPayment = payment;
     totalPaid += payment;
     totalInterest += interest;
     schedule.push({ month, payment, interest, amortization, balance: debt });
@@ -219,8 +252,89 @@ function calculate(state: FinancingState): Calculation {
     totalPaid,
     totalInterest,
     termEndBalance: schedule[schedule.length - 1]?.balance ?? 0,
+    fgtsAmortization,
     schedule,
   };
+}
+
+function calculateSacPriceScenario(
+  state: FinancingState,
+  includeFgts = true,
+): SacPriceScenarioCalculation {
+  const sac = calculate({ ...state, method: "SAC" }, includeFgts);
+  const price = calculate({ ...state, method: "PRICE" }, includeFgts);
+  const termMonths = price.schedule.length;
+  const monthlyRate = state.financingRate / 100 / 12;
+  const equalizationIndex = sac.schedule.findIndex((sacRow, index) => {
+    const pricePayment = price.schedule[index]?.payment ?? 0;
+    return sacRow.payment <= pricePayment + 0.005;
+  });
+
+  let debt = price.financedAmount;
+  let payoffMonth = debt > 0 ? termMonths : 0;
+  let extraAmortization = 0;
+  let totalPaid = 0;
+  let totalInterest = 0;
+  let fgtsAvailable = 0;
+  let fgtsAmortization = 0;
+
+  for (let index = 0; index < termMonths && debt > 0.005; index += 1) {
+    const month = index + 1;
+    if (includeFgts && state.fgtsSalary > 0) {
+      const salary = state.fgtsSalary * Math.pow(
+        1 + state.fgtsSalaryGrowth / 100,
+        Math.floor((month - 1) / 12),
+      );
+      fgtsAvailable += salary * FGTS_DEPOSIT_RATE;
+    }
+
+    const pricePayment = price.schedule[index]?.payment ?? 0;
+    const sacPayment = sac.schedule[index]?.payment ?? pricePayment;
+    const interest = debt * monthlyRate;
+    const regularAmortization = Math.min(
+      debt,
+      Math.max(0, pricePayment - interest),
+    );
+    const extraRequested = Math.max(0, sacPayment - pricePayment);
+    const extraApplied = Math.min(
+      Math.max(0, debt - regularAmortization),
+      extraRequested,
+    );
+    const amortization = regularAmortization + extraApplied;
+
+    debt = Math.max(0, debt - amortization);
+    if (includeFgts && month % FGTS_USE_INTERVAL_MONTHS === 0 && debt > 0.005) {
+      const applied = Math.min(debt, fgtsAvailable);
+      fgtsAvailable -= applied;
+      fgtsAmortization += applied;
+      debt = Math.max(0, debt - applied);
+    }
+    extraAmortization += extraApplied;
+    totalInterest += interest;
+    totalPaid += interest + amortization;
+
+    if (debt <= 0.005) payoffMonth = index + 1;
+  }
+
+  return {
+    sac,
+    price,
+    equalizationMonth: equalizationIndex >= 0 ? equalizationIndex + 1 : null,
+    payoffMonth,
+    extraAmortization,
+    totalPaid,
+    totalInterest,
+    fgtsAmortization,
+    sacFirstPayment: sac.schedule[0]?.payment ?? 0,
+    priceFirstPayment: price.schedule[0]?.payment ?? 0,
+  };
+}
+
+function loanPeriodLabel(month: number | null) {
+  if (month === null) return "não ocorre no prazo";
+  if (month === 0) return "sem dívida";
+  const years = (month / 12).toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+  return `${month} meses (${years} anos)`;
 }
 
 function clampSliderValue(spec: SliderSpec, value: number) {
@@ -288,6 +402,7 @@ function NumberField({
   activeKey,
   onFocusSlider,
   onSelectSlider,
+  headerAction,
 }: {
   label: string;
   value: number;
@@ -295,15 +410,20 @@ function NumberField({
   suffix: string;
   step?: number;
   sliderKey: SliderKey;
+  headerAction?: ReactNode;
 } & FieldInteractionProps) {
   const active = activeKey === sliderKey;
   return (
-    <label className="grid min-w-0 gap-1.25">
-      <span className="text-(--lp-muted) text-[9px] font-extrabold">{label}</span>
+    <div className="grid min-w-0 gap-1.25">
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <label htmlFor={`financing-${sliderKey}`} className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-(--lp-muted) text-[9px] font-extrabold">{label}</label>
+        {headerAction}
+      </div>
       <div
         className={`flex min-h-12 min-w-0 items-center rounded-[5px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_76%,transparent)] transition-[border-color,box-shadow] duration-150 ease-[ease]${active ? " border-(--lp-accent)!" : ""}`}
       >
         <input
+          id={`financing-${sliderKey}`}
           type="number"
           inputMode="decimal"
           value={value}
@@ -329,7 +449,7 @@ function NumberField({
           </button>
         )}
       </div>
-    </label>
+    </div>
   );
 }
 
@@ -369,29 +489,36 @@ function MethodToggle({
   );
 }
 
-function FinancingFields({
+function FinancingAdjustmentPanel({
   state,
   update,
-  compact = false,
   interaction = {},
 }: {
   state: FinancingState;
   update: (patch: Partial<FinancingState>) => void;
-  compact?: boolean;
   interaction?: FieldInteractionProps;
 }) {
   const fieldProps = { ...interaction };
+  const activeKey = interaction.activeKey ?? "termMonths";
+  const onChangeActive = interaction.onSelectSlider ?? (() => undefined);
+  const spec = SLIDER_SPECS[activeKey];
+  const value = sliderValue(activeKey, state);
+  const change = (nextValue: number) => update(spec.patch(clampSliderValue(spec, nextValue)));
+  const nudge = (direction: number) => change(value + direction * spec.step);
+  const financed = Math.max(0, state.property - state.entry);
+
   return (
-    <section
-      className={`border border-(--lp-line) bg-(--lp-paper) ${compact ? "rounded-[10px] p-3.75" : "rounded-[14px] p-4.25 max-[420px]:p-3.75"}`}
-    >
-      <header className="mb-4.25 flex items-start justify-between gap-3">
+    <section className="grid gap-3.25 rounded-[14px] border border-(--lp-line) bg-(--lp-paper) p-4.25 max-[420px]:p-3.75">
+      <header className="flex items-start justify-between gap-3.5">
         <div>
           <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">CALCULADORA DE FINANCIAMENTO</span>
+          <strong className="mt-1 block text-(--lp-accent) font-mono text-[19px] font-black">{money(financed, true)}</strong>
+          <span className="text-(--lp-muted) text-[9px]">valor financiado estimado</span>
         </div>
         <span className="grid size-7 place-items-center rounded-full bg-(--lp-accent) text-(--lp-accent-ink) font-mono text-[10px] font-black">01</span>
       </header>
-      <div className="grid grid-cols-2 gap-x-2.25 gap-y-2.75">
+
+      <div className="grid grid-cols-2 gap-2.5 min-[700px]:grid-cols-4">
         <NumberField
           label="Valor do imóvel"
           value={state.property}
@@ -408,6 +535,21 @@ function FinancingFields({
           suffix="R$"
           step={10000}
           sliderKey="entry"
+          headerAction={
+            <button
+              type="button"
+              className="shrink-0 px-0.5 text-(--lp-accent) text-[8px] font-black underline decoration-dotted underline-offset-2 hover:text-(--lp-ink)"
+              aria-label="Aplicar entrada de 20% do valor do imóvel"
+              title="Aplicar entrada de 20% do valor do imóvel"
+              onClick={(event) => {
+                event.preventDefault();
+                update({ entry: Math.round(state.property * 0.2) });
+                interaction.onSelectSlider?.("entry");
+              }}
+            >
+              Aplicar 20%
+            </button>
+          }
           {...fieldProps}
         />
         <NumberField
@@ -428,12 +570,56 @@ function FinancingFields({
           sliderKey="termMonths"
           {...fieldProps}
         />
-
       </div>
+
       <MethodToggle
         value={state.method}
         onChange={(method) => update({ method })}
       />
+
+      <div className="grid gap-3 border-t border-(--lp-line) pt-3.5">
+        <header className="flex items-start justify-between gap-3.5">
+          <div>
+            <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">BARRA DE AJUSTE</span>
+            <p className="mt-1.25 max-w-70 text-(--lp-muted) text-[10px] leading-[1.35]">Selecione um cartão ou ajuste o valor diretamente.</p>
+          </div>
+          <output className="shrink-0 text-(--lp-accent) font-mono text-[15px] font-black text-right">{spec.format(value)}</output>
+        </header>
+        <SliderTargets
+          state={state}
+          activeKey={activeKey}
+          onChange={onChangeActive}
+          keys={PRIMARY_SLIDER_KEYS}
+        />
+        <div className="flex items-baseline justify-between gap-2.5 rounded-[7px] bg-[color-mix(in_srgb,var(--lp-accent)_10%,transparent)] px-2.75 py-2.25 text-(--lp-muted) text-[9px]">
+          <span>Ajustando</span>
+          <strong className="text-(--lp-ink) text-[10px]">{spec.label}</strong>
+        </div>
+        <SliderControl spec={spec} value={value} onChange={change} />
+        <div className="-mt-2 flex justify-between gap-2.5 text-(--lp-muted) font-mono text-[8px]">
+          <span>{spec.format(spec.min)}</span>
+          <span>{spec.format(spec.max)}</span>
+        </div>
+        <div className="-mt-0.5 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            className="grid size-14 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[24px] leading-none active:scale-[.96]"
+            onClick={() => nudge(-1)}
+            aria-label={`Diminuir ${spec.label}`}
+          >
+            −
+          </button>
+          <span className="min-w-25 text-(--lp-muted) font-mono text-[8px] text-center">{spec.format(spec.step)} por toque</span>
+          <button
+            type="button"
+            className="grid size-14 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[24px] leading-none active:scale-[.96]"
+            onClick={() => nudge(1)}
+            aria-label={`Aumentar ${spec.label}`}
+          >
+            +
+          </button>
+        </div>
+      </div>
     </section>
   );
 }
@@ -796,6 +982,126 @@ function FinancingResult({
 }
 
 
+function ScenarioCard({
+  title,
+  description,
+  featured = false,
+  children,
+}: {
+  title: string;
+  description: string;
+  featured?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <article className={`grid content-start gap-3 rounded-[10px] border p-3.25 ${featured ? "border-(--lp-accent) bg-[color-mix(in_srgb,var(--lp-accent)_9%,var(--lp-paper))]" : "border-(--lp-line) bg-(--lp-paper)"}`}>
+      <div>
+        <h3 className="text-[13px] font-black tracking-[-.03em]">{title}</h3>
+        <p className="mt-1 text-(--lp-muted) text-[9px] leading-[1.35]">{description}</p>
+      </div>
+      {children}
+    </article>
+  );
+}
+
+function ScenarioStat({ label, value, tone = "" }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="grid gap-0.5">
+      <span className="text-(--lp-muted) text-[8px] uppercase tracking-[.06em]">{label}</span>
+      <strong className={`font-mono text-[13px] ${tone === "positive" ? "text-(--lp-positive)" : "text-(--lp-ink)"}`}>{value}</strong>
+    </div>
+  );
+}
+
+function SacPriceScenario({ state }: { state: FinancingState }) {
+  const [includeFgts, setIncludeFgts] = useState(true);
+  const scenario = useMemo(
+    () => calculateSacPriceScenario(state, includeFgts),
+    [state, includeFgts],
+  );
+  const hasFgtsSalary = state.fgtsSalary > 0;
+
+  return (
+    <section className="grid gap-3.25 rounded-[14px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_86%,var(--lp-accent)_4%)] p-4.25 max-[420px]:p-3.75">
+      <header className="flex items-start justify-between gap-3.5">
+        <div>
+          <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">SAC VS PRICE</span>
+          <h2 className="mt-1 text-[17px] tracking-[-.05em]">Três cenários de amortização</h2>
+        </div>
+        <span className="grid size-7 place-items-center rounded-full bg-(--lp-accent) text-(--lp-accent-ink) font-mono text-[10px] font-black">02</span>
+      </header>
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-[7px] border border-(--lp-line) bg-(--lp-paper) px-2.75 py-2">
+        <label className="flex min-h-8 cursor-pointer items-center gap-2 text-(--lp-ink) text-[10px] font-black">
+          <input
+            type="checkbox"
+            checked={includeFgts}
+            onChange={(event) => setIncludeFgts(event.currentTarget.checked)}
+            className="size-4 accent-(--lp-accent)"
+          />
+          Considerar FGTS
+        </label>
+        <span className="text-(--lp-muted) text-[8px]">
+          {includeFgts
+            ? `Aplicado a cada ${FGTS_USE_INTERVAL_MONTHS} meses`
+            : "FGTS desligado nesta comparação"}
+        </span>
+      </div>
+      <p className="max-w-140 text-(--lp-muted) text-[10px] leading-[1.4]">
+        Compare SAC, PRICE e PRICE com a diferença entre as parcelas aplicada diretamente no principal enquanto a PRICE for menor.
+      </p>
+      <div className="grid gap-2 min-[700px]:grid-cols-3">
+        <ScenarioCard title="SAC" description="Amortização constante; parcela começa maior e diminui.">
+          <div className="grid gap-2.5">
+            <ScenarioStat label="1ª parcela" value={money(scenario.sac.financingPayment)} />
+            <ScenarioStat label="Última parcela" value={money(scenario.sac.financingPaymentEnd)} />
+            <ScenarioStat label="FGTS aplicado" value={money(scenario.sac.fgtsAmortization, true)} />
+            <ScenarioStat label="Juros totais" value={money(scenario.sac.totalInterest, true)} />
+          </div>
+        </ScenarioCard>
+        <ScenarioCard title="PRICE" description="Parcela fixa; amortização cresce ao longo do prazo.">
+          <div className="grid gap-2.5">
+            <ScenarioStat label="Parcela fixa" value={money(scenario.price.financingPayment)} />
+            <ScenarioStat label="Quitação" value={loanPeriodLabel(state.termMonths)} />
+            <ScenarioStat label="FGTS aplicado" value={money(scenario.price.fgtsAmortization, true)} />
+            <ScenarioStat label="Juros totais" value={money(scenario.price.totalInterest, true)} />
+          </div>
+        </ScenarioCard>
+        <ScenarioCard title="PRICE + diferença" description="A diferença para a SAC vira amortização extra." featured>
+          <div className="grid gap-2.5">
+            <ScenarioStat label="Antes do empate" value={money(scenario.sacFirstPayment)} />
+            <ScenarioStat label="Após o empate" value={money(scenario.priceFirstPayment)} />
+            <ScenarioStat label="Amortização extra" value={money(scenario.extraAmortization, true)} tone="positive" />
+            <ScenarioStat label="FGTS aplicado" value={money(scenario.fgtsAmortization, true)} />
+            <ScenarioStat label="Juros totais" value={money(scenario.totalInterest, true)} />
+          </div>
+        </ScenarioCard>
+      </div>
+      {!hasFgtsSalary && includeFgts && (
+        <p className="-mt-1 text-(--lp-muted) text-[9px] leading-[1.35]">
+          Informe o salário na seção FGTS para projetar amortizações com FGTS.
+        </p>
+      )}
+      <div className="grid gap-2 border-t border-(--lp-line) pt-3 min-[700px]:grid-cols-3">
+        <ResultNumber
+          label="SAC iguala PRICE"
+          value={loanPeriodLabel(scenario.equalizationMonth)}
+          note="primeiro mês em que a SAC não é maior"
+        />
+        <ResultNumber
+          label="Quitação PRICE + diferença"
+          value={loanPeriodLabel(scenario.payoffMonth)}
+          note={`prazo configurado: ${state.termMonths} meses`}
+        />
+        <ResultNumber
+          label="Total pago no cenário"
+          value={money(scenario.totalPaid, true)}
+          note="PRICE com amortizações extras"
+        />
+      </div>
+    </section>
+  );
+}
+
 function SliderTargets({
   state,
   activeKey,
@@ -809,7 +1115,7 @@ function SliderTargets({
 }) {
   return (
     <div
-      className="grid grid-cols-2 gap-1.5 -mt-0.5 mb-px min-w-0 px-px pt-0.5 pb-1.25"
+      className="grid grid-cols-2 gap-1.5 -mt-0.5 mb-px min-w-0 px-px pt-0.5 pb-1.25 min-[700px]:grid-cols-4"
       role="tablist"
       aria-label="Variável controlada pela barra"
     >
@@ -886,80 +1192,6 @@ function SliderControl({
   );
 }
 
-function SliderPanel({
-  state,
-  update,
-  activeKey,
-  onChangeActive,
-  targetKeys,
-  helper,
-  showTargets = false,
-  showNudge = false,
-}: {
-  state: FinancingState;
-  update: (patch: Partial<FinancingState>) => void;
-  activeKey: SliderKey;
-  onChangeActive?: (key: SliderKey) => void;
-  targetKeys?: readonly SliderKey[];
-  helper: string;
-  showTargets?: boolean;
-  showNudge?: boolean;
-}) {
-  const spec = SLIDER_SPECS[activeKey];
-  const value = sliderValue(activeKey, state);
-  const change = (nextValue: number) =>
-    update(spec.patch(clampSliderValue(spec, nextValue)));
-  const nudge = (direction: number) => change(value + direction * spec.step);
-  return (
-    <section className={`grid gap-3.25 rounded-[14px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_80%,var(--lp-accent)_5%)] p-4.25 max-[420px]:p-3.75`}>
-      <header className="flex items-start justify-between gap-3.5">
-        <div>
-          <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">BARRA DE AJUSTE</span>
-          <p className="mt-1.25 max-w-70 text-(--lp-muted) text-[10px] leading-[1.35]">{helper}</p>
-        </div>
-        <output className="shrink-0 text-(--lp-accent) font-mono text-[15px] font-black text-right">{spec.format(value)}</output>
-      </header>
-      {showTargets && (
-        <SliderTargets
-          state={state}
-          activeKey={activeKey}
-          onChange={onChangeActive ?? (() => undefined)}
-          keys={targetKeys ?? PRIMARY_SLIDER_KEYS}
-        />
-      )}
-      <div className="flex items-baseline justify-between gap-2.5 rounded-[7px] bg-[color-mix(in_srgb,var(--lp-accent)_10%,transparent)] px-2.75 py-2.25 text-(--lp-muted) text-[9px]">
-        <span>Ajustando</span>
-        <strong className="text-(--lp-ink) text-[10px]">{spec.label}</strong>
-      </div>
-      <SliderControl spec={spec} value={value} onChange={change} />
-      <div className="-mt-2 flex justify-between gap-2.5 text-(--lp-muted) font-mono text-[8px]">
-        <span>{spec.format(spec.min)}</span>
-        <span>{spec.format(spec.max)}</span>
-      </div>
-      {showNudge && (
-        <div className="-mt-0.5 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            className="grid size-14 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[24px] leading-none active:scale-[.96]"
-            onClick={() => nudge(-1)}
-            aria-label={`Diminuir ${spec.label}`}
-          >
-            −
-          </button>
-          <span className="min-w-25 text-(--lp-muted) font-mono text-[8px] text-center">{spec.format(spec.step)} por toque</span>
-          <button
-            type="button"
-            className="grid size-14 place-items-center rounded-[7px] border border-(--lp-line) bg-(--lp-paper) text-(--lp-ink) text-[24px] leading-none active:scale-[.96]"
-            onClick={() => nudge(1)}
-            aria-label={`Aumentar ${spec.label}`}
-          >
-            +
-          </button>
-        </div>
-      )}
-    </section>
-  );
-}
 
 function Heading({
   kicker,
@@ -1156,22 +1388,12 @@ function FinancingView({ props }: { props: LayoutProps }) {
           removeStudy={removeStudy}
           clearStudies={clearStudies}
         />
-        <FinancingFields
+        <FinancingAdjustmentPanel
           state={state}
           update={update}
-          compact
           interaction={{ activeKey, onSelectSlider: setActiveKey }}
         />
-        <SliderPanel
-          state={state}
-          update={update}
-          activeKey={activeKey}
-          onChangeActive={setActiveKey}
-          targetKeys={["termMonths", "entry", "property", "financingRate"]}
-          helper="A barra ajusta a variável marcada nos campos ou na faixa."
-          showTargets
-          showNudge
-        />
+        <SacPriceScenario state={state} />
         <FgtsComparison
           comparison={fgtsComparison}
           salary={state.fgtsSalary}
