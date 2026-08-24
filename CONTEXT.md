@@ -138,6 +138,10 @@ _Avoid_: General inflation
 The assumed effective annual growth in Orçamento mensal before the rent constraint is applied.
 _Avoid_: Income growth
 
+**Crescimento do salário**:
+The assumed annual increase in the decision-maker’s monthly salary used to estimate future FGTS deposits.
+_Avoid_: Guaranteed raise, investment return
+
 ### Projection and comparison
 
 **Projeção**:

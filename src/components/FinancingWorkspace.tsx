@@ -32,6 +32,7 @@ type FinancingState = {
   financingRate: number;
   termMonths: number;
   fgtsSalary: number;
+  fgtsSalaryGrowth: number;
   method: Method;
 };
 
@@ -102,6 +103,7 @@ const DEFAULTS: FinancingState = {
   financingRate: 10,
   termMonths: 420,
   fgtsSalary: 0,
+  fgtsSalaryGrowth: 0,
   method: "SAC",
 };
 
@@ -1173,7 +1175,9 @@ function FinancingView({ props }: { props: LayoutProps }) {
         <FgtsComparison
           comparison={fgtsComparison}
           salary={state.fgtsSalary}
+          salaryGrowth={state.fgtsSalaryGrowth}
           onSalaryChange={(salary) => update({ fgtsSalary: salary })}
+          onSalaryGrowthChange={(salaryGrowth) => update({ fgtsSalaryGrowth: salaryGrowth })}
         />
 
       </main>
@@ -1243,6 +1247,7 @@ export default function FinancingWorkspace() {
       taxaAnual: state.financingRate / 100,
       prazoMeses: state.termMonths,
       salarioMensal: state.fgtsSalary,
+      crescimentoSalarioAnual: state.fgtsSalaryGrowth,
     }),
     [state],
   );
@@ -1274,7 +1279,13 @@ export default function FinancingWorkspace() {
   const loadStudy = useCallback(
     (id: number) => {
       const study = studies.find((candidate) => candidate.id === id);
-      if (study) setState({ ...study.state, fgtsSalary: study.state.fgtsSalary ?? 0 });
+      if (study) {
+        setState({
+          ...study.state,
+          fgtsSalary: study.state.fgtsSalary ?? 0,
+          fgtsSalaryGrowth: study.state.fgtsSalaryGrowth ?? 0,
+        });
+      }
     },
     [studies],
   );

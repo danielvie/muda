@@ -13,6 +13,7 @@ export type FgtsScheduleInput = {
   taxaAnual: number;
   prazoMeses: number;
   salarioMensal: number;
+  crescimentoSalarioAnual: number;
 };
 
 export type FgtsYearBlock = {
@@ -46,6 +47,7 @@ export type FgtsMethodProjection = {
 
 export type FgtsComparison = {
   salarioMensal: number;
+  crescimentoSalarioAnual: number;
   fgtsMensalEstimado: number;
   intervaloUsoMeses: number;
   sac: FgtsMethodProjection;
@@ -83,7 +85,6 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
   const taxaMensal = annualToMonthlyRate(input.taxaAnual);
   const amortizacaoSac = pv / prazoOriginalMeses;
   const prestacaoPrice = pricePayment(pv, taxaMensal, prazoOriginalMeses);
-  const fgtsMensal = input.salarioMensal * FGTS_DEPOSIT_RATE;
 
   let saldo = pv;
   let fgtsDisponivel = 0;
@@ -96,7 +97,11 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
 
   for (let mes = 1; mes <= prazoOriginalMeses && saldo > BALANCE_TOLERANCE; mes += 1) {
     const saldoInicial = saldo;
-    const fgtsDoMes = fgtsMensal;
+    const salarioDoMes = input.salarioMensal * Math.pow(
+      1 + input.crescimentoSalarioAnual,
+      Math.floor((mes - 1) / 12),
+    );
+    const fgtsDoMes = salarioDoMes * FGTS_DEPOSIT_RATE;
     const taxaJuros = saldoInicial * taxaMensal;
     const amortizacaoPlanejada = metodo === "SAC"
       ? amortizacaoSac
@@ -157,13 +162,16 @@ export function buildFgtsComparison(
     !Number.isFinite(input.taxaAnual) ||
     !Number.isFinite(input.prazoMeses) ||
     !Number.isFinite(input.salarioMensal) ||
-    input.salarioMensal <= 0
+    input.salarioMensal <= 0 ||
+    !Number.isFinite(input.crescimentoSalarioAnual) ||
+    input.crescimentoSalarioAnual < 0
   ) {
     return null;
   }
 
   return {
     salarioMensal: input.salarioMensal,
+    crescimentoSalarioAnual: input.crescimentoSalarioAnual,
     fgtsMensalEstimado: input.salarioMensal * FGTS_DEPOSIT_RATE,
     intervaloUsoMeses: FGTS_USE_INTERVAL_MONTHS,
     sac: projectMethod(input, "SAC"),

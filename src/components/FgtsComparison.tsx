@@ -71,13 +71,17 @@ function MethodCard({ projection }: { projection: FgtsMethodProjection }) {
 type FgtsComparisonProps = {
   comparison: FgtsComparisonData | null;
   salary: number;
+  salaryGrowth: number;
   onSalaryChange: (salary: number) => void;
+  onSalaryGrowthChange: (salaryGrowth: number) => void;
 };
 
 export default function FgtsComparison({
   comparison,
   salary,
+  salaryGrowth,
   onSalaryChange,
+  onSalaryGrowthChange,
 }: FgtsComparisonProps) {
   return (
     <section className="grid gap-3 rounded-[10px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_80%,var(--lp-accent)_5%)] p-3.5" aria-labelledby="fgts-comparison-title">
@@ -89,25 +93,47 @@ export default function FgtsComparison({
         </p>
       </header>
 
-      <label className="grid gap-1.25">
-        <span className="text-(--lp-muted) text-[9px] font-extrabold">Salário mensal bruto</span>
-        <div className="flex min-h-12 min-w-0 items-center rounded-[5px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_76%,transparent)]">
-          <input
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="100"
-            value={salary || ""}
-            placeholder="Informe para estimar o FGTS"
-            className="w-full min-w-0 border-0 bg-transparent p-[10px_5px_10px_10px] text-(--lp-ink) font-mono text-[13px] font-extrabold outline-0 focus:shadow-[inset_0_0_0_2px_var(--lp-accent)] max-[420px]:text-[12px]"
-            onChange={(event) => onSalaryChange(Number(event.currentTarget.value) || 0)}
-          />
-          <small className="whitespace-nowrap pr-2 text-(--lp-muted) text-[8px]">R$</small>
-        </div>
-        <small className="text-(--lp-muted) text-[9px] leading-[1.35]">
-          O cálculo estima {brl(salary * FGTS_DEPOSIT_RATE)} por mês, usando 8% do salário.
-        </small>
-      </label>
+      <div className="grid grid-cols-2 gap-3 max-[699px]:grid-cols-1">
+        <label className="grid gap-1.25">
+          <span className="text-(--lp-muted) text-[9px] font-extrabold">Salário mensal bruto</span>
+          <div className="flex min-h-12 min-w-0 items-center rounded-[5px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_76%,transparent)]">
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="100"
+              value={salary || ""}
+              placeholder="Informe o salário"
+              className="w-full min-w-0 border-0 bg-transparent p-[10px_5px_10px_10px] text-(--lp-ink) font-mono text-[13px] font-extrabold outline-0 focus:shadow-[inset_0_0_0_2px_var(--lp-accent)] max-[420px]:text-[12px]"
+              onChange={(event) => onSalaryChange(Number(event.currentTarget.value) || 0)}
+            />
+            <small className="whitespace-nowrap pr-2 text-(--lp-muted) text-[8px]">R$</small>
+          </div>
+          <small className="text-(--lp-muted) text-[9px] leading-[1.35]">
+            FGTS atual estimado: {brl(salary * FGTS_DEPOSIT_RATE)}/mês.
+          </small>
+        </label>
+
+        <label className="grid gap-1.25">
+          <span className="text-(--lp-muted) text-[9px] font-extrabold">Crescimento anual do salário</span>
+          <div className="flex min-h-12 min-w-0 items-center rounded-[5px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_76%,transparent)]">
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.5"
+              value={salaryGrowth || ""}
+              placeholder="Ex.: 5"
+              className="w-full min-w-0 border-0 bg-transparent p-[10px_5px_10px_10px] text-(--lp-ink) font-mono text-[13px] font-extrabold outline-0 focus:shadow-[inset_0_0_0_2px_var(--lp-accent)] max-[420px]:text-[12px]"
+              onChange={(event) => onSalaryGrowthChange(Number(event.currentTarget.value) || 0)}
+            />
+            <small className="whitespace-nowrap pr-2 text-(--lp-muted) text-[8px]">% a.a.</small>
+          </div>
+          <small className="text-(--lp-muted) text-[9px] leading-[1.35]">
+            Inclui dissídio e outros reajustes anuais.
+          </small>
+        </label>
+      </div>
 
       {comparison ? (
         <ComparisonResults comparison={comparison} />
@@ -129,10 +155,10 @@ function ComparisonResults({ comparison }: { comparison: FgtsComparisonData }) {
     <>
       <div className="grid gap-1">
         <p className="text-[11px] leading-[1.4] text-(--lp-muted)">
-          O saldo acumulado é usado a cada {comparison.intervaloUsoMeses} meses para reduzir o prazo.
+          O salário cresce {comparison.crescimentoSalarioAnual.toLocaleString("pt-BR")}% ao ano. O saldo acumulado é usado a cada {comparison.intervaloUsoMeses} meses para reduzir o prazo.
         </p>
         <p className="text-[11px] font-bold text-(--lp-muted)">
-          FGTS estimado: {brl(comparison.fgtsMensalEstimado)} por mês · {brl(comparison.fgtsMensalEstimado * 12)} por ano.
+          FGTS no primeiro ano: {brl(comparison.fgtsMensalEstimado)} por mês · {brl(comparison.fgtsMensalEstimado * 12)} por ano.
         </p>
       </div>
 
