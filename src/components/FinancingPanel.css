@@ -20,7 +20,7 @@
 .fc-targets button { display:grid; gap:3px; text-align:left; padding:9px 12px; min-height:64px; }
 .fc-targets button > span { font-size:13px; font-weight:500; }
 .fc-targets button strong { font-size:16px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
-.financing-panel .fc-auto-entry { display:flex; align-items:center; justify-content:space-between; gap:12px; text-align:left; padding:12px; }
+.financing-panel .fc-auto-entry { display:flex; align-items:center; justify-content:space-between; gap:8px 12px; text-align:left; padding:12px; }
 .fc-auto-entry > span:first-child { display:grid; gap:4px; }
 .fc-auto-entry strong { font-size:14px; }
 .fc-auto-entry small { font-size:12px; font-weight:400; color:var(--lp-muted); }
@@ -28,7 +28,7 @@
 .fc-switch-track > span { display:block; width:22px; height:22px; background:white; border-radius:50%; }
 .fc-auto-entry[aria-checked=true] .fc-switch-track { background:var(--lp-accent); }
 .fc-auto-entry[aria-checked=true] .fc-switch-track > span { transform:translateX(20px); }
-.fc-help,.fc-range-editor p { font-size:12px; color:var(--lp-muted); line-height:1.45; }
+.fc-help { font-size:12px; color:var(--lp-muted); line-height:1.45; }
 .fc-warning { padding:10px; border:1px solid var(--lp-line); font-size:13px; }
 .fc-adjustment { display:grid; gap:8px; }
 .fc-input-label { display:flex; align-items:baseline; justify-content:space-between; font-size:15px; font-weight:650; }
@@ -36,41 +36,11 @@
 .fc-number-row input { width:100%; min-width:0; height:58px; border:1px solid var(--lp-line); border-radius:9px; padding:8px 10px; font-size:28px; font-weight:650; font-variant-numeric:tabular-nums; background:var(--lp-bg); color:var(--lp-ink); }
 .financing-panel .fc-entry-shortcut { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:4px 10px; color:var(--lp-accent); font-size:14px; text-align:left; border-style:dashed; }
 .fc-entry-shortcut strong { font-size:15px; }
-.fc-drag-zone { min-width:0; background:transparent; padding:0 6px; }
-.fc-drag-zone input[type=range] { display:block; appearance:none; -webkit-appearance:none; width:100%; height:64px; margin:0; padding:0; background:transparent; cursor:grab; accent-color:var(--lp-accent); touch-action:pan-y; border-radius:10px; }
-.fc-drag-zone input[type=range]:active { cursor:grabbing; }
-.fc-drag-zone input[type=range]::-webkit-slider-runnable-track { height:6px; background:color-mix(in srgb,var(--lp-accent) 28%,var(--lp-paper)); border-radius:8px; }
-.fc-drag-zone input[type=range]::-webkit-slider-thumb { appearance:none; -webkit-appearance:none; height:44px; width:44px; margin-top:-19px; border-radius:50%; background:var(--lp-accent); border:3px solid var(--lp-paper); box-shadow:0 1px 4px #0003; }
-.fc-drag-zone input[type=range]::-moz-range-track { height:6px; background:color-mix(in srgb,var(--lp-accent) 28%,var(--lp-paper)); border-radius:8px; }
-.fc-drag-zone input[type=range]::-moz-range-thumb { box-sizing:border-box; height:44px; width:44px; border-radius:50%; background:var(--lp-accent); border:3px solid var(--lp-paper); box-shadow:0 1px 4px #0003; }
-.fc-drag-zone input:disabled { opacity:.4; }
-.fc-ruler input[type=range]::-webkit-slider-runnable-track { height:10px; border-radius:2px; background:repeating-linear-gradient(90deg,var(--lp-line) 0 2px,transparent 2px calc(10% - 1px)); }
-.fc-ruler input[type=range]::-webkit-slider-thumb { margin-top:-17px; border-radius:10px; }
-.fc-ruler input[type=range]::-moz-range-track { height:10px; border-radius:2px; background:repeating-linear-gradient(90deg,var(--lp-line) 0 2px,transparent 2px calc(10% - 1px)); }
-.fc-ruler input[type=range]::-moz-range-thumb { border-radius:10px; }
-.fc-range-scale { display:flex; justify-content:space-between; gap:10px; margin-top:-12px; padding-inline:6px; color:var(--lp-muted); font-size:12px; }
-.fc-range-scale span { min-width:0; overflow-wrap:anywhere; }
-.fc-nudges { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.fc-nudges button { display:flex; justify-content:center; align-items:center; gap:8px; height:52px; }
-.fc-nudges b { font-size:26px; color:var(--lp-accent); }
-.fc-nudges span { font-size:14px; }
-.fc-range-disclosure { min-width:0; border:1px solid var(--lp-line); border-radius:10px; }
-.fc-range-disclosure > summary { display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:60px; padding:12px; cursor:pointer; list-style:none; }
-.fc-range-disclosure > summary::-webkit-details-marker { display:none; }
-.fc-range-disclosure > summary > span:first-child { display:grid; gap:4px; min-width:0; }
-.fc-range-disclosure summary strong { font-size:14px; color:var(--lp-accent); }
-.fc-range-disclosure summary small { font-size:12px; color:var(--lp-muted); overflow-wrap:anywhere; }
-.fc-chevron { font-size:24px; color:var(--lp-accent); }
-.fc-range-disclosure[open] .fc-chevron { transform:rotate(180deg); }
-.fc-range-editor { display:grid; gap:12px; border-top:1px solid var(--lp-line); margin:0 12px; padding:12px 0; }
-.fc-scale-modes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
-.fc-scale-modes button { padding:8px 4px; font-size:14px; }
-.fc-zoom-label { display:block; font-size:14px; }
-.fc-zoom-ends { display:flex; justify-content:space-between; font-size:12px; color:var(--lp-muted); margin-top:-12px; }
-.financing-panel .fc-crop { border-color:var(--lp-accent); color:var(--lp-accent); font-size:14px; }
-.fc-method { display:flex; align-items:center; gap:8px; border-top:1px solid var(--lp-line); padding-top:12px; }
-.fc-method > span { flex:1; font-size:14px; }
-.fc-method button { min-width:76px; }
+.fc-method { display:flex; align-items:center; gap:8px; margin-top:8px; border-top:1px solid #ffffff30; padding-top:12px; }
+.fc-method > span { flex:1; font-size:14px; color:#e0e8f3; }
+.financing-panel .fc-method button { min-width:76px; min-height:48px; background:transparent; color:white; border-color:#ffffff70; }
+.financing-panel .fc-method button:hover { border-color:white; background:#ffffff18; }
+.financing-panel .fc-method button[aria-pressed=true] { background:var(--lp-yellow); color:var(--lp-hero); border-color:var(--lp-yellow); }
 .fc-costs { padding:14px 16px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; border-top:1px solid var(--lp-line); }
 .fc-costs dt { font-size:13px; color:var(--lp-muted); }
 .fc-costs dd { font-size:17px; font-weight:700; margin-top:3px; overflow-wrap:anywhere; }

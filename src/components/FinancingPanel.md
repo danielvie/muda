@@ -1,40 +1,49 @@
-# Financiamento mobile com zoom de ponto fixo
+# Financiamento com gesto bidimensional e bandas estáveis
 
-Promovido por escolha do usuário: rodada 6, variante 3.
+Promovido por escolha do usuário: rodada de linha 1× e bandas de zoom, variante 5. O mecanismo foi estendido aos quatro campos da calculadora.
 
 ## Comportamento aprovado
 
-- Prestação e editor no mesmo painel. Imóvel, Entrada, Juros e Prazo são selecionados diretamente, sem Anterior/Próximo.
-- Toggle de entrada mínima automática de 20%, preservando entradas maiores ao mudar o imóvel.
-- Régua sem painel de fundo, área de arraste de 64 px, puxador de 44 px e botões de pelo menos 48 px.
-- Ao soltar na borda da régua do imóvel, a faixa se expande. Não altera a escala durante o arraste.
-- “Ajustar alcance” começa recolhido. O zoom fixa Mínimo, Imóvel ou Máximo. O crop recupera precisão perto do imóvel, sem mudar seu valor.
-- Detalhes das parcelas, estudos salvos, comparação SAC/PRICE e FGTS continuam disponíveis abaixo do editor.
+- Imóvel e entrada: passos de R$ 1.000. Juros: 0,1 ponto percentual. Prazo: um ano, convertido para meses no estado financeiro.
+- Horizontal diminui ou aumenta o valor. Vertical muda a escala dos próximos trechos horizontais, sem recalcular os anteriores.
+- Escalas de 0,25×, 0,5×, 1×, 2× e 4×. Centros separados por 48 px, com margem de 8 px além da divisória para evitar trocas involuntárias.
+- Uma linha horizontal discreta marca a altura inicial de 1×. Permanece fixa durante o gesto e desaparece ao encerrar.
+- O ponteiro é capturado; o arraste continua fora da área. Soltar, cancelar, perder foco ou mudar de campo encerra a interação, mantendo os ajustes já aplicados.
+- Cada campo mantém sua faixa ao alternar entre campos e ambientes. Crop recorta perto do valor sem mudar a simulação.
+- A calculadora não usa mais réguas, expansão na borda, seletores de variante ou estado de depuração.
+- Teclado: esquerda/direita ajustam valor, cima/baixo mudam escala, Enter/Espaço/Escape encerram. O campo numérico continua disponível.
+
+## Regras financeiras preservadas
+
+O mínimo automático de 20% mantém a entrada atual ou a eleva quando necessário. O atalho de 20% continua disponível. Entradas automáticas que não são múltiplos de R$ 1.000 não mudam ao focar/sair do campo ou fazer um gesto puramente vertical.
+
+Juros ficam entre 0% e 20% a.a.; prazo entre 1 e 40 anos. A entrada respeita seu mínimo e o limite disponível. Intervalos sem um tick válido desabilitam o gesto, mantendo a edição direta. Juros, prestações e projeções não são arredondados para ticks monetários.
+
+Os números usam formato brasileiro. Digitação incompleta fica local até Enter ou perda de foco. Ao iniciar um gesto depois de digitar, o campo é confirmado antes de capturar o valor inicial.
+
+O botão Salvar estudo permanece junto à prestação. Estudos antigos, FGTS com redução de prazo/prestação, SAC/PRICE e os demais ambientes são preservados. Valores de gesto ficam em memória; a persistência de estudos mantém a chave existente.
 
 ## Implementação
 
-`FinancingPanel.tsx` contém a interface aprovada. `financingControls.ts` contém as regras de atualização, limites, zoom e recorte, testadas independentemente da UI. A workspace mantém valores, política de entrada e faixa ao trocar de ambiente. Estudos existentes continuam carregáveis; restaurá-los com a política ativa respeita o mínimo de entrada.
+- `FinancingGestureControl.tsx` e `.css`: área de interação, captura do ponteiro, bandas, linha 1× e acessibilidade por teclado.
+- `financingGesture.ts`: configuração por unidade, faixas independentes, histerese e integração incremental de movimento.
+- `financingControls.ts`: política financeira, parsing/formatação e snapping.
+- `FinancingWorkspace.tsx`: valores e faixas compartilhados, estudos e projeções.
 
-Campos numéricos guardam digitação incompleta localmente e confirmam ao sair ou tocar Enter. Isso evita reduzir o imóvel ou a entrada ao apagar temporariamente um campo. Barras e botões atualizam a prestação imediatamente.
-
-A regra do mínimo arredonda 20% para cima ao real inteiro. Se a entrada preservada superar o valor do imóvel, o painel avisa que não há saldo a financiar. O toggle começa desligado e não é persistido. Os estudos continuam usando a chave de armazenamento existente.
-
-## Integração com FGTS
-
-Os modos de reduzir prazo e reduzir prestação de `origin/main` permanecem disponíveis no painel FGTS. O estado compartilhado aceita mudanças de modo, preserva a seleção ao editar a calculadora e a inclui nos estudos salvos. Estudos antigos sem modo de FGTS usam redução de prazo. A regra de entrada mínima continua aplicada ao restaurar estudos.
+A normalização das faixas decimais usa tolerância numérica para evitar que representações como `9.2 / 0.1` ampliem os limites a cada renderização.
 
 ## Fonte do protótipo
 
-Branch local `prototype/financing-ux-round-6`, commit `7124c6b06339ca021b83570277313a0c2fc8e030`.
+Branch local `prototype/financing-stable-bands`, commit `1e1082d134502cf1e3cfa374889691281038b966`.
 
-Ela preserva as cinco alternativas, o seletor e o histórico de avaliação. A versão principal não importa o protótipo, não consulta `?variant=` e não exibe estado de depuração. Não houve push ou deploy nesta promoção.
+Ela preserva as cinco variantes e o histórico de avaliação. Os arquivos descartáveis foram removidos da versão principal. Não houve push ou deploy nesta promoção.
 
 ## Verificação
 
-- `pnpm test`: 20 testes de controles e FGTS. `pnpm run test:financing` executa os 19 testes de controles. Requer Node com suporte nativo a TypeScript, verificado no Node 24.
-- `pnpm run check` e `pnpm run build`.
-- Navegador em 320, 390 e 1280 px: sem overflow horizontal, controles de pelo menos 48 px, barra de 64 px.
-- Rota padrão e antiga URL `?variant=3` mostram o painel promovido, sem seletor.
-- Imóvel acima do antigo teto, confirmação numérica, mínimo automático, zoom com máximo fixo e crop exercitados no navegador.
-
-Gestos em aparelho físico ainda precisam de avaliação.
+- 42 testes de controles, gestos e FGTS. `test` inclui as três suítes; `test:financing` executa controles e gestos.
+- TypeScript e build de produção.
+- Quatro campos exercitados no navegador com faixas de 320, 390 e 1280 px; sem overflow horizontal e com área de gesto de 240 px.
+- Sequências horizontais/verticais verificaram escala, unidade, linha fixa e remoção da linha ao terminar.
+- Crop preservou o valor dos quatro campos. Faixas foram preservadas ao trocar de campo, incluindo juros com decimais.
+- Um arraste real automatizado do Chrome confirmou a digitação pendente de R$ 1,5 milhão antes de começar; o movimento vertical ampliou só a faixa e liberou a captura ao soltar.
+- Console consultado sem erros ou avisos. Falta avaliação dos gestos em aparelho físico.

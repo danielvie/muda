@@ -13,10 +13,31 @@ export type FinancingState = {
 export type Bounds = { min: number; max: number };
 export type ZoomAnchor = "min" | "value" | "max";
 export type FinancingField = "property" | "entry" | "financingRate" | "termMonths";
+export const MONEY_TICK = 1000;
 export const MIN_RANGE_WIDTH = 20000;
 const MAX = Number.MAX_SAFE_INTEGER;
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 export const minimumEntry = (property: number) => Math.ceil(property * 0.2);
+
+export function formatFinancingNumber(value: number, monetary: boolean): string {
+  return value.toLocaleString("pt-BR", { minimumFractionDigits: monetary ? 2 : 0, maximumFractionDigits: 2 });
+}
+
+/** Accept Brazilian grouping/decimals and ungrouped decimal-dot values pasted from older fields. */
+export function parseFinancingNumber(raw: string): number {
+  const text = raw.trim().replace(/^R\$\s*/, "").replace(/\s/g, "");
+  if (/^[+-]?\d{1,3}(\.\d{3})+(,\d+)?$/.test(text)) return Number(text.replace(/\./g, "").replace(",", "."));
+  if (/^[+-]?(\d+([.,]\d*)?|[.,]\d+)$/.test(text)) return Number(text.replace(",", "."));
+  return NaN;
+}
+
+/** Snap to a zero-based grid, never to the possibly fractional minimum of a zoom range. */
+export function snapFinancingValue(value: number, tick: number, min: number, max: number): number {
+  const lower = Math.ceil(min / tick) * tick;
+  const upper = Math.floor(max / tick) * tick;
+  if (lower > upper) return clamp(value, min, max); // Preserve constraints when no full tick fits.
+  return Number(clamp(Math.round(value / tick) * tick, lower, upper).toFixed(6));
+}
 
 /** Apply the entry policy to every mutation, including restored studies. */
 export function updateFinancing(state: FinancingState, patch: Partial<FinancingState>, automaticEntry: boolean): FinancingState {
@@ -48,6 +69,8 @@ export function normalizeBounds(bounds: Bounds, value: number): Bounds {
     max = Math.min(MAX, min + MIN_RANGE_WIDTH);
     min = Math.max(0, max - MIN_RANGE_WIDTH);
   }
+  min = Math.floor(min / MONEY_TICK) * MONEY_TICK;
+  max = Math.min(MAX, Math.ceil(max / MONEY_TICK) * MONEY_TICK);
   return { min, max };
 }
 export function zoomBounds(bounds: Bounds, value: number, width: number, anchor: ZoomAnchor): Bounds {

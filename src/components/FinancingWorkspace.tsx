@@ -8,7 +8,8 @@ import {
 } from "react";
 import FinanceVsInvest from "./FinanceVsInvest.tsx";
 import FinancingPanel from "./FinancingPanel.tsx";
-import { normalizeBounds, updateFinancing, type Bounds, type FinancingState } from "../financingControls.ts";
+import { updateFinancing, type Bounds, type FinancingField, type FinancingState } from "../financingControls.ts";
+import { DEFAULT_CONTROL_RANGES, normalizeControlRanges, type ControlRanges } from "../financingGesture.ts";
 import InvestmentProjection from "./InvestmentProjection.tsx";
 import FgtsComparison from "./FgtsComparison.tsx";
 import {
@@ -19,7 +20,7 @@ import {
 } from "../fgtsSchedule.ts";
 
 
-// Guided mobile financing with anchored zoom, promoted from UX round 6, variant 3.
+// Mobile financing with stable zoom bands and a fixed 1x origin for all four controls.
 // Palette C: financing and comparisons in blue, investment in green.
 
 
@@ -78,8 +79,8 @@ type QuickAction = {
 type LayoutProps = {
   automaticEntry: boolean;
   onAutomaticEntryChange: (enabled: boolean) => void;
-  bounds: Bounds;
-  onBoundsChange: (bounds: Bounds) => void;
+  ranges: ControlRanges;
+  onRangeChange: (field: FinancingField, bounds: Bounds) => void;
   state: FinancingState;
   result: Calculation;
   fgtsComparison: FgtsComparisonData | null;
@@ -1396,7 +1397,7 @@ function persistStudies(studies: Study[]) {
 
 export default function FinancingWorkspace() {
   const [automaticEntry, setAutomaticEntry] = useState(false);
-  const [rangeBounds, setRangeBounds] = useState<Bounds>({ min: 0, max: 2000000 });
+  const [controlRanges, setControlRanges] = useState<ControlRanges>(DEFAULT_CONTROL_RANGES);
   const [environment, setEnvironment] = useState<Environment>("financing");
   const [state, setState] = useState<FinancingState>(DEFAULTS);
   const [studies, setStudies] = useState<Study[]>(readSavedStudies);
@@ -1420,11 +1421,11 @@ export default function FinancingWorkspace() {
     (patch: Partial<FinancingState>) => setState(previous => updateFinancing(previous, patch, automaticEntry)),
     [automaticEntry],
   );
-  const bounds = normalizeBounds(rangeBounds, state.property);
+  const ranges = normalizeControlRanges(controlRanges, state, automaticEntry);
   useEffect(() => {
-    setRangeBounds(previous => normalizeBounds(previous, state.property));
-  }, [state.property]);
-  const onBoundsChange = (next: Bounds) => setRangeBounds(normalizeBounds(next, state.property));
+    setControlRanges(previous => normalizeControlRanges(previous, state, automaticEntry));
+  }, [state, automaticEntry]);
+  const onRangeChange = (field: FinancingField, next: Bounds) => setControlRanges(previous => ({ ...previous, [field]: next }));
   const onAutomaticEntryChange = (enabled: boolean) => {
     setAutomaticEntry(enabled);
     if (enabled) setState(previous => updateFinancing(previous, {}, true));
@@ -1447,7 +1448,7 @@ export default function FinancingWorkspace() {
         ].slice(-8),
       );
     },
-    [result, state],
+    [result, state, setStudies],
   );
   const loadStudy = useCallback(
     (id: number) => {
@@ -1466,9 +1467,9 @@ export default function FinancingWorkspace() {
   const removeStudy = useCallback(
     (id: number) =>
       setStudies((previous) => previous.filter((study) => study.id !== id)),
-    [],
+    [setStudies],
   );
-  const clearStudies = useCallback(() => setStudies([]), []);
+  const clearStudies = useCallback(() => setStudies([]), [setStudies]);
 
   useEffect(() => {
     persistStudies(studies);
@@ -1477,8 +1478,8 @@ export default function FinancingWorkspace() {
   const props: LayoutProps = {
     automaticEntry,
     onAutomaticEntryChange,
-    bounds,
-    onBoundsChange,
+    ranges,
+    onRangeChange,
     state,
     result,
     fgtsComparison,

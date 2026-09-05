@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   cropBounds, expandAtEdge, minimumEntry, normalizeBounds, updateFinancing,
   widthToZoom, zoomBounds, zoomScale, zoomToWidth, type FinancingState,
+  MONEY_TICK, formatFinancingNumber, parseFinancingNumber, snapFinancingValue,
 } from "./financingControls.ts";
 
 const state: FinancingState = { property: 800000, entry: 120000, financingRate: 10, termMonths: 420, fgtsSalary: 0, fgtsSalaryGrowth: 0, fgtsMode: "PRAZO", method: "SAC" };
@@ -93,6 +94,43 @@ test("zoom conversion round trips across a logarithmic scale", () => {
   const scale = zoomScale({ min: 0, max: 2000000 }, 800000);
   for (const position of [0, 10, 50, 90, 100]) assert.ok(Math.abs(widthToZoom(zoomToWidth(position, scale), scale) - position) < 1e-8);
 });
+test("zoom and crop limits align to global money ticks without rounding the property", () => {
+  const value = 1740671.71;
+  const bounds = cropBounds({ min: 0, max: 2000000 }, value);
+  assert.equal(bounds.min % MONEY_TICK, 0);
+  assert.equal(bounds.max % MONEY_TICK, 0);
+  assert.ok(bounds.min <= value && bounds.max >= value);
+  for (const anchor of ["min", "value", "max"] as const) {
+    const zoomed = zoomBounds(bounds, value, 453921.791, anchor);
+    assert.equal(zoomed.min % MONEY_TICK, 0);
+    assert.equal(zoomed.max % MONEY_TICK, 0);
+  }
+});
+test("amount controls snap to global thousands, not a fractional range origin", () => {
+  assert.equal(snapFinancingValue(1740671.71, MONEY_TICK, 1566671.71, 1914671.71), 1741000);
+  assert.equal(snapFinancingValue(1742000, MONEY_TICK, 1566000, 1915000), 1742000);
+  assert.equal(snapFinancingValue(1740000, MONEY_TICK, 1566000, 1915000), 1740000);
+});
+test("ticks preserve entry constraints and decimal rate precision", () => {
+  assert.equal(snapFinancingValue(348000, MONEY_TICK, 348200, 1741000), 349000);
+  assert.equal(snapFinancingValue(300, MONEY_TICK, 200, 500), 300);
+  assert.equal(snapFinancingValue(10.100000000001, 0.1, 0, 20), 10.1);
+  assert.equal(snapFinancingValue(35.4, 1, 1, 40), 35);
+  assert.equal(updateFinancing({ ...state, property: 1741000 }, {}, true).entry, 348200);
+});
+test("formatted controls use Brazilian grouping and decimal comma", () => {
+  assert.equal(formatFinancingNumber(1741000, true), "1.741.000,00");
+  assert.equal(formatFinancingNumber(10.1, false), "10,1");
+  assert.equal(formatFinancingNumber(35, false), "35");
+});
+test("parse formatted, raw, and pasted currency values without losing grouping", () => {
+  for (const raw of ["1.740.671,71", "1740671,71", "1740671.71", "R$ 1.740.671,71"]) assert.equal(parseFinancingNumber(raw), 1740671.71);
+  assert.equal(parseFinancingNumber("1.000"), 1000);
+  assert.equal(parseFinancingNumber("10,1"), 10.1);
+  assert.equal(parseFinancingNumber("0,00"), 0);
+  for (const raw of ["", "abc", "1..2", "1,2,3", "1.23.456"]) assert.ok(Number.isNaN(parseFinancingNumber(raw)));
+});
+
 test("safe numerical bounds remain finite and include large values", () => {
   const max = Number.MAX_SAFE_INTEGER;
   const bounds = normalizeBounds({ min: max, max: Infinity }, max);
