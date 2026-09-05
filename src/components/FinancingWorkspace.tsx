@@ -7,6 +7,8 @@ import {
   type ReactNode,
 } from "react";
 import FinanceVsInvest from "./FinanceVsInvest.tsx";
+import FinancingPanel from "./FinancingPanel.tsx";
+import { normalizeBounds, updateFinancing, type Bounds, type FinancingState } from "../financingControls.ts";
 import InvestmentProjection from "./InvestmentProjection.tsx";
 import FgtsComparison from "./FgtsComparison.tsx";
 import {
@@ -14,12 +16,11 @@ import {
   FGTS_DEPOSIT_RATE,
   FGTS_USE_INTERVAL_MONTHS,
   type FgtsComparison as FgtsComparisonData,
-  type FgtsMode,
 } from "../fgtsSchedule.ts";
 
 
-// Promoted financing workspace. The former I2-D study is now the production flow.
-// Palette C is the production theme: blue financing, green investment, blue comparison.
+// Guided mobile financing with anchored zoom, promoted from UX round 6, variant 3.
+// Palette C: financing and comparisons in blue, investment in green.
 
 
 type Method = "SAC" | "PRICE";
@@ -28,17 +29,6 @@ type SliderKey =
   | "entry"
   | "financingRate"
   | "termMonths";
-
-type FinancingState = {
-  property: number;
-  entry: number;
-  financingRate: number;
-  termMonths: number;
-  fgtsSalary: number;
-  fgtsSalaryGrowth: number;
-  fgtsMode: FgtsMode;
-  method: Method;
-};
 
 type ScheduleRow = {
   month: number;
@@ -86,6 +76,10 @@ type QuickAction = {
 };
 
 type LayoutProps = {
+  automaticEntry: boolean;
+  onAutomaticEntryChange: (enabled: boolean) => void;
+  bounds: Bounds;
+  onBoundsChange: (bounds: Bounds) => void;
   state: FinancingState;
   result: Calculation;
   fgtsComparison: FgtsComparisonData | null;
@@ -1322,53 +1316,7 @@ function ComparisonEnvironment() {
 }
 
 function FinancingView({ props }: { props: LayoutProps }) {
-  const {
-    state,
-    result,
-    fgtsComparison,
-    update,
-    studies,
-    saveStudy,
-    loadStudy,
-    removeStudy,
-    clearStudies,
-  } = props;
-  const [activeKey, setActiveKey] = useState<SliderKey>("termMonths");
-  const toggleMethod = () =>
-    update({ method: state.method === "SAC" ? "PRICE" : "SAC" });
-  const extendTerm = () =>
-    update({ termMonths: Math.min(480, state.termMonths + 60) });
-  const lowerRate = () =>
-    update({ financingRate: Math.max(4, state.financingRate - 0.5) });
-  const increaseRate = () =>
-    update({ financingRate: Math.min(18, state.financingRate + 0.5) });
-  const actions: QuickAction[] = [
-    {
-      label: state.method === "SAC" ? "Testar PRICE" : "Voltar ao SAC",
-      detail: "alternar o sistema de amortização",
-      onClick: toggleMethod,
-    },
-    {
-      label: "Salvar comparação",
-      detail: "guardar este método",
-      onClick: () => saveStudy("Comparação"),
-    },
-    {
-      label: "Prazo +5 anos",
-      detail: "testar o efeito no pagamento",
-      onClick: extendTerm,
-    },
-    {
-      label: "Juros −0,5 p.p.",
-      detail: "simular uma taxa menor",
-      onClick: lowerRate,
-    },
-    {
-      label: "Juros +0,5 p.p.",
-      detail: "simular uma taxa maior",
-      onClick: increaseRate,
-    },
-  ];
+  const { state, result, fgtsComparison, update, studies, saveStudy, loadStudy, removeStudy, clearStudies } = props;
 
   return (
     <div data-environment="financing" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
@@ -1377,32 +1325,12 @@ function FinancingView({ props }: { props: LayoutProps }) {
         action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">FINANCIAMENTO</span>}
       />
       <main className="mx-auto flex w-[calc(100%-24px)] max-w-170 flex-col gap-2 pt-4.5 pb-27.5 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
-        <Heading
-          kicker="FINANCIAMENTO · SAC OU PRICE"
-          title={
-            <>
-              Calcule a parcela do
-              <br />
-              seu financiamento.
-            </>
-          }
-          description="Ajuste o valor do imóvel, a entrada, os juros e o prazo para montar seu cenário."
-        />
-        <FinancingResult result={result} state={state} />
-        <QuickActions
-          helper="A prestação muda de forma diferente em cada sistema. Guarde os dois estados."
-          actions={actions}
-          studies={studies}
-          currentPayment={result.financingPayment}
-          loadStudy={loadStudy}
-          removeStudy={removeStudy}
-          clearStudies={clearStudies}
-        />
-        <FinancingAdjustmentPanel
-          state={state}
-          update={update}
-          interaction={{ activeKey, onSelectSlider: setActiveKey }}
-        />
+        <FinancingPanel {...props} />
+        <details className="financing-details"><summary>Ver parcelas e custos do financiamento</summary><FinancingSummary result={result} state={state} /><InstallmentList result={result} /></details>
+        <details className="financing-details"><summary>Estudos salvos · {studies.length}</summary>
+          <button type="button" className="financing-save" onClick={() => saveStudy()}>Salvar simulação atual</button>
+          {studies.length > 0 ? <StudyShelf studies={studies} currentPayment={result.financingPayment} loadStudy={loadStudy} removeStudy={removeStudy} clearStudies={clearStudies} /> : <p className="pb-3 text-sm">Salve uma simulação para comparar outras combinações.</p>}
+        </details>
         <SacPriceScenario state={state} />
         <FgtsComparison
           comparison={fgtsComparison}
@@ -1467,6 +1395,8 @@ function persistStudies(studies: Study[]) {
 }
 
 export default function FinancingWorkspace() {
+  const [automaticEntry, setAutomaticEntry] = useState(false);
+  const [rangeBounds, setRangeBounds] = useState<Bounds>({ min: 0, max: 2000000 });
   const [environment, setEnvironment] = useState<Environment>("financing");
   const [state, setState] = useState<FinancingState>(DEFAULTS);
   const [studies, setStudies] = useState<Study[]>(readSavedStudies);
@@ -1487,10 +1417,18 @@ export default function FinancingWorkspace() {
     [state],
   );
   const update = useCallback(
-    (patch: Partial<FinancingState>) =>
-      setState((previous) => ({ ...previous, ...patch })),
-    [],
+    (patch: Partial<FinancingState>) => setState(previous => updateFinancing(previous, patch, automaticEntry)),
+    [automaticEntry],
   );
+  const bounds = normalizeBounds(rangeBounds, state.property);
+  useEffect(() => {
+    setRangeBounds(previous => normalizeBounds(previous, state.property));
+  }, [state.property]);
+  const onBoundsChange = (next: Bounds) => setRangeBounds(normalizeBounds(next, state.property));
+  const onAutomaticEntryChange = (enabled: boolean) => {
+    setAutomaticEntry(enabled);
+    if (enabled) setState(previous => updateFinancing(previous, {}, true));
+  };
 
 
   const saveStudy = useCallback(
@@ -1515,15 +1453,15 @@ export default function FinancingWorkspace() {
     (id: number) => {
       const study = studies.find((candidate) => candidate.id === id);
       if (study) {
-        setState({
+        setState(updateFinancing({
           ...study.state,
           fgtsSalary: study.state.fgtsSalary ?? 0,
           fgtsSalaryGrowth: study.state.fgtsSalaryGrowth ?? 0,
           fgtsMode: study.state.fgtsMode === "PRESTACAO" ? "PRESTACAO" : "PRAZO",
-        });
+        }, {}, automaticEntry));
       }
     },
-    [studies],
+    [studies, automaticEntry],
   );
   const removeStudy = useCallback(
     (id: number) =>
@@ -1537,6 +1475,10 @@ export default function FinancingWorkspace() {
   }, [studies]);
 
   const props: LayoutProps = {
+    automaticEntry,
+    onAutomaticEntryChange,
+    bounds,
+    onBoundsChange,
     state,
     result,
     fgtsComparison,

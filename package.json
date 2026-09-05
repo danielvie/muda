@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "check": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types src/fgtsSchedule.test.ts",
+    "test": "node --test --experimental-strip-types src/fgtsSchedule.test.ts src/financingControls.test.ts",
+    "test:financing": "node --test src/financingControls.test.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
