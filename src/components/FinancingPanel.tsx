@@ -51,6 +51,12 @@ export default function FinancingPanel(props: Props) {
     update({ [selected]: selected === "termMonths" ? next * 12 : next });
   };
   const stepLabel = selected === "financingRate" ? "0,1 p.p." : selected === "termMonths" ? "1 ano" : money(field.step);
+  const rangeProps = {
+    label: field.label, spec, bounds, stepLabel,
+    format: (value: number) => display(selected, value),
+    onChange: (value: number, nextBounds: Bounds) => { change(value); props.onRangeChange(selected, nextBounds); },
+    onBoundsChange: (nextBounds: Bounds) => props.onRangeChange(selected, nextBounds),
+  };
   return <section className="financing-panel">
     <h1>Quanto fica a parcela?</h1>
     <div className="fc-card">
@@ -68,9 +74,7 @@ export default function FinancingPanel(props: Props) {
           <div className="fc-number-row"><AmountInput key={selected} id={id} value={spec.value} min={spec.min} max={spec.max} step={field.step} monetary={field.monetary} onChange={change} /></div>
           <p className="fc-help">Se digitar, confirme com Enter ou saia do campo.</p>
           {selected === "entry" && <button type="button" className="fc-entry-shortcut" onClick={() => update({ entry: floor })}><span>Usar 20% do imóvel</span><strong>{money(floor)}</strong></button>}
-          <FinancingRangeControl key={selected} label={field.label} spec={spec} bounds={bounds} format={value => display(selected, value)} formatDelta={value => selected === "financingRate" ? `${value.toLocaleString("pt-BR", { maximumFractionDigits: 3 })} p.p.` : display(selected, value)} stepLabel={stepLabel}
-            onChange={(value, nextBounds) => { change(value); props.onRangeChange(selected, nextBounds); }}
-            onBoundsChange={nextBounds => props.onRangeChange(selected, nextBounds)} />
+          <FinancingRangeControl key={selected} {...rangeProps} />
         </div>
       </div>
       <dl className="fc-costs"><div><dt>Financiado</dt><dd>{money(result.financedAmount)}</dd></div><div><dt>Juros totais</dt><dd>{money(result.totalInterest)}</dd></div></dl>

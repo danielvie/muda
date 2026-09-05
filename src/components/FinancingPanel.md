@@ -1,52 +1,50 @@
-# Financiamento com barra simples e gesto opcional
+# Financiamento com barra simples e alça Foco
 
-O gesto de bandas estáveis, promovido da variante 5, continua disponível nos quatro campos. Para evitar toques acidentais, a interface começa com uma barra horizontal simples. O menu de gesto fica recolhido em "Ajustar alcance e precisão".
+Promovido por escolha do usuário: variante 2 do protótipo de recorte com alças auxiliares. A dinâmica das laterais foi ajustada na promoção.
 
 ## Comportamento aprovado
 
-- Imóvel e entrada: passos de R$ 1.000. Juros: 0,1 ponto percentual. Prazo: um ano, convertido para meses no estado financeiro.
-- A barra simples usa os limites inicial e final da faixa atual. As setas movem um tick; PageUp/PageDown movem dez; Home/End alcançam os limites. A barra não expande ao chegar na borda.
-- Ao expandir o menu, horizontal diminui ou aumenta o valor. Vertical muda a escala dos próximos trechos horizontais, sem recalcular os anteriores.
-- Escalas de 0,25×, 0,5×, 1×, 2× e 4×. Centros separados por 48 px, com margem de 8 px além da divisória para evitar trocas involuntárias.
-- Uma linha horizontal discreta marca a altura inicial de 1×. Permanece fixa durante o gesto e desaparece ao encerrar.
-- O ponteiro é capturado; o arraste continua fora da área. Soltar, cancelar, perder foco ou mudar de campo encerra a interação, mantendo os ajustes já aplicados.
-- Cada campo mantém sua faixa ao alternar entre campos e ambientes. Crop recorta perto do valor sem mudar a simulação.
-- O menu começa fechado e volta fechado ao mudar de campo. Ao fechar, o componente de gesto é desmontado; não sobra uma área sensível escondida. A faixa ajustada permanece na barra simples.
-- No gesto expandido, esquerda/direita ajustam valor, cima/baixo mudam escala e Enter/Espaço/Escape encerram. O campo numérico continua disponível.
+A barra simples altera o valor dentro da faixa atual. A alça Foco altera somente a faixa, com prévia durante o arraste e aplicação ao soltar:
 
-## Regras financeiras preservadas
+- Sobre a barra: recorta perto do ponto escolhido, tentando usar um quarto da largura atual. O recorte sempre inclui o valor da simulação e respeita a largura mínima.
+- Fora à esquerda: restaura o mínimo para zero, mantendo o máximo. Quando o campo exige um mínimo maior, como a entrada automática de 20% ou o prazo de um ano, usa esse mínimo permitido.
+- Fora à direita: dobra o limite máximo, mantendo o mínimo. Limites financeiros podem impedir a duplicação completa.
+- Fora da barra e sem extrapolar as laterais: cancela sem mudar a faixa.
 
-O mínimo automático de 20% mantém a entrada atual ou a eleva quando necessário. O atalho de 20% continua disponível. Entradas automáticas que não são múltiplos de R$ 1.000 não mudam ao focar/sair do campo ou fazer um gesto puramente vertical.
+Exemplo: faixa de R$ 750 mil a R$ 1,25 milhão. Puxar à direita resulta em R$ 750 mil a R$ 2,5 milhões. Puxar à esquerda depois resulta em R$ 0 a R$ 2,5 milhões. O imóvel não muda.
 
-Juros ficam entre 0% e 20% a.a.; prazo entre 1 e 40 anos. A entrada respeita seu mínimo e o limite disponível. Intervalos sem um tick válido desabilitam o gesto, mantendo a edição direta. Juros, prestações e projeções não são arredondados para ticks monetários.
+O gesto sempre calcula a prévia a partir da faixa inicial. Movimentos repetidos antes de soltar não duplicam o máximo várias vezes. É preciso deslocar pelo menos 8 px; um toque na alça não altera valores.
 
-Os números usam formato brasileiro. Digitação incompleta fica local até Enter ou perda de foco. Ao iniciar um gesto depois de digitar, o campo é confirmado antes de capturar o valor inicial.
+## Campos e acessibilidade
 
-O botão Salvar estudo permanece junto à prestação. Estudos antigos, FGTS com redução de prazo/prestação, SAC/PRICE e os demais ambientes são preservados. Valores de gesto ficam em memória; a persistência de estudos mantém a chave existente.
+- Imóvel e entrada: passos de R$ 1.000; juros: 0,1 ponto percentual; prazo: um ano.
+- Valores em formato brasileiro, com digitação incompleta mantida local até Enter ou perda de foco.
+- Barra com área de toque de 64 px; alça com altura mínima de 56 px. A barra permite rolagem vertical; somente a alça captura o gesto.
+- No teclado, a barra aceita setas, PageUp/PageDown e Home/End. Na alça, esquerda/direita escolhem o ponto; − restaura mínimo; + prepara máximo em dobro; Enter aplica; Escape cancela.
+- Soltar ou perder captura encerra o gesto. Mudar de campo ou alterar a simulação cancela qualquer prévia anterior.
+
+O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. O mínimo automático de 20%, estudos existentes e os dois modos de FGTS são preservados. As faixas ficam em memória; os estudos usam a chave de armazenamento existente.
 
 ## Implementação
 
-- `FinancingRangeControl.tsx` e `.css`: barra simples, limites visíveis e expansão explícita do menu.
-- `FinancingGestureControl.tsx` e `.css`: área de interação, captura do ponteiro, bandas, linha 1× e acessibilidade por teclado.
-- `financingGesture.ts`: configuração por unidade, faixas independentes, histerese e integração incremental de movimento.
-- `financingControls.ts`: política financeira, parsing/formatação e snapping.
-- `FinancingWorkspace.tsx`: valores e faixas compartilhados, estudos e projeções.
+- `FinancingRangeControl.tsx` e `.css`: barra, alça, zonas de soltura, prévia e captura do ponteiro.
+- `financingRangeDrop.ts`: recorte, restauração de mínimo, duplicação do máximo e classificação do ponto de soltura.
+- `financingGesture.ts`: configuração por unidade, normalização das faixas e controles da barra.
+- `financingControls.ts`: regras financeiras, formato brasileiro e ticks.
+- `FinancingWorkspace.tsx`: valores, faixas, estudos e projeções.
 
-A normalização das faixas decimais usa tolerância numérica para evitar que representações como `9.2 / 0.1` ampliem os limites a cada renderização.
+O menu bidimensional anterior, o seletor de protótipos e as variantes descartadas não fazem parte da interface principal.
 
 ## Fonte do protótipo
 
-Branch local `prototype/financing-stable-bands`, commit `1e1082d134502cf1e3cfa374889691281038b966`.
+Branch local `prototype/financing-focus-drop`, commit `6da870282ace81076d9a5ea28363bd62dc10725d`.
 
-Ela preserva as cinco variantes e o histórico de avaliação. Os arquivos descartáveis foram removidos da versão principal. Não houve push ou deploy nesta promoção.
+Ela preserva as quatro variantes e o histórico de avaliação antes da promoção. A regra assimétrica das laterais está implementada na versão principal.
 
 ## Verificação
 
-- 47 testes de controles, barra simples, gestos e FGTS. `test` inclui as três suítes; `test:financing` executa controles e gestos.
-- TypeScript e build de produção.
-- Quatro campos exercitados no navegador com faixas de 320, 390 e 1280 px; sem overflow horizontal e com área de gesto de 240 px.
-- Sequências horizontais/verticais verificaram escala, unidade, linha fixa e remoção da linha ao terminar.
-- Barra e menu foram verificados nos quatro campos: estado inicial fechado, passo correto, preservação do valor durante zoom e remoção da área de gesto ao fechar.
-- Crop preservou o valor dos quatro campos. Faixas foram preservadas ao trocar de campo, incluindo juros com decimais.
-- Um arraste real automatizado do Chrome confirmou a digitação pendente de R$ 1,5 milhão antes de começar; o movimento vertical ampliou só a faixa e liberou a captura ao soltar.
-- Console consultado sem erros ou avisos. Falta avaliação dos gestos em aparelho físico.
+- 58 testes de controles, gestos, recorte e FGTS; TypeScript e build de produção passaram.
+- Navegador em 320, 390 e 1280 px, com os quatro campos sem overflow horizontal.
+- Arrastes reais automatizados do Chrome confirmaram recorte, duplicação apenas do máximo e restauração apenas do mínimo, mantendo o imóvel em R$ 800 mil.
+- Prévia não aplicou mudanças antes de soltar/confirmar. Cancelamento e limites de entrada, juros e prazo cobertos por testes.
+- Console consultado sem erros ou avisos. O conforto dos gestos ainda precisa ser avaliado em aparelho físico.

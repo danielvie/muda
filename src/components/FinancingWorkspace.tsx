@@ -20,7 +20,7 @@ import {
 } from "../fgtsSchedule.ts";
 
 
-// Mobile financing with stable zoom bands and a fixed 1x origin for all four controls.
+// Mobile financing with a simple slider and a focus handle for adjusting each field's range.
 // Palette C: financing and comparisons in blue, investment in green.
 
 
