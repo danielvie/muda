@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   DEFAULT_CONTROL_RANGES, FINANCING_FIELDS, controlSpec, cropControlRange, gestureBounds,
   moveFinancingGesture, normalizeControlRange, normalizeControlRanges, startFinancingGesture,
+  sliderControlValue, sliderControlKey,
 } from "./financingGesture.ts";
 import { updateFinancing, type FinancingState } from "./financingControls.ts";
 const state: FinancingState = { property: 800000, entry: 120000, financingRate: 10, termMonths: 420, fgtsSalary: 0, fgtsSalaryGrowth: 0, fgtsMode: "PRAZO", method: "SAC" };
@@ -95,6 +96,45 @@ test("decimal zoom ranges are idempotent across repeated renders", () => {
   let current = first;
   for (let i = 0; i < 100; i++) current = normalizeControlRange(current, spec);
   assert.deepEqual(current, first);
+});
+test("simple slider snaps globally and does not change its bounds", () => {
+  const spec = controlSpec("property", state, false);
+  const bounds = { min: 720000, max: 880000 };
+  assert.equal(sliderControlValue(811321, bounds, spec), 811000);
+  assert.equal(sliderControlValue(900000, bounds, spec), 880000);
+  assert.deepEqual(bounds, { min: 720000, max: 880000 });
+});
+test("slider keyboard uses field ticks and supports range endpoints", () => {
+  for (const field of FINANCING_FIELDS) {
+    const spec = controlSpec(field.key, state, false);
+    const bounds = normalizeControlRange(DEFAULT_CONTROL_RANGES[field.key], spec);
+    assert.equal(sliderControlKey("ArrowRight", bounds, spec), spec.value + spec.step);
+    assert.equal(sliderControlKey("ArrowLeft", bounds, spec), spec.value - spec.step);
+    assert.equal(sliderControlKey("Home", bounds, spec), bounds.min);
+    assert.equal(sliderControlKey("End", bounds, spec), bounds.max);
+    assert.equal(sliderControlKey("Enter", bounds, spec), null);
+  }
+});
+test("slider can reach an exact automatic entry floor without reversing direction", () => {
+  const updated = updateFinancing(state, { property: 1741000 }, true);
+  const spec = controlSpec("entry", updated, true);
+  const bounds = normalizeControlRange({ min: 0, max: updated.property }, spec);
+  assert.equal(sliderControlKey("ArrowLeft", bounds, spec), 348200);
+  assert.equal(sliderControlKey("ArrowRight", bounds, spec), 349000);
+  assert.equal(sliderControlValue(bounds.min, bounds, spec), 348200);
+  assert.equal(sliderControlValue(bounds.max, bounds, spec), 1741000);
+});
+test("slider preserves decimal ticks near the upper bound", () => {
+  const spec = controlSpec("financingRate", { ...state, financingRate: 9.1 }, false);
+  const bounds = { min: 9, max: 9.2 };
+  assert.equal(sliderControlValue(9.19, bounds, spec), 9.2);
+  assert.equal(sliderControlKey("ArrowRight", bounds, spec), 9.2);
+});
+test("a range narrower than one tick selects only its endpoints", () => {
+  const spec = controlSpec("entry", { ...state, property: 500, entry: 300 }, false);
+  const bounds = { min: 200, max: 500 };
+  assert.equal(sliderControlValue(250, bounds, spec), 200);
+  assert.equal(sliderControlValue(400, bounds, spec), 500);
 });
 test("invalid pointer coordinates are ignored", () => {
   const g = startFinancingGesture(0, 0, controlSpec("property", state, false), DEFAULT_CONTROL_RANGES.property);

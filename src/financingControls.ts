@@ -33,10 +33,10 @@ export function parseFinancingNumber(raw: string): number {
 
 /** Snap to a zero-based grid, never to the possibly fractional minimum of a zoom range. */
 export function snapFinancingValue(value: number, tick: number, min: number, max: number): number {
-  const lower = Math.ceil(min / tick) * tick;
-  const upper = Math.floor(max / tick) * tick;
+  const lower = Math.ceil(min / tick - 1e-9) * tick;
+  const upper = Math.floor(max / tick + 1e-9) * tick;
   if (lower > upper) return clamp(value, min, max); // Preserve constraints when no full tick fits.
-  return Number(clamp(Math.round(value / tick) * tick, lower, upper).toFixed(6));
+  return clamp(Number(clamp(Math.round(value / tick) * tick, lower, upper).toFixed(6)), min, max);
 }
 
 /** Apply the entry policy to every mutation, including restored studies. */

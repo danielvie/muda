@@ -50,6 +50,24 @@ export function rangeAroundValue(width: number, spec: ControlSpec): Bounds {
 export function cropControlRange(spec: ControlSpec): Bounds {
   return rangeAroundValue(Math.max(spec.monetary ? 100000 : spec.step * 5, spec.value) * 0.2, spec);
 }
+/** Pointer input snaps to global ticks; exact range endpoints remain reachable. */
+export function sliderControlValue(value: number, bounds: Bounds, spec: ControlSpec): number {
+  if (!Number.isFinite(value)) return spec.value;
+  if (value <= bounds.min) return bounds.min;
+  if (value >= bounds.max) return bounds.max;
+  if (Math.ceil(bounds.min / spec.step) > Math.floor(bounds.max / spec.step)) return value < (bounds.min + bounds.max) / 2 ? bounds.min : bounds.max;
+  return snapFinancingValue(value, spec.step, bounds.min, bounds.max);
+}
+export function sliderControlKey(key: string, bounds: Bounds, spec: ControlSpec): number | null {
+  if (key === "Home") return bounds.min;
+  if (key === "End") return bounds.max;
+  const direction = ["ArrowRight", "ArrowUp", "PageUp"].includes(key) ? 1 : ["ArrowLeft", "ArrowDown", "PageDown"].includes(key) ? -1 : 0;
+  if (!direction) return null;
+  const count = key.startsWith("Page") ? 10 : 1;
+  const index = direction > 0 ? Math.floor(spec.value / spec.step + 1e-9) : Math.ceil(spec.value / spec.step - 1e-9);
+  const value = sliderControlValue(clean((index + direction * count) * spec.step), bounds, spec);
+  return direction > 0 ? Math.max(spec.value, value) : Math.min(spec.value, value);
+}
 export type FinancingGesture = {
   originX: number; originY: number; x: number; y: number;
   rawValue: number; value: number; band: number; scale: number;

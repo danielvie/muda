@@ -7,7 +7,7 @@ import {
 import type { Bounds } from "../financingControls.ts";
 import "./FinancingGestureControl.css";
 
-type Props = {
+export type FinancingGestureControlProps = {
   label: string;
   spec: ControlSpec;
   bounds: Bounds;
@@ -32,7 +32,7 @@ function ZoomBands({ origin, height, band }: { origin: number; height: number; b
   })}</div>;
 }
 
-export default function FinancingGestureControl(props: Props) {
+export default function FinancingGestureControl(props: FinancingGestureControlProps) {
   const latest = useRef(props); latest.current = props;
   const pad = useRef<HTMLButtonElement>(null);
   const session = useRef<FinancingGesture | null>(null);
