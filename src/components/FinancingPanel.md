@@ -46,6 +46,35 @@ A interface informa que o salvamento é local a este navegador. Não há sincron
 
 O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. O mínimo automático de 20%, estudos existentes e os dois modos de FGTS são preservados. As faixas temporárias ficam em memória; apenas comandos explícitos persistem padrões. Os estudos usam a chave de armazenamento existente.
 
+## Comparação unificada
+
+Aprovada a unificação visual de SAC vs PRICE e Amortização com FGTS, sem alterar os motores financeiros. O painel principal e os controles de faixa permanecem como estavam.
+
+- Um único controle Considerar FGTS afeta a comparação. Desligá-lo oculta os campos e os detalhes FGTS, sem apagar salário, crescimento ou modo. O controle fica na workspace e mantém seu estado ao trocar de ambiente; não adiciona persistência nem muda o formato dos estudos.
+- Reduzir prazo, Reduzir prestação, salário e crescimento ficam antes dos resultados, sem menu intermediário.
+- SAC, PRICE e PRICE + diferença têm o mesmo destaque e os mesmos indicadores, na mesma ordem: desembolso mensal inicial, quitação, juros totais e FGTS aplicado. O desembolso de PRICE + diferença inclui a amortização extra, não apenas a prestação.
+- Os cartões ficam empilhados abaixo de 700 px e lado a lado nas larguras maiores. Os valores monetários não são arredondados para milhares na comparação.
+- Detalhes da comparação e evolução anual começam recolhidos. O cruzamento das prestações fica junto à explicação das amortizações extras.
+- Os detalhes preservam os totais de PRICE + diferença e, na projeção FGTS, a entrada, soma das prestações, FGTS aplicado, total com entrada e FGTS, prestação após o primeiro uso, quantidade de usos e FGTS não utilizado.
+
+### Integração com o cálculo corrigido
+
+O layout usa a correção financeira de `9814da4`, documentada em `src/financingProjection.md`. Os três cartões consomem `calculateSacPriceScenario`; os detalhes FGTS e sua tabela anual consomem `buildFgtsComparison`. Ambos usam taxa efetiva anual e têm paridade coberta pelos testes. O aviso antigo sobre taxas divergentes foi removido.
+
+O desembolso inicial de PRICE + diferença vem de `differenceSchedule[0].payment`. Seu total do bolso já inclui extras em dinheiro; a composição com FGTS soma apenas `fgtsAmortization`, e a composição com entrada soma também `state.entry`. Os rótulos distinguem esses totais. O indicador SAC ≤ PRICE considera prestações reais e não promete empate permanente.
+
+Reduzir prazo mantém a quota de principal no SAC e o encargo na PRICE. Os avisos de ausência de TR, seguros, tarifas e custos de posse permanecem visíveis fora dos detalhes. Hipóteses e limites do FGTS ficam explicados nos detalhes, sem tratar o primeiro uso no mês 24 como carência obrigatória.
+
+O motor corrigido fornece `differenceSchedule`, mas a tabela anual existente ainda apresenta somente SAC e PRICE. A interface informa esse limite de apresentação, sem indicar que falta um cálculo.
+
+### Verificação da unificação visual
+
+- `npm run test:comparison`: nove testes de renderização, incluindo pagamento real do terceiro cenário e totais sem duplicar extras. Usa Node com `registerHooks`, disponível a partir de 22.15, e TypeScript para carregar TSX nos testes. `FinancingComparison.fixture.ts` agora usa hipóteses fixas avaliadas pelos motores corrigidos.
+- A suíte completa aprovou 109 testes; TypeScript, build de produção e verificação de whitespace passaram.
+- Aplicativo integrado inspecionado no Chrome em 320, 390 e 1280 px, usando o build de produção. Sem overflow da página, inclusive com detalhes abertos; a tabela tem sua própria rolagem. Os indicadores dos três cartões ficam alinhados no desktop.
+- Salvar/carregar estudo restaurou salário, crescimento e modo. Desligar FGTS zerou sua aplicação nas três estratégias sem mudar a prévia principal. Trocar para Investir e voltar preservou o controle desligado; religá-lo recuperou as configurações. Console sem erros ou avisos.
+- Dependências existentes foram reutilizadas por uma junction local de `node_modules`; não houve validação de instalação limpa.
+
 ## Implementação
 
 - `FinancingRangeControl.tsx` e `.css`: barra, alça, zonas de soltura, prévia e captura do ponteiro.
@@ -54,7 +83,9 @@ O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. O mínimo autom�
 - `financingRangeDrop.ts`: recorte, restauração de mínimo, duplicação do máximo e classificação do ponto de soltura.
 - `financingGesture.ts`: configuração por unidade, normalização das faixas e controles da barra.
 - `financingControls.ts`: regras financeiras, formato brasileiro e ticks.
-- `FinancingWorkspace.tsx`: valores, faixas, estudos e composição dos painéis.
+- `FinancingWorkspace.tsx`: valores, faixas, estudos, ativação compartilhada de FGTS e composição dos painéis.
+- `FinancingComparison.tsx` e `.css`: controles FGTS e cartões das três estratégias, sem fórmulas financeiras novas.
+- `FgtsComparison.tsx`: detalhes e evolução anual SAC/PRICE da projeção FGTS.
 - `financingProjection.ts` e `loanPayments.ts`: prestações previstas, cronograma SAC/PRICE e cenário com amortizações extras. A regra de redução de prazo está documentada em `src/financingProjection.md`.
 
 O menu bidimensional anterior, o seletor de protótipos e as variantes descartadas não fazem parte da interface principal.

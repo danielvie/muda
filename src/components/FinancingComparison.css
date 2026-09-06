@@ -1,0 +1,71 @@
+.financing-comparison {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--lp-line);
+  border-radius: 14px;
+  background: var(--lp-paper);
+  color: var(--lp-ink);
+}
+.financing-comparison * { box-sizing: border-box; }
+.financing-comparison h2, .financing-comparison h3, .financing-comparison h4,
+.financing-comparison p, .financing-comparison dl, .financing-comparison dd { margin: 0; }
+.financing-comparison h2 { margin-top: 6px; font-size: 21px; line-height: 1.2; font-weight: 800; letter-spacing: -.04em; }
+.financing-comparison h3 { font-size: 15px; line-height: 1.3; font-weight: 800; }
+.financing-comparison h4 { font-size: 14px; font-weight: 800; }
+.financing-comparison .comparison-eyebrow { color: var(--lp-accent); font-size: 10px; font-weight: 800; letter-spacing: .06em; }
+.financing-comparison .comparison-intro { margin-top: 8px; color: var(--lp-muted); font-size: 12px; line-height: 1.5; }
+.comparison-controls { display: grid; gap: 14px; border-radius: 10px; padding: 14px; background: color-mix(in srgb, var(--lp-accent) 5%, var(--lp-paper)); border: 1px solid var(--lp-line); }
+.comparison-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; font-size: 14px; font-weight: 800; cursor: pointer; }
+.comparison-toggle input { width: 22px; height: 22px; accent-color: var(--lp-accent); cursor: pointer; }
+.comparison-modes { min-width: 0; padding: 0; margin: 0; border: 0; }
+.comparison-modes legend { padding: 0 0 8px; font-size: 12px; font-weight: 700; }
+.comparison-modes > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.comparison-modes button { min-height: 64px; padding: 10px; text-align: left; border-radius: 8px; border: 1px solid var(--lp-line); background: var(--lp-paper); color: var(--lp-ink); cursor: pointer; font: inherit; }
+.comparison-modes button[aria-pressed="true"] { border-color: var(--lp-accent); box-shadow: inset 0 0 0 1px var(--lp-accent); background: color-mix(in srgb, var(--lp-accent) 9%, var(--lp-paper)); }
+.comparison-modes strong { display: block; font-size: 12px; }
+.comparison-modes span { display: block; margin-top: 5px; color: var(--lp-muted); font-size: 11px; line-height: 1.4; }
+.comparison-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.comparison-fields > label { display: grid; gap: 6px; min-width: 0; font-size: 12px; font-weight: 700; }
+.comparison-fields label > div { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 48px; padding: 0 10px; background: var(--lp-paper); border: 1px solid var(--lp-line); border-radius: 6px; }
+.comparison-fields input { width: 100%; min-width: 0; min-height: 46px; border: 0; background: transparent; color: var(--lp-ink); font-size: 16px; font-variant-numeric: tabular-nums; }
+.comparison-fields label > div > span { flex-shrink: 0; font-size: 11px; color: var(--lp-muted); }
+.financing-comparison .comparison-note { font-size: 12px; line-height: 1.5; color: var(--lp-muted); }
+.comparison-strategies { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.comparison-strategy { min-width: 0; display: grid; grid-template-rows: subgrid; grid-row: span 2; gap: 16px; padding: 12px; border: 1px solid var(--lp-line); border-radius: 10px; }
+.comparison-strategy header p { margin-top: 6px; font-size: 11px; line-height: 1.45; color: var(--lp-muted); }
+.comparison-strategy dl { display: grid; grid-template-rows: repeat(4, minmax(56px, auto)); gap: 8px; }
+.comparison-strategy dt { font-size: 11px; line-height: 1.4; color: var(--lp-muted); }
+.comparison-strategy dd { margin-top: 4px; font-size: 15px; font-weight: 800; line-height: 1.4; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.comparison-details { min-width: 0; border-top: 1px solid var(--lp-line); }
+.comparison-details > summary { padding: 15px 0 0; min-height: 48px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.comparison-details-content { display: grid; gap: 20px; padding-top: 16px; min-width: 0; }
+.comparison-details-content section { min-width: 0; display: grid; align-content: start; gap: 12px; }
+.comparison-detail-stats { display: grid; gap: 10px; }
+.comparison-detail-stats > div { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--lp-line); padding-bottom: 8px; font-size: 12px; line-height: 1.5; }
+.comparison-detail-stats dt { color: var(--lp-muted); }
+.comparison-detail-stats dd { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.comparison-crossing { font-size: 12px; line-height: 1.5; }
+.comparison-fgts-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.comparison-table-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--lp-line); border-radius: 8px; }
+.comparison-table-scroll table { width: 100%; min-width: 740px; border-collapse: collapse; font-size: 12px; text-align: left; font-variant-numeric: tabular-nums; }
+.comparison-table-scroll caption { text-align: left; padding: 12px; color: var(--lp-muted); }
+.comparison-table-scroll th, .comparison-table-scroll td { padding: 10px; border-top: 1px solid var(--lp-line); white-space: nowrap; }
+.comparison-table-scroll thead { background: color-mix(in srgb, var(--lp-accent) 5%, var(--lp-paper)); }
+.financing-comparison :is(button, input, summary, [tabindex]):focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; }
+@media (max-width: 699px) {
+  .financing-comparison { padding: 16px; gap: 16px; }
+  .comparison-strategies { grid-template-columns: minmax(0, 1fr); }
+  .comparison-strategy { display: grid; grid-row: auto; grid-template-rows: auto auto; gap: 12px; padding: 14px; }
+  .comparison-strategy dl { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto auto; gap: 12px; }
+  .comparison-fgts-details { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) {
+  .financing-comparison { padding: 12px; }
+  .financing-comparison h2 { font-size: 20px; }
+  .comparison-controls { padding: 10px; }
+  .comparison-fields { grid-template-columns: minmax(0, 1fr); }
+  .comparison-modes button { padding: 8px; }
+  .comparison-strategy dd { font-size: 14px; }
+}

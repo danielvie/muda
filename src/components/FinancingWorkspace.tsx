@@ -13,10 +13,11 @@ import { updateFinancing, type Bounds, type FinancingField, type FinancingState 
 import { normalizeControlRanges, type ControlRanges } from "../financingGesture.ts";
 import { readRangePreferences, resolveRangePreferences, saveRangePreference, restoreRangePreference, type RangePreferences, type PreferenceResult } from "../financingRangePreferences.ts";
 import InvestmentProjection from "./InvestmentProjection.tsx";
-import FgtsComparison from "./FgtsComparison.tsx";
+import FinancingComparison, { type FinancingComparisonScenario } from "./FinancingComparison.tsx";
 import {
   buildFgtsComparison,
   FGTS_USE_INTERVAL_MONTHS,
+  FGTS_DEPOSIT_RATE,
   type FgtsComparison as FgtsComparisonData,
 } from "../fgtsSchedule.ts";
 
@@ -57,6 +58,9 @@ type LayoutProps = {
   state: FinancingState;
   result: Calculation;
   fgtsComparison: FgtsComparisonData | null;
+  comparisonScenario: FinancingComparisonScenario;
+  includeFgts: boolean;
+  onIncludeFgtsChange: (enabled: boolean) => void;
   update: (patch: Partial<FinancingState>) => void;
   studies: Study[];
   saveStudy: (label?: string) => void;
@@ -165,13 +169,6 @@ const PRIMARY_SLIDER_KEYS: SliderKey[] = [
   "financingRate",
   "termMonths",
 ];
-
-function loanPeriodLabel(month: number | null) {
-  if (month === null) return "não ocorre no prazo";
-  if (month === 0) return "sem dívida";
-  const years = (month / 12).toLocaleString("pt-BR", { maximumFractionDigits: 1 });
-  return `${month} meses (${years} anos)`;
-}
 
 function clampSliderValue(spec: SliderSpec, value: number) {
   const stepped =
@@ -818,127 +815,6 @@ function FinancingResult({
 }
 
 
-function ScenarioCard({
-  title,
-  description,
-  featured = false,
-  children,
-}: {
-  title: string;
-  description: string;
-  featured?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <article className={`grid content-start gap-3 rounded-[10px] border p-3.25 ${featured ? "border-(--lp-accent) bg-[color-mix(in_srgb,var(--lp-accent)_9%,var(--lp-paper))]" : "border-(--lp-line) bg-(--lp-paper)"}`}>
-      <div>
-        <h3 className="text-[13px] font-black tracking-[-.03em]">{title}</h3>
-        <p className="mt-1 text-(--lp-muted) text-[9px] leading-[1.35]">{description}</p>
-      </div>
-      {children}
-    </article>
-  );
-}
-
-function ScenarioStat({ label, value, tone = "" }: { label: string; value: string; tone?: string }) {
-  return (
-    <div className="grid gap-0.5">
-      <span className="text-(--lp-muted) text-[8px] uppercase tracking-[.06em]">{label}</span>
-      <strong className={`font-mono text-[13px] ${tone === "positive" ? "text-(--lp-positive)" : "text-(--lp-ink)"}`}>{value}</strong>
-    </div>
-  );
-}
-
-function SacPriceScenario({ state }: { state: FinancingState }) {
-  const [includeFgts, setIncludeFgts] = useState(true);
-  const scenario = useMemo(
-    () => calculateSacPriceScenario(state, includeFgts),
-    [state, includeFgts],
-  );
-  const hasFgtsSalary = state.fgtsSalary > 0;
-
-  return (
-    <section className="grid gap-3.25 rounded-[14px] border border-(--lp-line) bg-[color-mix(in_srgb,var(--lp-paper)_86%,var(--lp-accent)_4%)] p-4.25 max-[420px]:p-3.75">
-      <header className="flex items-start justify-between gap-3.5">
-        <div>
-          <span className="text-(--lp-muted) text-[9px] font-black tracking-[.14em] uppercase">SAC VS PRICE</span>
-          <h2 className="mt-1 text-[17px] tracking-[-.05em]">Três cenários de amortização</h2>
-        </div>
-        <span className="grid size-7 place-items-center rounded-full bg-(--lp-accent) text-(--lp-accent-ink) font-mono text-[10px] font-black">02</span>
-      </header>
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-[7px] border border-(--lp-line) bg-(--lp-paper) px-2.75 py-2">
-        <label className="flex min-h-8 cursor-pointer items-center gap-2 text-(--lp-ink) text-[10px] font-black">
-          <input
-            type="checkbox"
-            checked={includeFgts}
-            onChange={(event) => setIncludeFgts(event.currentTarget.checked)}
-            className="size-4 accent-(--lp-accent)"
-          />
-          Considerar FGTS
-        </label>
-        <span className="text-(--lp-muted) text-[8px]">
-          {includeFgts
-            ? `Aplicado a cada ${FGTS_USE_INTERVAL_MONTHS} meses para reduzir ${state.fgtsMode === "PRAZO" ? "o prazo" : "a prestação"}`
-            : "FGTS desligado nesta comparação"}
-        </span>
-      </div>
-      <p className="max-w-140 text-(--lp-muted) text-[10px] leading-[1.4]">
-        PRICE + diferença usa a prestação SAC real como orçamento: o excedente sobre o encargo PRICE próprio amortiza a dívida. Sem SAC ativa, não há extra. Extras em dinheiro reduzem prazo; no modo reduzir prestação, somente o FGTS recalcula o encargo pelo saldo próprio e prazo restante.
-      </p>
-      <div className="grid gap-2 min-[700px]:grid-cols-3">
-        <ScenarioCard title="SAC" description="Quota de principal constante; FGTS reduz juros. No modo reduzir prestação, a quota é recalculada.">
-          <div className="grid gap-2.5">
-            <ScenarioStat label="1ª parcela" value={money(scenario.sac.financingPayment)} />
-            <ScenarioStat label="Última parcela" value={money(scenario.sac.financingPaymentEnd)} />
-            <ScenarioStat label="FGTS aplicado" value={money(scenario.sac.fgtsAmortization, true)} />
-            <ScenarioStat label="Juros totais" value={money(scenario.sac.totalInterest, true)} />
-          </div>
-        </ScenarioCard>
-        <ScenarioCard title="PRICE" description="Encargo constante entre recálculos; FGTS pode reduzir prazo ou prestação.">
-          <div className="grid gap-2.5">
-            <ScenarioStat label="1ª prestação" value={money(scenario.price.financingPayment)} />
-            <ScenarioStat label="Quitação" value={loanPeriodLabel(scenario.price.schedule.length)} />
-            <ScenarioStat label="FGTS aplicado" value={money(scenario.price.fgtsAmortization, true)} />
-            <ScenarioStat label="Juros totais" value={money(scenario.price.totalInterest, true)} />
-          </div>
-        </ScenarioCard>
-        <ScenarioCard title="PRICE + diferença" description="A diferença para a SAC vira amortização extra." featured>
-          <div className="grid gap-2.5">
-            <ScenarioStat label="1º pagamento com extra" value={money(scenario.differenceSchedule[0]?.payment ?? 0)} />
-            <ScenarioStat label="Amortização extra" value={money(scenario.extraAmortization, true)} tone="positive" />
-            <ScenarioStat label="FGTS aplicado" value={money(scenario.fgtsAmortization, true)} />
-            <ScenarioStat label="Juros totais" value={money(scenario.totalInterest, true)} />
-          </div>
-        </ScenarioCard>
-      </div>
-      {!hasFgtsSalary && includeFgts && (
-        <p className="-mt-1 text-(--lp-muted) text-[9px] leading-[1.35]">
-          Informe o salário na seção FGTS para projetar amortizações com FGTS.
-        </p>
-      )}
-      <div className="grid gap-2 border-t border-(--lp-line) pt-3 min-[700px]:grid-cols-3">
-        <ResultNumber
-          label="Primeiro mês SAC ≤ PRICE"
-          value={loanPeriodLabel(scenario.equalizationMonth)}
-          note={scenario.equalizationMonth === null ? "não ocorre com ambos ativos" : "prestações reais; pode mudar após FGTS ou acerto final"}
-        />
-        <ResultNumber
-          label="Quitação PRICE + diferença"
-          value={loanPeriodLabel(scenario.payoffMonth)}
-          note={`prazo configurado: ${state.termMonths} meses`}
-        />
-        <ResultNumber
-          label="Do bolso no financiamento"
-          value={money(scenario.totalPaid, true)}
-          note="Prestações + extras em dinheiro; sem entrada e FGTS"
-        />
-        <ResultNumber label="Total com FGTS" value={money(scenario.totalPaid + scenario.fgtsAmortization, true)} note="Financiamento: dinheiro do bolso + FGTS; sem entrada" />
-      </div>
-      <p className="text-(--lp-muted) text-[10px] leading-[1.4]">Modelo simplificado de principal e juros, sem TR ou outro indexador, seguros e tarifas. Não é cotação CAIXA nem reproduz seu algoritmo contratual; confira a simulação do contrato.</p>
-    </section>
-  );
-}
-
 function SliderTargets({
   state,
   activeKey,
@@ -1164,15 +1040,15 @@ function FinancingView({ props }: { props: LayoutProps }) {
           <button type="button" className="financing-save" onClick={() => saveStudy()}>Salvar simulação atual</button>
           {studies.length > 0 ? <StudyShelf studies={studies} currentPayment={result.financingPayment} loadStudy={loadStudy} removeStudy={removeStudy} clearStudies={clearStudies} /> : <p className="pb-3 text-sm">Salve uma simulação para comparar outras combinações.</p>}
         </details>
-        <SacPriceScenario state={state} />
-        <FgtsComparison
-          comparison={fgtsComparison}
-          salary={state.fgtsSalary}
-          salaryGrowth={state.fgtsSalaryGrowth}
-          mode={state.fgtsMode}
-          onSalaryChange={(salary) => update({ fgtsSalary: salary })}
-          onSalaryGrowthChange={(salaryGrowth) => update({ fgtsSalaryGrowth: salaryGrowth })}
-          onModeChange={(fgtsMode) => update({ fgtsMode })}
+        <FinancingComparison
+          state={state}
+          scenario={props.comparisonScenario}
+          fgtsComparison={fgtsComparison}
+          includeFgts={props.includeFgts}
+          onIncludeFgtsChange={props.onIncludeFgtsChange}
+          update={update}
+          fgtsMonthlyEstimate={state.fgtsSalary * FGTS_DEPOSIT_RATE}
+          fgtsIntervalMonths={FGTS_USE_INTERVAL_MONTHS}
         />
 
       </main>
@@ -1238,7 +1114,12 @@ export default function FinancingWorkspace() {
   const nextStudyId = useRef(
     studies.reduce((highest, study) => Math.max(highest, study.id), 0),
   );
+  const [includeFgts, setIncludeFgts] = useState(true);
   const result = useMemo(() => calculate(state), [state]);
+  const comparisonScenario = useMemo(
+    () => calculateSacPriceScenario(state, includeFgts),
+    [state, includeFgts],
+  );
   const fgtsComparison = useMemo(
     () => buildFgtsComparison({
       valorImovel: state.property,
@@ -1330,6 +1211,9 @@ export default function FinancingWorkspace() {
     state,
     result,
     fgtsComparison,
+    comparisonScenario,
+    includeFgts,
+    onIncludeFgtsChange: setIncludeFgts,
     update,
     studies,
     saveStudy,
