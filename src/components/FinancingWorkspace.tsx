@@ -7,14 +7,15 @@ import {
   type ReactNode,
 } from "react";
 import FinanceVsInvest from "./FinanceVsInvest.tsx";
+import { calculate, calculateSacPriceScenario, type Calculation } from "../financingProjection.ts";
 import FinancingPanel from "./FinancingPanel.tsx";
 import { updateFinancing, type Bounds, type FinancingField, type FinancingState } from "../financingControls.ts";
-import { DEFAULT_CONTROL_RANGES, normalizeControlRanges, type ControlRanges } from "../financingGesture.ts";
+import { normalizeControlRanges, type ControlRanges } from "../financingGesture.ts";
+import { readRangePreferences, resolveRangePreferences, saveRangePreference, restoreRangePreference, type RangePreferences, type PreferenceResult } from "../financingRangePreferences.ts";
 import InvestmentProjection from "./InvestmentProjection.tsx";
 import FgtsComparison from "./FgtsComparison.tsx";
 import {
   buildFgtsComparison,
-  FGTS_DEPOSIT_RATE,
   FGTS_USE_INTERVAL_MONTHS,
   type FgtsComparison as FgtsComparisonData,
 } from "../fgtsSchedule.ts";
@@ -31,37 +32,6 @@ type SliderKey =
   | "financingRate"
   | "termMonths";
 
-type ScheduleRow = {
-  month: number;
-  payment: number;
-  interest: number;
-  amortization: number;
-  balance: number;
-};
-type Calculation = {
-  financedAmount: number;
-  financingPayment: number;
-  financingPaymentEnd: number;
-  totalPaid: number;
-  totalInterest: number;
-  termEndBalance: number;
-  fgtsAmortization: number;
-  schedule: ScheduleRow[];
-};
-
-type SacPriceScenarioCalculation = {
-  sac: Calculation;
-  price: Calculation;
-  equalizationMonth: number | null;
-  payoffMonth: number;
-  extraAmortization: number;
-  totalPaid: number;
-  totalInterest: number;
-  fgtsAmortization: number;
-  sacFirstPayment: number;
-  priceFirstPayment: number;
-};
-
 type Study = {
   id: number;
   label: string;
@@ -77,6 +47,9 @@ type QuickAction = {
 };
 
 type LayoutProps = {
+  rangePreferences: RangePreferences;
+  onSaveRangePreference: (field: FinancingField, bounds: Bounds) => PreferenceResult;
+  onRestoreRangePreference: (field: FinancingField) => PreferenceResult;
   automaticEntry: boolean;
   onAutomaticEntryChange: (enabled: boolean) => void;
   ranges: ControlRanges;
@@ -192,148 +165,6 @@ const PRIMARY_SLIDER_KEYS: SliderKey[] = [
   "financingRate",
   "termMonths",
 ];
-
-function calculate(state: FinancingState, includeFgts = false): Calculation {
-  const termMonths = Math.max(12, Math.round(state.termMonths));
-  const financedAmount = Math.max(0, state.property - state.entry);
-  const monthlyRate = state.financingRate / 100 / 12;
-  const pricePaymentFor = (balance: number, months: number) =>
-    monthlyRate === 0
-      ? balance / months
-      : (balance *
-          (monthlyRate * Math.pow(1 + monthlyRate, months))) /
-        (Math.pow(1 + monthlyRate, months) - 1);
-  let pricePayment = pricePaymentFor(financedAmount, termMonths);
-  let fixedAmortization = financedAmount / termMonths;
-  let debt = financedAmount;
-  let firstPayment = 0;
-  let finalPayment = 0;
-  let totalPaid = 0;
-  let totalInterest = 0;
-  let fgtsAvailable = 0;
-  let fgtsAmortization = 0;
-  const schedule: ScheduleRow[] = [];
-
-  for (let month = 1; month <= termMonths && debt > 0.005; month += 1) {
-    if (includeFgts && state.fgtsSalary > 0) {
-      const salary = state.fgtsSalary * Math.pow(
-        1 + state.fgtsSalaryGrowth / 100,
-        Math.floor((month - 1) / 12),
-      );
-      fgtsAvailable += salary * FGTS_DEPOSIT_RATE;
-    }
-
-    const interest = debt * monthlyRate;
-    const amortization =
-      state.method === "SAC"
-        ? Math.min(debt, fixedAmortization)
-        : Math.min(debt, Math.max(0, pricePayment - interest));
-    const payment = amortization + interest;
-    debt = Math.max(0, debt - amortization);
-    if (includeFgts && month % FGTS_USE_INTERVAL_MONTHS === 0 && debt > 0.005) {
-      const applied = Math.min(debt, fgtsAvailable);
-      fgtsAvailable -= applied;
-      fgtsAmortization += applied;
-      debt = Math.max(0, debt - applied);
-
-      const remainingMonths = termMonths - month;
-      if (state.fgtsMode === "PRESTACAO" && debt > 0.005 && remainingMonths > 0) {
-        fixedAmortization = debt / remainingMonths;
-        pricePayment = pricePaymentFor(debt, remainingMonths);
-      }
-    }
-    if (month === 1) firstPayment = payment;
-    if (payment > 0 && debt <= 0.005) finalPayment = payment;
-    if (month === termMonths && finalPayment === 0) finalPayment = payment;
-    totalPaid += payment;
-    totalInterest += interest;
-    schedule.push({ month, payment, interest, amortization, balance: debt });
-  }
-
-  return {
-    financedAmount,
-    financingPayment: firstPayment,
-    financingPaymentEnd: finalPayment,
-    totalPaid,
-    totalInterest,
-    termEndBalance: schedule[schedule.length - 1]?.balance ?? 0,
-    fgtsAmortization,
-    schedule,
-  };
-}
-
-function calculateSacPriceScenario(
-  state: FinancingState,
-  includeFgts = true,
-): SacPriceScenarioCalculation {
-  const sac = calculate({ ...state, method: "SAC" }, includeFgts);
-  const price = calculate({ ...state, method: "PRICE" }, includeFgts);
-  const termMonths = price.schedule.length;
-  const monthlyRate = state.financingRate / 100 / 12;
-  const equalizationIndex = sac.schedule.findIndex((sacRow, index) => {
-    const pricePayment = price.schedule[index]?.payment ?? 0;
-    return sacRow.payment <= pricePayment + 0.005;
-  });
-
-  let debt = price.financedAmount;
-  let payoffMonth = debt > 0 ? termMonths : 0;
-  let extraAmortization = 0;
-  let totalPaid = 0;
-  let totalInterest = 0;
-  let fgtsAvailable = 0;
-  let fgtsAmortization = 0;
-
-  for (let index = 0; index < termMonths && debt > 0.005; index += 1) {
-    const month = index + 1;
-    if (includeFgts && state.fgtsSalary > 0) {
-      const salary = state.fgtsSalary * Math.pow(
-        1 + state.fgtsSalaryGrowth / 100,
-        Math.floor((month - 1) / 12),
-      );
-      fgtsAvailable += salary * FGTS_DEPOSIT_RATE;
-    }
-
-    const pricePayment = price.schedule[index]?.payment ?? 0;
-    const sacPayment = sac.schedule[index]?.payment ?? pricePayment;
-    const interest = debt * monthlyRate;
-    const regularAmortization = Math.min(
-      debt,
-      Math.max(0, pricePayment - interest),
-    );
-    const extraRequested = Math.max(0, sacPayment - pricePayment);
-    const extraApplied = Math.min(
-      Math.max(0, debt - regularAmortization),
-      extraRequested,
-    );
-    const amortization = regularAmortization + extraApplied;
-
-    debt = Math.max(0, debt - amortization);
-    if (includeFgts && month % FGTS_USE_INTERVAL_MONTHS === 0 && debt > 0.005) {
-      const applied = Math.min(debt, fgtsAvailable);
-      fgtsAvailable -= applied;
-      fgtsAmortization += applied;
-      debt = Math.max(0, debt - applied);
-    }
-    extraAmortization += extraApplied;
-    totalInterest += interest;
-    totalPaid += interest + amortization;
-
-    if (debt <= 0.005) payoffMonth = index + 1;
-  }
-
-  return {
-    sac,
-    price,
-    equalizationMonth: equalizationIndex >= 0 ? equalizationIndex + 1 : null,
-    payoffMonth,
-    extraAmortization,
-    totalPaid,
-    totalInterest,
-    fgtsAmortization,
-    sacFirstPayment: sac.schedule[0]?.payment ?? 0,
-    priceFirstPayment: price.schedule[0]?.payment ?? 0,
-  };
-}
 
 function loanPeriodLabel(month: number | null) {
   if (month === null) return "não ocorre no prazo";
@@ -1055,7 +886,7 @@ function SacPriceScenario({ state }: { state: FinancingState }) {
         Compare SAC, PRICE e PRICE com a diferença entre as parcelas aplicada diretamente no principal enquanto a PRICE for menor.
       </p>
       <div className="grid gap-2 min-[700px]:grid-cols-3">
-        <ScenarioCard title="SAC" description="Amortização constante; parcela começa maior e diminui.">
+        <ScenarioCard title="SAC" description={includeFgts && state.fgtsMode === "PRAZO" ? "Prestações originais decrescentes; FGTS antecipa a quitação." : "Amortização constante; parcela começa maior e diminui."}>
           <div className="grid gap-2.5">
             <ScenarioStat label="1ª parcela" value={money(scenario.sac.financingPayment)} />
             <ScenarioStat label="Última parcela" value={money(scenario.sac.financingPaymentEnd)} />
@@ -1090,7 +921,7 @@ function SacPriceScenario({ state }: { state: FinancingState }) {
         <ResultNumber
           label="SAC iguala PRICE"
           value={loanPeriodLabel(scenario.equalizationMonth)}
-          note="primeiro mês em que a SAC não é maior"
+          note={scenario.equalizationMonth === null ? "sem cruzamento com ambos os financiamentos ativos" : "primeiro mês em que a SAC prevista não é maior"}
         />
         <ResultNumber
           label="Quitação PRICE + diferença"
@@ -1397,7 +1228,8 @@ function persistStudies(studies: Study[]) {
 
 export default function FinancingWorkspace() {
   const [automaticEntry, setAutomaticEntry] = useState(false);
-  const [controlRanges, setControlRanges] = useState<ControlRanges>(DEFAULT_CONTROL_RANGES);
+  const [rangePreferences, setRangePreferences] = useState<RangePreferences>(readRangePreferences);
+  const [controlRanges, setControlRanges] = useState<ControlRanges>(() => resolveRangePreferences(rangePreferences));
   const [environment, setEnvironment] = useState<Environment>("financing");
   const [state, setState] = useState<FinancingState>(DEFAULTS);
   const [studies, setStudies] = useState<Study[]>(readSavedStudies);
@@ -1426,6 +1258,16 @@ export default function FinancingWorkspace() {
     setControlRanges(previous => normalizeControlRanges(previous, state, automaticEntry));
   }, [state, automaticEntry]);
   const onRangeChange = (field: FinancingField, next: Bounds) => setControlRanges(previous => ({ ...previous, [field]: next }));
+  const onSaveRangePreference = (field: FinancingField, bounds: Bounds) => {
+    const result = saveRangePreference(field, bounds);
+    if (result.ok) setRangePreferences(result.preferences);
+    return result;
+  };
+  const onRestoreRangePreference = (field: FinancingField) => {
+    const result = restoreRangePreference(field);
+    if (result.ok) setRangePreferences(result.preferences);
+    return result;
+  };
   const onAutomaticEntryChange = (enabled: boolean) => {
     setAutomaticEntry(enabled);
     if (enabled) setState(previous => updateFinancing(previous, {}, true));
@@ -1476,6 +1318,9 @@ export default function FinancingWorkspace() {
   }, [studies]);
 
   const props: LayoutProps = {
+    rangePreferences,
+    onSaveRangePreference,
+    onRestoreRangePreference,
     automaticEntry,
     onAutomaticEntryChange,
     ranges,

@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "check": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types src/fgtsSchedule.test.ts src/financingControls.test.ts src/financingGesture.test.ts src/financingRangeDrop.test.ts",
-    "test:financing": "node --test src/financingControls.test.ts src/financingGesture.test.ts src/financingRangeDrop.test.ts",
+    "test": "node --test --experimental-strip-types src/fgtsSchedule.test.ts src/financingControls.test.ts src/financingGesture.test.ts src/financingRangeDrop.test.ts src/financingRangePreferences.test.ts src/financingProjection.test.ts",
+    "test:financing": "node --test src/financingControls.test.ts src/financingGesture.test.ts src/financingRangeDrop.test.ts src/financingRangePreferences.test.ts src/financingProjection.test.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

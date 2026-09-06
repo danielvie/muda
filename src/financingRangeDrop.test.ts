@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { controlSpec, type ControlSpec } from "./financingGesture.ts";
-import { proposeRangeDrop, proposalAtPoint } from "./financingRangeDrop.ts";
+import { proposeRangeDrop, proposalAtPoint, FOCUS_CROP_RADIUS_PX } from "./financingRangeDrop.ts";
 import type { FinancingState } from "./financingControls.ts";
 const state: FinancingState = { property: 800000, entry: 120000, financingRate: 10, termMonths: 420, fgtsSalary: 0, fgtsSalaryGrowth: 0, fgtsMode: "PRAZO", method: "SAC" };
 const property = controlSpec('property', state, false);
@@ -23,11 +23,26 @@ test('repeated previews use the same starting bounds and never compound', () => 
   assert.deepEqual(bounds, { min: 650000, max: 1150000 });
   assert.equal(property.value, 800000);
 });
-test('focus crop shrinks around the drop point and preserves the current value', () => {
+test('crop above the current value preserves the lower limit', () => {
   const result = proposeRangeDrop('crop', { min: 0, max: 2000000 }, property, 1000000);
-  assert.deepEqual(result.bounds, { min: 750000, max: 1250000 });
+  assert.deepEqual(result.bounds, { min: 0, max: 1000000 });
+  assert.equal(result.cropEdge, 'max');
   assert.equal(result.point, 1000000);
   assert.equal(property.value, 800000);
+});
+test('crop below the current value preserves the upper limit', () => {
+  const result = proposeRangeDrop('crop', { min: 0, max: 2000000 }, property, 600000);
+  assert.deepEqual(result.bounds, { min: 600000, max: 2000000 });
+  assert.equal(result.cropEdge, 'min');
+  assert.equal(property.value, 800000);
+});
+test('crop keeps the opposite endpoint even with nonzero limits', () => {
+  const bounds = { min: 650000, max: 1150000 };
+  assert.deepEqual(proposeRangeDrop('crop', bounds, property, 900000).bounds, { min: 650000, max: 900000 });
+  assert.deepEqual(proposeRangeDrop('crop', bounds, property, 700000).bounds, { min: 700000, max: 1150000 });
+});
+test('an explicit directional crop at the current value keeps the lower side', () => {
+  assert.deepEqual(proposeRangeDrop('crop', { min: 0, max: 2000000 }, property, 800000).bounds, { min: 0, max: 800000 });
 });
 test('cropping a distant point still includes the simulation and never expands', () => {
   const bounds = { min: 0, max: 2000000 };
@@ -75,6 +90,54 @@ test('left and right are distinct drop targets and arbitrary vertical drops canc
   assert.equal(proposalAtPoint(200, 200, track, bounds, property)?.intent, 'crop');
   assert.equal(proposalAtPoint(200, 500, track, bounds, property), null);
   assert.equal(proposalAtPoint(NaN, 200, track, bounds, property), null);
+});
+test('dropping near the value thumb centers a 200k monetary range', () => {
+  const bounds = { min: 0, max: 2000000 };
+  const track = { left: 100, right: 300, y: 200 };
+  // 800k is at x=180 on this track.
+  for (const x of [180, 180 + FOCUS_CROP_RADIUS_PX, 180 - FOCUS_CROP_RADIUS_PX]) {
+    const result = proposalAtPoint(x, 200, track, bounds, property)!;
+    assert.equal(result.intent, 'crop-center');
+    assert.deepEqual(result.bounds, { min: 700000, max: 900000 });
+    assert.equal(result.point, 800000);
+  }
+  assert.equal(property.value, 800000);
+});
+test('outside the proximity radius the directional crop still applies', () => {
+  const track = { left: 100, right: 300, y: 200 };
+  const bounds = { min: 0, max: 2000000 };
+  assert.equal(proposalAtPoint(180 + FOCUS_CROP_RADIUS_PX + 1, 200, track, bounds, property)?.cropEdge, 'max');
+  assert.equal(proposalAtPoint(180 - FOCUS_CROP_RADIUS_PX - 1, 200, track, bounds, property)?.cropEdge, 'min');
+  assert.equal(proposalAtPoint(180, 240, track, bounds, property), null);
+});
+test('center crop respects zero and monetary hard limits', () => {
+  const low = { ...property, value: 50000 };
+  const result = proposeRangeDrop('crop-center', { min: 0, max: 2000000 }, low);
+  assert.deepEqual(result.bounds, { min: 0, max: 150000 });
+  assert.equal(result.limited, true);
+  const entry = controlSpec('entry', { ...state, entry: 180000 }, true);
+  const limited = proposeRangeDrop('crop-center', { min: 160000, max: 800000 }, entry);
+  assert.deepEqual(limited.bounds, { min: 160000, max: 280000 });
+  assert.equal(limited.limited, true);
+});
+test('center framing uses its fixed width even after an overly narrow crop', () => {
+  const result = proposeRangeDrop('crop-center', { min: 790000, max: 810000 }, property);
+  assert.deepEqual(result.bounds, { min: 700000, max: 900000 });
+});
+test('the thumb zone takes precedence when the current value is at an edge', () => {
+  const track = { left: 100, right: 300, y: 200 };
+  const low = { ...property, value: 0 };
+  assert.equal(proposalAtPoint(79, 200, track, { min: 0, max: 2000000 }, low)?.intent, 'crop-center');
+  assert.equal(proposalAtPoint(50, 200, track, { min: 0, max: 2000000 }, low)?.intent, 'reset-min');
+});
+test('interest and term never use the 100k monetary crop', () => {
+  for (const key of ['financingRate', 'termMonths'] as const) {
+    const spec = controlSpec(key, state, false);
+    const bounds = { min: spec.min, max: spec.max };
+    const x = 100 + (spec.value - bounds.min) / (bounds.max - bounds.min) * 200;
+    assert.equal(proposalAtPoint(x, 200, { left: 100, right: 300, y: 200 }, bounds, spec)?.intent, 'crop');
+    assert.equal(proposeRangeDrop('crop-center', bounds, spec).intent, 'crop');
+  }
 });
 test('the numerical ceiling never produces an infinite expanded range', () => {
   const spec = { ...property, value: Number.MAX_SAFE_INTEGER };

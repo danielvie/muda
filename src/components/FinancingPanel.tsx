@@ -1,10 +1,15 @@
 import { useEffect, useId, useState } from "react";
 import { minimumEntry, formatFinancingNumber, parseFinancingNumber, snapFinancingValue, type Bounds, type FinancingField, type FinancingState } from "../financingControls.ts";
-import { FINANCING_FIELDS, controlSpec, normalizeControlRange, type ControlRanges } from "../financingGesture.ts";
+import { FINANCING_FIELDS, controlSpec, normalizeControlRange, resetControlRange, type ControlRanges } from "../financingGesture.ts";
 import FinancingRangeControl from "./FinancingRangeControl.tsx";
+import FinancingRangePreferences from "./FinancingRangePreferences.tsx";
+import { resolveRangePreferences, type RangePreferences, type PreferenceResult } from "../financingRangePreferences.ts";
 import "./FinancingPanel.css";
 
 type Props = {
+  rangePreferences: RangePreferences;
+  onSaveRangePreference: (field: FinancingField, bounds: Bounds) => PreferenceResult;
+  onRestoreRangePreference: (field: FinancingField) => PreferenceResult;
   state: FinancingState;
   result: { financingPayment: number; financingPaymentEnd: number; financedAmount: number; totalInterest: number };
   update: (patch: Partial<FinancingState>) => void;
@@ -43,6 +48,8 @@ export default function FinancingPanel(props: Props) {
   const field = FINANCING_FIELDS.find(candidate => candidate.key === selected)!;
   const spec = controlSpec(selected, state, automaticEntry);
   const bounds = normalizeControlRange(props.ranges[selected], spec);
+  const defaults = resolveRangePreferences(props.rangePreferences);
+  const defaultApplied = resetControlRange(selected, state, automaticEntry, defaults);
   const id = useId();
   const floor = minimumEntry(state.property);
   const change = (value: number) => {
@@ -56,6 +63,7 @@ export default function FinancingPanel(props: Props) {
     format: (value: number) => display(selected, value),
     onChange: (value: number, nextBounds: Bounds) => { change(value); props.onRangeChange(selected, nextBounds); },
     onBoundsChange: (nextBounds: Bounds) => props.onRangeChange(selected, nextBounds),
+    onResetRange: () => props.onRangeChange(selected, defaultApplied),
   };
   return <section className="financing-panel">
     <h1>Quanto fica a parcela?</h1>
@@ -75,6 +83,9 @@ export default function FinancingPanel(props: Props) {
           <p className="fc-help">Se digitar, confirme com Enter ou saia do campo.</p>
           {selected === "entry" && <button type="button" className="fc-entry-shortcut" onClick={() => update({ entry: floor })}><span>Usar 20% do imóvel</span><strong>{money(floor)}</strong></button>}
           <FinancingRangeControl key={selected} {...rangeProps} />
+          <FinancingRangePreferences key={`preferences-${selected}`} field={selected} label={field.label} unit={field.unit} monetary={field.monetary} current={bounds} saved={defaults[selected]} applied={defaultApplied} customized={props.rangePreferences[selected] !== undefined} format={rangeProps.format}
+            onSave={next => props.onSaveRangePreference(selected, next)}
+            onRestore={() => props.onRestoreRangePreference(selected)} />
         </div>
       </div>
       <dl className="fc-costs"><div><dt>Financiado</dt><dd>{money(result.financedAmount)}</dd></div><div><dt>Juros totais</dt><dd>{money(result.totalInterest)}</dd></div></dl>

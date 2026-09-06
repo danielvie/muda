@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   DEFAULT_CONTROL_RANGES, FINANCING_FIELDS, controlSpec, cropControlRange, gestureBounds,
   moveFinancingGesture, normalizeControlRange, normalizeControlRanges, startFinancingGesture,
-  sliderControlValue, sliderControlKey,
+  sliderControlValue, sliderControlKey, resetControlRange,
 } from "./financingGesture.ts";
 import { updateFinancing, type FinancingState } from "./financingControls.ts";
 const state: FinancingState = { property: 800000, entry: 120000, financingRate: 10, termMonths: 420, fgtsSalary: 0, fgtsSalaryGrowth: 0, fgtsMode: "PRAZO", method: "SAC" };
@@ -135,6 +135,20 @@ test("a range narrower than one tick selects only its endpoints", () => {
   const bounds = { min: 200, max: 500 };
   assert.equal(sliderControlValue(250, bounds, spec), 200);
   assert.equal(sliderControlValue(400, bounds, spec), 500);
+});
+test("reset restores the default range of each field without changing values", () => {
+  for (const field of FINANCING_FIELDS) {
+    const original = structuredClone(state);
+    assert.deepEqual(resetControlRange(field.key, state, false), DEFAULT_CONTROL_RANGES[field.key]);
+    assert.deepEqual(state, original);
+  }
+});
+test("reset keeps values above the default maximum and the automatic entry floor", () => {
+  const high = updateFinancing(state, { property: 5000000 }, true);
+  assert.deepEqual(resetControlRange('property', high, true), { min: 0, max: 5000000 });
+  const entry = resetControlRange('entry', high, true);
+  assert.equal(entry.min, high.entry);
+  assert.ok(entry.max >= high.entry && entry.max <= high.property);
 });
 test("invalid pointer coordinates are ignored", () => {
   const g = startFinancingGesture(0, 0, controlSpec("property", state, false), DEFAULT_CONTROL_RANGES.property);

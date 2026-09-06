@@ -42,6 +42,9 @@ export function normalizeControlRange(bounds: Bounds, spec: ControlSpec): Bounds
 export function normalizeControlRanges(ranges: ControlRanges, state: FinancingState, automatic: boolean): ControlRanges {
   return Object.fromEntries(FINANCING_FIELDS.map(({ key }) => [key, normalizeControlRange(ranges[key], controlSpec(key, state, automatic))])) as ControlRanges;
 }
+export function resetControlRange(field: FinancingField, state: FinancingState, automatic: boolean, defaults: ControlRanges = DEFAULT_CONTROL_RANGES): Bounds {
+  return normalizeControlRange(defaults[field], controlSpec(field, state, automatic));
+}
 export function rangeAroundValue(width: number, spec: ControlSpec): Bounds {
   const size = clamp(Number.isFinite(width) ? width : spec.max - spec.min, 0, spec.max - spec.min);
   const min = clamp(spec.value - size / 2, spec.min, Math.max(spec.min, spec.max - size));

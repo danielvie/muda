@@ -123,7 +123,7 @@ export default function FgtsComparison({
             onClick={() => onModeChange("PRAZO")}
           >
             <strong className="block text-[11px] text-(--lp-heading)">Reduzir prazo</strong>
-            <span className="mt-1 block text-[9px] leading-[1.35] text-(--lp-muted)">Mantém o cálculo original e elimina parcelas do final.</span>
+            <span className="mt-1 block text-[9px] leading-[1.35] text-(--lp-muted)">Mantém as prestações previstas e antecipa a quitação.</span>
           </button>
           <button
             type="button"

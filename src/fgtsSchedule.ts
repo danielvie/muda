@@ -1,4 +1,5 @@
 import { annualToMonthlyRate } from "./finance.ts";
+import { fixedPricePayment, originalSacPayment } from "./loanPayments.ts";
 
 export const FGTS_DEPOSIT_RATE = 0.08;
 export const FGTS_USE_INTERVAL_MONTHS = 24;
@@ -61,14 +62,6 @@ export type FgtsComparison = {
   price: FgtsMethodProjection;
 };
 
-function pricePayment(pv: number, taxaMensal: number, prazoMeses: number) {
-  if (pv === 0) return 0;
-  if (taxaMensal === 0) return pv / prazoMeses;
-
-  const factor = Math.pow(1 + taxaMensal, prazoMeses);
-  return pv * (taxaMensal * factor) / (factor - 1);
-}
-
 function createYearBlock(ano: number, mes: number, saldoInicial: number): FgtsYearBlock {
   return {
     ano,
@@ -91,7 +84,7 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
   const pv = Math.max(0, input.valorImovel - input.entrada);
   const taxaMensal = annualToMonthlyRate(input.taxaAnual);
   let amortizacaoSac = pv / prazoOriginalMeses;
-  let prestacaoPrice = pricePayment(pv, taxaMensal, prazoOriginalMeses);
+  let prestacaoPrice = fixedPricePayment(pv, taxaMensal, prazoOriginalMeses);
 
   let saldo = pv;
   let fgtsDisponivel = 0;
@@ -112,9 +105,10 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
     );
     const fgtsDoMes = salarioDoMes * FGTS_DEPOSIT_RATE;
     const taxaJuros = saldoInicial * taxaMensal;
-    const amortizacaoPlanejada = metodo === "SAC"
-      ? amortizacaoSac
-      : prestacaoPrice - taxaJuros;
+    const prestacaoPlanejada = metodo === "PRICE" ? prestacaoPrice
+      : input.modo === "PRAZO" ? originalSacPayment(pv, taxaMensal, prazoOriginalMeses, mes)
+      : amortizacaoSac + taxaJuros;
+    const amortizacaoPlanejada = prestacaoPlanejada - taxaJuros;
     const amortizacaoProgramada = Math.min(saldoInicial, Math.max(0, amortizacaoPlanejada));
     const prestacao = amortizacaoProgramada + taxaJuros;
     if (mes === 1) primeiraPrestacao = prestacao;
@@ -136,14 +130,15 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
       const mesesRestantes = prazoOriginalMeses - mes;
       if (input.modo === "PRESTACAO" && saldo > BALANCE_TOLERANCE && mesesRestantes > 0) {
         amortizacaoSac = saldo / mesesRestantes;
-        prestacaoPrice = pricePayment(saldo, taxaMensal, mesesRestantes);
+        prestacaoPrice = fixedPricePayment(saldo, taxaMensal, mesesRestantes);
       }
 
       if (fgtsAcionamentos === 1) {
         const proximoJuro = saldo * taxaMensal;
-        const proximaAmortizacao = metodo === "SAC"
-          ? Math.min(saldo, amortizacaoSac)
-          : Math.min(saldo, Math.max(0, prestacaoPrice - proximoJuro));
+        const proximaPrestacaoPlanejada = metodo === "PRICE" ? prestacaoPrice
+          : input.modo === "PRAZO" ? originalSacPayment(pv, taxaMensal, prazoOriginalMeses, mes + 1)
+          : amortizacaoSac + proximoJuro;
+        const proximaAmortizacao = Math.min(saldo, Math.max(0, proximaPrestacaoPlanejada - proximoJuro));
         prestacaoAposPrimeiroFgts = proximaAmortizacao + proximoJuro;
       }
     }
