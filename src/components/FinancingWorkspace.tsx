@@ -13,6 +13,7 @@ import { updateFinancing, type Bounds, type FinancingField, type FinancingState 
 import { normalizeControlRanges, type ControlRanges } from "../financingGesture.ts";
 import { readRangePreferences, resolveRangePreferences, saveRangePreference, restoreRangePreference, type RangePreferences, type PreferenceResult } from "../financingRangePreferences.ts";
 import InvestmentProjection from "./InvestmentProjection.tsx";
+import { readValuePreferences, resolveValuePreferences, saveValuePreference, removeValuePreference, type ValuePreferences, type ValuePreferenceResult } from "../financingValuePreferences.ts";
 import FinancingComparison, { type FinancingComparisonScenario } from "./FinancingComparison.tsx";
 import {
   buildFgtsComparison,
@@ -48,6 +49,9 @@ type QuickAction = {
 };
 
 type LayoutProps = {
+  valuePreferences: ValuePreferences;
+  onSaveValuePreference: (field: FinancingField) => ValuePreferenceResult;
+  onRemoveValuePreference: (field: FinancingField) => ValuePreferenceResult;
   rangePreferences: RangePreferences;
   onSaveRangePreference: (field: FinancingField, bounds: Bounds) => PreferenceResult;
   onRestoreRangePreference: (field: FinancingField) => PreferenceResult;
@@ -85,17 +89,6 @@ type FieldInteractionProps = {
   activeKey?: SliderKey;
   onFocusSlider?: (key: SliderKey) => void;
   onSelectSlider?: (key: SliderKey) => void;
-};
-
-const DEFAULTS: FinancingState = {
-  property: 800000,
-  entry: 120000,
-  financingRate: 10,
-  termMonths: 420,
-  fgtsSalary: 0,
-  fgtsSalaryGrowth: 0,
-  fgtsMode: "PRAZO",
-  method: "SAC",
 };
 
 function money(value: number, compact = false) {
@@ -1109,7 +1102,8 @@ export default function FinancingWorkspace() {
   const [rangePreferences, setRangePreferences] = useState<RangePreferences>(readRangePreferences);
   const [controlRanges, setControlRanges] = useState<ControlRanges>(() => resolveRangePreferences(rangePreferences));
   const [environment, setEnvironment] = useState<Environment>("financing");
-  const [state, setState] = useState<FinancingState>(DEFAULTS);
+  const [valuePreferences, setValuePreferences] = useState<ValuePreferences>(readValuePreferences);
+  const [state, setState] = useState<FinancingState>(() => resolveValuePreferences(valuePreferences));
   const [studies, setStudies] = useState<Study[]>(readSavedStudies);
   const nextStudyId = useRef(
     studies.reduce((highest, study) => Math.max(highest, study.id), 0),
@@ -1149,6 +1143,16 @@ export default function FinancingWorkspace() {
   const onRestoreRangePreference = (field: FinancingField) => {
     const result = restoreRangePreference(field);
     if (result.ok) setRangePreferences(result.preferences);
+    return result;
+  };
+  const onSaveValuePreference = (field: FinancingField) => {
+    const result = saveValuePreference(field, state[field]);
+    if (result.ok) setValuePreferences(result.preferences);
+    return result;
+  };
+  const onRemoveValuePreference = (field: FinancingField) => {
+    const result = removeValuePreference(field);
+    if (result.ok) setValuePreferences(result.preferences);
     return result;
   };
   const onAutomaticEntryChange = (enabled: boolean) => {
@@ -1201,6 +1205,9 @@ export default function FinancingWorkspace() {
   }, [studies]);
 
   const props: LayoutProps = {
+    valuePreferences,
+    onSaveValuePreference,
+    onRemoveValuePreference,
     rangePreferences,
     onSaveRangePreference,
     onRestoreRangePreference,

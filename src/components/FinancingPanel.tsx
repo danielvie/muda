@@ -3,10 +3,15 @@ import { minimumEntry, formatFinancingNumber, parseFinancingNumber, snapFinancin
 import { FINANCING_FIELDS, controlSpec, normalizeControlRange, resetControlRange, type ControlRanges } from "../financingGesture.ts";
 import FinancingRangeControl from "./FinancingRangeControl.tsx";
 import FinancingRangePreferences from "./FinancingRangePreferences.tsx";
+import FinancingValuePreference from "./FinancingValuePreference.tsx";
+import type { ValuePreferences, ValuePreferenceResult } from "../financingValuePreferences.ts";
 import { resolveRangePreferences, type RangePreferences, type PreferenceResult } from "../financingRangePreferences.ts";
 import "./FinancingPanel.css";
 
 type Props = {
+  valuePreferences: ValuePreferences;
+  onSaveValuePreference: (field: FinancingField) => ValuePreferenceResult;
+  onRemoveValuePreference: (field: FinancingField) => ValuePreferenceResult;
   rangePreferences: RangePreferences;
   onSaveRangePreference: (field: FinancingField, bounds: Bounds) => PreferenceResult;
   onRestoreRangePreference: (field: FinancingField) => PreferenceResult;
@@ -82,7 +87,11 @@ export default function FinancingPanel(props: Props) {
           <div className="fc-number-row"><AmountInput key={selected} id={id} value={spec.value} min={spec.min} max={spec.max} step={field.step} monetary={field.monetary} onChange={change} /></div>
           <p className="fc-help">Se digitar, confirme com Enter ou saia do campo.</p>
           {selected === "entry" && <button type="button" className="fc-entry-shortcut" onClick={() => update({ entry: floor })}><span>Usar 20% do imóvel</span><strong>{money(floor)}</strong></button>}
-          <FinancingRangeControl key={selected} {...rangeProps} />
+          <FinancingValuePreference key={`value-${selected}`} label={field.label} value={state[selected]} saved={props.valuePreferences[selected]}
+            format={value => display(selected, selected === "termMonths" ? value / 12 : value)}
+            onSave={() => props.onSaveValuePreference(selected)} onRemove={() => props.onRemoveValuePreference(selected)}
+            render={(action, details) => <FinancingRangeControl {...rangeProps} valuePreferenceAction={action} valuePreferenceDetails={details} />} />
+          {selected === "entry" && props.valuePreferences.entry !== undefined && props.valuePreferences.entry > state.property && <p className="fc-help">Ao abrir a calculadora, a entrada fica limitada ao valor inicial do imóvel. O padrão salvo é preservado.</p>}
           <FinancingRangePreferences key={`preferences-${selected}`} field={selected} label={field.label} unit={field.unit} monetary={field.monetary} current={bounds} saved={defaults[selected]} applied={defaultApplied} customized={props.rangePreferences[selected] !== undefined} format={rangeProps.format}
             onSave={next => props.onSaveRangePreference(selected, next)}
             onRestore={() => props.onRestoreRangePreference(selected)} />

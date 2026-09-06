@@ -36,6 +36,27 @@ As preferências ficam em `localStorage`, na chave `muda.financing.rangePreferen
 
 A interface informa que o salvamento é local a este navegador. Não há sincronização entre aparelhos. Falha ao gravar mantém a preferência anterior e apresenta um erro; dados corrompidos são ignorados na leitura, sem gravação automática.
 
+## Valores padrão por campo
+
+Salvar padrão fica à esquerda do Foco original; Resetar faixa fica à direita. A variante 7, Trio central, foi escolhida para imóvel, entrada, juros e prazo. Os dois botões laterais têm a mesma largura e 48 px de altura, com menos destaque. Foco mantém a alça com pontos, 88 px de largura, 56 px de altura e o gesto original. A ordem de teclado segue Salvar, Foco, Resetar.
+
+Salvar padrão salva somente o valor confirmado do campo selecionado. Não salva a simulação inteira, a faixa, o sistema de amortização, a política de entrada mínima nem as configurações de FGTS.
+
+- A próxima abertura da calculadora usa os campos salvos; os demais mantêm os valores originais do aplicativo. Mudar de campo, trocar de ambiente ou carregar estudo não reaplica os padrões.
+- Os valores ficam em `localStorage`, na chave `muda.financing.valuePreferences.v1`, separados de estudos e faixas. A entrada é um valor em reais, não um percentual. O prazo é armazenado em meses e exibido em anos.
+- Salvar não altera a simulação ou a faixa atual. Digitar, perder foco, usar a barra, Foco ou Resetar faixa não salva valores automaticamente.
+- O controle mostra o valor padrão salvo e permite Remover padrão somente daquele campo. Remover não muda o valor atual; na próxima abertura volta a usar o valor original do aplicativo.
+- Na abertura, a entrada respeita o valor inicial do imóvel. Se o padrão de entrada for maior, apenas o valor aplicado é limitado; a preferência salva permanece intacta. A faixa se adapta para incluir os valores iniciais sem sobrescrever os limites salvos.
+- Falhas de armazenamento exibem erro e preservam o padrão anterior. Dados inválidos são ignorados sem gravação automática. Salvar e remover leem a configuração mais recente para preservar outros campos salvos por outra aba.
+
+### Verificação dos valores padrão
+
+- Doze testes em `financingValuePreferences.test.ts` cobrem armazenamento individual, unidades, zero, precisão, limites, dados corrompidos, falhas de armazenamento, mesclagem e independência de estudos e faixas. A suíte completa aprovou 125 testes; TypeScript e build passaram. `FinancingRangeActions.test.ts` cobre a ordem dos comandos, a identidade do Foco e a separação entre ação de salvar e detalhes da preferência.
+- No navegador, salvar os quatro campos e recarregar preservou apenas os valores escolhidos. Carregar estudo com juros diferentes não mudou o padrão. Remover o padrão dos juros manteve o valor atual e restaurou o valor original na abertura seguinte.
+- Clicar em Salvar diretamente após digitar, sem Enter, confirmou e salvou o novo valor. Falha simulada de armazenamento manteve a preferência anterior e mostrou erro.
+- Foco e Resetar faixa preservaram o valor e não gravaram padrões. Os quatro campos foram inspecionados em 320, 390 e 1280 px, sem overflow, com ações laterais simétricas de 48 px e Foco de 56 px. O arraste real após a promoção enquadrou R$ 925 mil entre R$ 825 mil e R$ 1,025 milhão, sem alterar o valor nem a preferência. Console sem erros ou avisos.
+- Fonte do layout promovido: variante 7 em `prototype/range-actions-focus`, commit `bfdf59a`, arquivos `src/components/RangeActionsPrototype.tsx` e `.css`. As outras variantes e o seletor permanecem apenas no protótipo. A implementação usa os controles reais e o salvamento individual, não as ações simuladas.
+
 ## Campos e acessibilidade
 
 - Imóvel e entrada: passos de R$ 1.000; juros: 0,1 ponto percentual; prazo: um ano.
@@ -81,7 +102,9 @@ O motor corrigido fornece `differenceSchedule`, mas a tabela anual existente ain
 
 - `FinancingRangeControl.tsx` e `.css`: barra, alça, zonas de soltura, prévia e captura do ponteiro.
 - `FinancingRangePreferences.tsx` e `.css`: painel Minha faixa, edição manual e comandos de salvamento/restauração.
-- `financingRangePreferences.ts`: validação, leitura versionada e gravação explícita dos padrões por campo.
+- `financingRangePreferences.ts`: validação, leitura versionada e gravação explícita dos padrões de faixa por campo.
+- `financingValuePreferences.ts`: valores originais, preferências individuais de valor e resolução dos valores iniciais da workspace.
+- `FinancingValuePreference.tsx`: salvar/remover o valor padrão do campo e informar sucesso ou falha, junto aos controles de faixa.
 - `financingRangeDrop.ts`: recorte, restauração de mínimo, duplicação do máximo e classificação do ponto de soltura.
 - `financingGesture.ts`: configuração por unidade, normalização das faixas e controles da barra.
 - `financingControls.ts`: regras financeiras, formato brasileiro e ticks.

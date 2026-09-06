@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { sliderControlKey, sliderControlValue, type ControlSpec } from "../financingGesture.ts";
 import { proposeRangeDrop, proposalAtPoint, type RangeDropProposal, type RangeDropTrack } from "../financingRangeDrop.ts";
@@ -11,6 +11,8 @@ type Props = {
   onChange: (value: number, bounds: Bounds) => void;
   onBoundsChange: (bounds: Bounds) => void;
   onResetRange: () => void;
+  valuePreferenceAction?: ReactNode;
+  valuePreferenceDetails?: ReactNode;
 };
 type Session = {
   pointerId: number | null; startX: number; startY: number; moved: boolean;
@@ -88,7 +90,8 @@ export default function FinancingRangeControl(props: Props) {
       <span className="frc-drop-zone" role="img" aria-label="Soltar à direita: duplicar limite máximo" data-active={preview?.intent === 'expand-max'} title="Duplicar o máximo sem mudar o mínimo">→<small>2×</small></span>
     </div>
     <div className="frc-limits" aria-hidden="true"><span>{format(bounds.min)}</span><span>{format(bounds.max)}</span></div>
-    <div className="frc-focus-row"><span>Passo: {props.stepLabel}.</span>
+    <div className="frc-focus-row">
+      {props.valuePreferenceAction && <div className="frc-value-action">{props.valuePreferenceAction}</div>}
       <button ref={helper} type="button" className="frc-focus" aria-label={`Arrastar Foco de ${props.label}`} aria-describedby={helpId} disabled={spec.max <= spec.min} data-active={active}
         onPointerDown={event => {
           if (event.button !== 0 || session.current?.pointerId != null) return;
@@ -121,7 +124,9 @@ export default function FinancingRangeControl(props: Props) {
         }}><span aria-hidden="true">⠿</span><strong>Foco</strong></button>
       <button type="button" className="frc-reset" onClick={() => { finish(); props.onResetRange(); setMessage('Faixa padrão restaurada. O valor foi preservado.'); }}>Resetar faixa</button>
     </div>
+    {props.valuePreferenceDetails}
     <div className="frc-feedback" role="status">{preview ? <><strong>{proposalTitle(preview)}</strong><span>{format(preview.bounds.min)} a {format(preview.bounds.max)}</span>{preview.limited && <small>Respeita o limite permitido para este campo.</small>}</> : <span>{message}</span>}</div>
+    <p className="frc-step">Passo: {props.stepLabel}.</p>
     <p id={helpId} className="frc-help">{spec.monetary && 'Perto do puxador, enquadra R$ 100 mil abaixo e acima do valor atual. '}Acima do valor atual, mantém o mínimo; abaixo, mantém o máximo. Fora à esquerda restaura o mínimo; fora à direita dobra o máximo. O valor atual é preservado. No teclado, use ← → para escolher o ponto, −/+ para os limites, Enter para aplicar e Esc para cancelar.</p>
   </div>;
 }
