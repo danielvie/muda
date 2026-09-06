@@ -1,5 +1,5 @@
-import { annualToMonthlyRate, priceInstallmentAt, sacInstallmentAt, type SacInput } from "./finance";
-import { toNumber } from "./format";
+import { annualToMonthlyRate, priceInstallmentAt, sacInstallmentAt, type SacInput } from "./finance.ts";
+import { toNumber } from "./format.ts";
 
 export type AmortizationMethod = "SAC" | "PRICE";
 

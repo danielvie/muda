@@ -1,5 +1,5 @@
 import { annualToMonthlyRate } from "./finance.ts";
-import { fixedPricePayment, originalSacPayment } from "./loanPayments.ts";
+import { fixedPricePayment, sacPayment } from "./loanPayments.ts";
 
 export const FGTS_DEPOSIT_RATE = 0.08;
 export const FGTS_USE_INTERVAL_MONTHS = 24;
@@ -106,8 +106,7 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
     const fgtsDoMes = salarioDoMes * FGTS_DEPOSIT_RATE;
     const taxaJuros = saldoInicial * taxaMensal;
     const prestacaoPlanejada = metodo === "PRICE" ? prestacaoPrice
-      : input.modo === "PRAZO" ? originalSacPayment(pv, taxaMensal, prazoOriginalMeses, mes)
-      : amortizacaoSac + taxaJuros;
+      : sacPayment(saldoInicial, amortizacaoSac, taxaMensal);
     const amortizacaoPlanejada = prestacaoPlanejada - taxaJuros;
     const amortizacaoProgramada = Math.min(saldoInicial, Math.max(0, amortizacaoPlanejada));
     const prestacao = amortizacaoProgramada + taxaJuros;
@@ -133,11 +132,10 @@ function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsM
         prestacaoPrice = fixedPricePayment(saldo, taxaMensal, mesesRestantes);
       }
 
-      if (fgtsAcionamentos === 1) {
+      if (fgtsAcionamentos === 1 && amortizacaoComFgts > BALANCE_TOLERANCE) {
         const proximoJuro = saldo * taxaMensal;
         const proximaPrestacaoPlanejada = metodo === "PRICE" ? prestacaoPrice
-          : input.modo === "PRAZO" ? originalSacPayment(pv, taxaMensal, prazoOriginalMeses, mes + 1)
-          : amortizacaoSac + proximoJuro;
+          : sacPayment(saldo, amortizacaoSac, taxaMensal);
         const proximaAmortizacao = Math.min(saldo, Math.max(0, proximaPrestacaoPlanejada - proximoJuro));
         prestacaoAposPrimeiroFgts = proximaAmortizacao + proximoJuro;
       }

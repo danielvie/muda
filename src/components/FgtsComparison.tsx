@@ -68,12 +68,12 @@ function MethodCard({ projection }: { projection: FgtsMethodProjection }) {
           <dd className="mt-1 text-sm font-black text-(--lp-heading)">{formatUses(projection.fgtsAcionamentos)}</dd>
         </div>
         <div className="rounded-[7px] bg-[color-mix(in_srgb,var(--lp-paper)_88%,var(--lp-line))] p-2">
-          <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">Valor efetivo do imóvel</dt>
+          <dt className="text-[10px] font-bold uppercase tracking-[0.04em] text-(--lp-muted)">Total com entrada e FGTS</dt>
           <dd className="mt-1 text-[clamp(14px,4vw,18px)] font-black text-(--lp-heading)">{brl(projection.valorEfetivoImovel)}</dd>
         </div>
       </dl>
       <p className="text-[11px] leading-[1.35] text-(--lp-muted)">
-        Valor efetivo = entrada + prestações pagas + FGTS aplicado. Não inclui taxas ou custos de posse.
+        Total = entrada + prestações do bolso + FGTS aplicado. Sem TR ou outro indexador, seguros, tarifas e custos de posse. Modelo simplificado, não é cotação CAIXA; confira a simulação contratual.
       </p>
       {projection.fgtsNaoUtilizado > 0.005 && (
         <p className="text-[11px] leading-[1.35] text-(--lp-muted)">
@@ -123,7 +123,7 @@ export default function FgtsComparison({
             onClick={() => onModeChange("PRAZO")}
           >
             <strong className="block text-[11px] text-(--lp-heading)">Reduzir prazo</strong>
-            <span className="mt-1 block text-[9px] leading-[1.35] text-(--lp-muted)">Mantém as prestações previstas e antecipa a quitação.</span>
+            <span className="mt-1 block text-[9px] leading-[1.35] text-(--lp-muted)">Antecipa a quitação. No SAC, mantém a quota de principal; na PRICE, mantém o encargo de principal e juros.</span>
           </button>
           <button
             type="button"
@@ -199,13 +199,14 @@ function ComparisonResults({ comparison }: { comparison: FgtsComparisonData }) {
     <>
       <div className="grid gap-1">
         <p className="text-[11px] leading-[1.4] text-(--lp-muted)">
-          O salário cresce {(comparison.crescimentoSalarioAnual * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% ao ano. O saldo acumulado é usado a cada {comparison.intervaloUsoMeses} meses para {comparison.modo === "PRAZO" ? "reduzir o prazo" : "reduzir as próximas prestações"}.
+          Estratégia hipotética: saldo inicial do FGTS zero, depósitos de 8% do salário, sem 13º, remuneração do fundo ou distribuição de resultados. O salário cresce {(comparison.crescimentoSalarioAnual * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% ao ano. O saldo acumulado é usado no fim de cada {comparison.intervaloUsoMeses} meses, depois da prestação, para {comparison.modo === "PRAZO" ? "reduzir o prazo" : "reduzir as próximas prestações"}.
         </p>
         <p className="text-[11px] font-bold text-(--lp-muted)">
           FGTS no primeiro ano: {brl(comparison.fgtsMensalEstimado)} por mês · {brl(comparison.fgtsMensalEstimado * 12)} por ano.
         </p>
       </div>
 
+      <p className="text-[11px] leading-[1.4] text-(--lp-muted)">O primeiro uso no mês 24 é uma hipótese, não uma carência obrigatória. Elegibilidade, saldo disponível, intervalo entre usos e data de pagamento dependem das regras do FGTS e do contrato.</p>
       <div className="grid grid-cols-2 gap-3 min-w-0 max-[699px]:grid-cols-1">
         <MethodCard projection={comparison.sac} />
         <MethodCard projection={comparison.price} />

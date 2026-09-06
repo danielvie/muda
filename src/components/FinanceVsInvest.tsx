@@ -30,7 +30,7 @@ const numericFields: Array<{ key: NumericField; label: string; help: string; pla
   },
   {
     key: "financingAnnualRate",
-    label: "Juros financiamento (% a.a.)",
+    label: "Taxa efetiva do financiamento (% a.a.)",
     help: "Taxa anual efetiva usada para calcular as parcelas do financiamento.",
   },
   {

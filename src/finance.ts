@@ -1,3 +1,5 @@
+import { fixedPricePayment } from "./loanPayments.ts";
+
 export type InvestmentProjectionInput = {
   saldoInicial: number;
   aporteMensal: number;
@@ -81,11 +83,12 @@ export function priceInstallmentAt(input: SacInput, mes: number): SacInstallment
   const iM = annualToMonthlyRate(input.taxaAnual);
 
   // PMT = PV * [i * (1+i)^n] / [(1+i)^n - 1]
-  const pmt = pv * (iM * Math.pow(1 + iM, n)) / (Math.pow(1 + iM, n) - 1);
+  const pmt = fixedPricePayment(pv, iM, n);
 
   // Saldo devedor no mês k-1
   // SD(k-1) = PV * [(1+i)^n - (1+i)^(k-1)] / [(1+i)^n - 1]
-  const saldoDevedorInicial = pv * (Math.pow(1 + iM, n) - Math.pow(1 + iM, k - 1)) / (Math.pow(1 + iM, n) - 1);
+  const saldoDevedorInicial = iM === 0 ? Math.max(0, pv - (k - 1) * pmt)
+    : pv * (Math.pow(1 + iM, n) - Math.pow(1 + iM, k - 1)) / (Math.pow(1 + iM, n) - 1);
   const juros = saldoDevedorInicial * iM;
   const amortizacao = pmt - juros;
 

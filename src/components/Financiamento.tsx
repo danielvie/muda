@@ -133,7 +133,7 @@ export default function Financiamento() {
         <div className="grid grid-cols-2 gap-3 min-w-0 max-sm:grid-cols-1">
           <div className="field grid min-w-0 gap-1.5">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <label className="field-label" htmlFor="sac-taxa-anual">Taxa anual (%)</label>
+              <label className="field-label" htmlFor="sac-taxa-anual">Taxa efetiva anual (%)</label>
               <div className="flex gap-1.5">
                 {sortedTaxRates.map((rate) => (
                   <button className="field-chip" type="button" key={rate} onClick={() => fillTaxaAnoEntry(rate)}>
@@ -213,7 +213,7 @@ export default function Financiamento() {
                 <div className="metric-value">{projection.metrics.pv}</div>
               </div>
               <div>
-                <div className="metric-label">Total Pago</div>
+                <div className="metric-label">Total das prestações, sem entrada</div>
                 <div className="metric-value">{projection.metrics.totalPago}</div>
               </div>
             </div>
@@ -236,6 +236,7 @@ export default function Financiamento() {
               </div>
             </div>
 
+            <p className="text-xs text-text-muted">Principal e juros, sem TR ou outro indexador, seguros e tarifas. Modelo simplificado, não é cotação CAIXA. Confira a simulação contratual.</p>
             <YearBlockList blocks={projection.yearBlocks} />
           </>
         ) : (

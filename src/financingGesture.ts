@@ -3,7 +3,7 @@ import { MONEY_TICK, minimumEntry, snapFinancingValue, type Bounds, type Financi
 export const FINANCING_FIELDS = [
   { key: "property", label: "Valor do imóvel", short: "Imóvel", unit: "R$", step: MONEY_TICK, monetary: true },
   { key: "entry", label: "Entrada", short: "Entrada", unit: "R$", step: MONEY_TICK, monetary: true },
-  { key: "financingRate", label: "Juros anuais", short: "Juros", unit: "% a.a.", step: 0.1, monetary: false },
+  { key: "financingRate", label: "Taxa efetiva anual", short: "Juros", unit: "% a.a.", step: 0.1, monetary: false },
   { key: "termMonths", label: "Prazo", short: "Prazo", unit: "anos", step: 1, monetary: false },
 ] as const;
 export type ControlRanges = Record<FinancingField, Bounds>;

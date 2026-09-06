@@ -68,7 +68,7 @@ export default function FinancingPanel(props: Props) {
   return <section className="financing-panel">
     <h1>Quanto fica a parcela?</h1>
     <div className="fc-card">
-      <div className="fc-payment"><span>Primeira prestação estimada · {state.method}</span><output aria-live="polite">{money(result.financingPayment)}</output><small>Última parcela de {money(result.financingPaymentEnd)}</small>
+      <div className="fc-payment"><span>Primeira prestação estimada · {state.method}</span><output aria-live="polite">{money(result.financingPayment)}</output><small>Última parcela de {money(result.financingPaymentEnd)}</small><small>Principal e juros, sem FGTS nesta prévia, sem TR ou outro indexador, seguros e tarifas. Taxa efetiva anual. Não é cotação CAIXA; confira a simulação contratual.</small>
         <div className="fc-method" role="group" aria-label="Sistema de amortização"><span>Sistema</span>{(["SAC", "PRICE"] as const).map(method => <button type="button" key={method} aria-pressed={state.method === method} onClick={() => update({ method })}>{method}</button>)}</div>
         <div className="fc-save-row"><button type="button" className="fc-save-study" onClick={() => { props.saveStudy(); setSavedState(state); }}>Salvar estudo</button><span role="status">{savedState === state ? "Adicionado aos estudos." : ""}</span></div>
       </div>

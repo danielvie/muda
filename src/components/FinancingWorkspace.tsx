@@ -135,7 +135,7 @@ const SLIDER_SPECS: Record<SliderKey, SliderSpec> = {
   },
   financingRate: {
     key: "financingRate",
-    label: "Juros do financiamento",
+    label: "Taxa efetiva anual",
     short: "Juros",
     min: 4,
     max: 18,
@@ -883,10 +883,10 @@ function SacPriceScenario({ state }: { state: FinancingState }) {
         </span>
       </div>
       <p className="max-w-140 text-(--lp-muted) text-[10px] leading-[1.4]">
-        Compare SAC, PRICE e PRICE com a diferença entre as parcelas aplicada diretamente no principal enquanto a PRICE for menor.
+        PRICE + diferença usa a prestação SAC real como orçamento: o excedente sobre o encargo PRICE próprio amortiza a dívida. Sem SAC ativa, não há extra. Extras em dinheiro reduzem prazo; no modo reduzir prestação, somente o FGTS recalcula o encargo pelo saldo próprio e prazo restante.
       </p>
       <div className="grid gap-2 min-[700px]:grid-cols-3">
-        <ScenarioCard title="SAC" description={includeFgts && state.fgtsMode === "PRAZO" ? "Prestações originais decrescentes; FGTS antecipa a quitação." : "Amortização constante; parcela começa maior e diminui."}>
+        <ScenarioCard title="SAC" description="Quota de principal constante; FGTS reduz juros. No modo reduzir prestação, a quota é recalculada.">
           <div className="grid gap-2.5">
             <ScenarioStat label="1ª parcela" value={money(scenario.sac.financingPayment)} />
             <ScenarioStat label="Última parcela" value={money(scenario.sac.financingPaymentEnd)} />
@@ -894,9 +894,9 @@ function SacPriceScenario({ state }: { state: FinancingState }) {
             <ScenarioStat label="Juros totais" value={money(scenario.sac.totalInterest, true)} />
           </div>
         </ScenarioCard>
-        <ScenarioCard title="PRICE" description="Parcela fixa; amortização cresce ao longo do prazo.">
+        <ScenarioCard title="PRICE" description="Encargo constante entre recálculos; FGTS pode reduzir prazo ou prestação.">
           <div className="grid gap-2.5">
-            <ScenarioStat label="Parcela fixa" value={money(scenario.price.financingPayment)} />
+            <ScenarioStat label="1ª prestação" value={money(scenario.price.financingPayment)} />
             <ScenarioStat label="Quitação" value={loanPeriodLabel(scenario.price.schedule.length)} />
             <ScenarioStat label="FGTS aplicado" value={money(scenario.price.fgtsAmortization, true)} />
             <ScenarioStat label="Juros totais" value={money(scenario.price.totalInterest, true)} />
@@ -904,8 +904,7 @@ function SacPriceScenario({ state }: { state: FinancingState }) {
         </ScenarioCard>
         <ScenarioCard title="PRICE + diferença" description="A diferença para a SAC vira amortização extra." featured>
           <div className="grid gap-2.5">
-            <ScenarioStat label="Antes do empate" value={money(scenario.sacFirstPayment)} />
-            <ScenarioStat label="Após o empate" value={money(scenario.priceFirstPayment)} />
+            <ScenarioStat label="1º pagamento com extra" value={money(scenario.differenceSchedule[0]?.payment ?? 0)} />
             <ScenarioStat label="Amortização extra" value={money(scenario.extraAmortization, true)} tone="positive" />
             <ScenarioStat label="FGTS aplicado" value={money(scenario.fgtsAmortization, true)} />
             <ScenarioStat label="Juros totais" value={money(scenario.totalInterest, true)} />
@@ -919,9 +918,9 @@ function SacPriceScenario({ state }: { state: FinancingState }) {
       )}
       <div className="grid gap-2 border-t border-(--lp-line) pt-3 min-[700px]:grid-cols-3">
         <ResultNumber
-          label="SAC iguala PRICE"
+          label="Primeiro mês SAC ≤ PRICE"
           value={loanPeriodLabel(scenario.equalizationMonth)}
-          note={scenario.equalizationMonth === null ? "sem cruzamento com ambos os financiamentos ativos" : "primeiro mês em que a SAC prevista não é maior"}
+          note={scenario.equalizationMonth === null ? "não ocorre com ambos ativos" : "prestações reais; pode mudar após FGTS ou acerto final"}
         />
         <ResultNumber
           label="Quitação PRICE + diferença"
@@ -929,11 +928,13 @@ function SacPriceScenario({ state }: { state: FinancingState }) {
           note={`prazo configurado: ${state.termMonths} meses`}
         />
         <ResultNumber
-          label="Total pago no cenário"
+          label="Do bolso no financiamento"
           value={money(scenario.totalPaid, true)}
-          note="PRICE com amortizações extras"
+          note="Prestações + extras em dinheiro; sem entrada e FGTS"
         />
+        <ResultNumber label="Total com FGTS" value={money(scenario.totalPaid + scenario.fgtsAmortization, true)} note="Financiamento: dinheiro do bolso + FGTS; sem entrada" />
       </div>
+      <p className="text-(--lp-muted) text-[10px] leading-[1.4]">Modelo simplificado de principal e juros, sem TR ou outro indexador, seguros e tarifas. Não é cotação CAIXA nem reproduz seu algoritmo contratual; confira a simulação do contrato.</p>
     </section>
   );
 }
@@ -1212,7 +1213,8 @@ function readSavedStudies(): Study[] {
           Number.isFinite(study.payment)
         );
       })
-      .slice(-8);
+      .slice(-8)
+      .map(study => ({ ...study, payment: calculate(study.state).financingPayment }));
   } catch {
     return [];
   }

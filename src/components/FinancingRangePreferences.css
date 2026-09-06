@@ -1,0 +1,30 @@
+.range-preferences { border:1px solid var(--lp-line); border-radius:10px; min-width:0; margin-top:4px; }
+.range-preferences > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:60px; padding:12px; list-style:none; cursor:pointer; }
+.range-preferences > summary::-webkit-details-marker { display:none; }
+.range-preferences > summary > span:first-child { display:grid; gap:4px; min-width:0; }
+.range-preferences > summary strong { color:var(--lp-accent); font-size:14px; }
+.range-preferences > summary small { color:var(--lp-muted); font-size:12px; overflow-wrap:anywhere; }
+.rp-chevron { font-size:24px; color:var(--lp-accent); }
+.range-preferences[open] > summary .rp-chevron { transform:rotate(180deg); }
+.rp-body { display:grid; gap:12px; padding:12px; border-top:1px solid var(--lp-line); }
+.rp-body h3 { font-size:15px; font-weight:700; }
+.rp-body header small,.rp-note { font-size:11px; color:var(--lp-muted); }
+.rp-body p { margin:0; font-size:12px; color:var(--lp-muted); line-height:1.45; }
+.rp-body form { display:grid; gap:12px; }
+.rp-current { display:grid; gap:4px; padding:10px; border-left:3px solid var(--lp-accent); }
+.rp-current span { color:var(--lp-muted); font-size:12px; }
+.rp-current strong { font-size:14px; overflow-wrap:anywhere; }
+.rp-fields { display:grid; gap:12px; }
+.rp-fields label { display:grid; gap:6px; min-width:0; }
+.rp-fields label > span { font-size:13px; font-weight:600; }
+.rp-fields input { width:100%; min-width:0; min-height:52px; padding:10px; border:1px solid var(--lp-line); border-radius:8px; background:var(--lp-paper); color:var(--lp-ink); font-size:20px; font-variant-numeric:tabular-nums; }
+.rp-fields input[aria-invalid=true] { border-color:#b3392f; }
+.rp-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.financing-panel .rp-body button { min-height:48px; font-size:14px; }
+.financing-panel .rp-primary { background:var(--lp-accent); border-color:var(--lp-accent); color:white; }
+.financing-panel .rp-primary:hover { background:color-mix(in srgb,var(--lp-accent) 85%,black); }
+.financing-panel .rp-restore { color:var(--lp-muted); }
+.rp-body .rp-error { color:#b3392f; }
+.rp-body .rp-status { color:var(--lp-accent); }
+.rp-status:empty { display:none; }
+.rp-adjusted { padding:10px; border:1px dashed var(--lp-line); border-radius:8px; }
