@@ -53,8 +53,8 @@ test('cropping a distant point still includes the simulation and never expands',
   }
 });
 test('minimum-width crops do not grow the range', () => {
-  const bounds = { min: 790000, max: 810000 };
-  const result = proposeRangeDrop('crop', bounds, property, 810000);
+  const bounds = { min: 790000, max: 990000 };
+  const result = proposeRangeDrop('crop', bounds, property, 990000);
   assert.deepEqual(result.bounds, bounds);
 });
 test('left entry reset respects the automatic twenty percent floor', () => {
@@ -113,11 +113,11 @@ test('outside the proximity radius the directional crop still applies', () => {
 test('center crop respects zero and monetary hard limits', () => {
   const low = { ...property, value: 50000 };
   const result = proposeRangeDrop('crop-center', { min: 0, max: 2000000 }, low);
-  assert.deepEqual(result.bounds, { min: 0, max: 150000 });
+  assert.deepEqual(result.bounds, { min: 0, max: 200000 });
   assert.equal(result.limited, true);
   const entry = controlSpec('entry', { ...state, entry: 180000 }, true);
   const limited = proposeRangeDrop('crop-center', { min: 160000, max: 800000 }, entry);
-  assert.deepEqual(limited.bounds, { min: 160000, max: 280000 });
+  assert.deepEqual(limited.bounds, { min: 160000, max: 360000 });
   assert.equal(limited.limited, true);
 });
 test('center framing uses its fixed width even after an overly narrow crop', () => {

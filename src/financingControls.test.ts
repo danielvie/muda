@@ -106,13 +106,13 @@ test("zoom and crop limits align to global money ticks without rounding the prop
     assert.equal(zoomed.max % MONEY_TICK, 0);
   }
 });
-test("amount controls snap to global thousands, not a fractional range origin", () => {
-  assert.equal(snapFinancingValue(1740671.71, MONEY_TICK, 1566671.71, 1914671.71), 1741000);
-  assert.equal(snapFinancingValue(1742000, MONEY_TICK, 1566000, 1915000), 1742000);
+test("amount controls snap to global ten-thousands, not a fractional range origin", () => {
+  assert.equal(snapFinancingValue(1740671.71, MONEY_TICK, 1566671.71, 1914671.71), 1740000);
+  assert.equal(snapFinancingValue(1742000, MONEY_TICK, 1566000, 1915000), 1740000);
   assert.equal(snapFinancingValue(1740000, MONEY_TICK, 1566000, 1915000), 1740000);
 });
 test("ticks preserve entry constraints and decimal rate precision", () => {
-  assert.equal(snapFinancingValue(348000, MONEY_TICK, 348200, 1741000), 349000);
+  assert.equal(snapFinancingValue(348000, MONEY_TICK, 348200, 1741000), 350000);
   assert.equal(snapFinancingValue(300, MONEY_TICK, 200, 500), 300);
   assert.equal(snapFinancingValue(10.100000000001, 0.1, 0, 20), 10.1);
   assert.equal(snapFinancingValue(35.4, 1, 1, 40), 35);

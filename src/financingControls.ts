@@ -13,7 +13,7 @@ export type FinancingState = {
 export type Bounds = { min: number; max: number };
 export type ZoomAnchor = "min" | "value" | "max";
 export type FinancingField = "property" | "entry" | "financingRate" | "termMonths";
-export const MONEY_TICK = 1000;
+export const MONEY_TICK = 10000;
 export const MIN_RANGE_WIDTH = 20000;
 const MAX = Number.MAX_SAFE_INTEGER;
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));

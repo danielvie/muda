@@ -13,7 +13,7 @@ for (const field of FINANCING_FIELDS) {
     const spec = controlSpec(field.key, state, false);
     const gesture = startFinancingGesture(100, 200, spec, DEFAULT_CONTROL_RANGES[field.key]);
     const moved = moveFinancingGesture(gesture, 108, 200);
-    const expected = field.key === "property" ? 810000 : field.key === "entry" ? 124000 : field.key === "financingRate" ? 10.1 : 36;
+    const expected = field.key === "property" ? 810000 : field.key === "entry" ? 130000 : field.key === "financingRate" ? 10.1 : 36;
     assert.equal(moved.value, expected);
     assert.equal(moved.scale, 1);
     assert.equal(moved.originY, 200);
@@ -32,7 +32,7 @@ test("vertical motion changes only subsequent horizontal segments", () => {
   g = moveFinancingGesture(g, 8, -48); assert.equal(g.value, 810000); assert.equal(g.scale, 2);
   g = moveFinancingGesture(g, 16, -48); assert.equal(g.value, 830000);
   g = moveFinancingGesture(g, 16, 48); assert.equal(g.value, 830000); assert.equal(g.scale, 0.5);
-  g = moveFinancingGesture(g, 24, 48); assert.equal(g.value, 835000);
+  g = moveFinancingGesture(g, 24, 48); assert.equal(g.value, 840000);
   assert.equal(g.originX, 0); assert.equal(g.originY, 0);
 });
 test("stable bands have an eight pixel hysteresis margin", () => {
@@ -97,10 +97,10 @@ test("decimal zoom ranges are idempotent across repeated renders", () => {
   for (let i = 0; i < 100; i++) current = normalizeControlRange(current, spec);
   assert.deepEqual(current, first);
 });
-test("simple slider snaps globally and does not change its bounds", () => {
+test("simple slider snaps globally by ten-thousands and does not change its bounds", () => {
   const spec = controlSpec("property", state, false);
   const bounds = { min: 720000, max: 880000 };
-  assert.equal(sliderControlValue(811321, bounds, spec), 811000);
+  assert.equal(sliderControlValue(811321, bounds, spec), 810000);
   assert.equal(sliderControlValue(900000, bounds, spec), 880000);
   assert.deepEqual(bounds, { min: 720000, max: 880000 });
 });
@@ -120,7 +120,7 @@ test("slider can reach an exact automatic entry floor without reversing directio
   const spec = controlSpec("entry", updated, true);
   const bounds = normalizeControlRange({ min: 0, max: updated.property }, spec);
   assert.equal(sliderControlKey("ArrowLeft", bounds, spec), 348200);
-  assert.equal(sliderControlKey("ArrowRight", bounds, spec), 349000);
+  assert.equal(sliderControlKey("ArrowRight", bounds, spec), 350000);
   assert.equal(sliderControlValue(bounds.min, bounds, spec), 348200);
   assert.equal(sliderControlValue(bounds.max, bounds, spec), 1741000);
 });
