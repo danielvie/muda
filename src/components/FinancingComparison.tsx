@@ -35,12 +35,12 @@ export default function FinancingComparison({
 }: FinancingComparisonProps) {
   const strategies = [
     { name: "SAC", description: "Quota de principal constante; juros caem com o saldo. Reduzir prestação recalcula a quota.", initial: scenario.sac.financingPayment,
-      payoff: scenario.sac.schedule.length, interest: scenario.sac.totalInterest, fgts: scenario.sac.fgtsAmortization },
+      payoff: scenario.sac.schedule.length, interest: scenario.sac.totalInterest, fgts: scenario.sac.fgtsAmortization, cash: scenario.sac.totalPaid },
     { name: "PRICE", description: includeFgts && state.fgtsSalary > 0 && state.fgtsMode === "PRESTACAO"
       ? "O FGTS recalcula as próximas prestações." : "Prestação fixa até o acerto final.", initial: scenario.price.financingPayment,
-      payoff: scenario.price.schedule.length, interest: scenario.price.totalInterest, fgts: scenario.price.fgtsAmortization },
+      payoff: scenario.price.schedule.length, interest: scenario.price.totalInterest, fgts: scenario.price.fgtsAmortization, cash: scenario.price.totalPaid },
     { name: "PRICE + diferença", description: "A prestação SAC real é o orçamento. A diferença para o encargo PRICE próprio vira amortização extra.", initial: scenario.differenceSchedule[0]?.payment ?? 0,
-      payoff: scenario.payoffMonth, interest: scenario.totalInterest, fgts: scenario.fgtsAmortization },
+      payoff: scenario.payoffMonth, interest: scenario.totalInterest, fgts: scenario.fgtsAmortization, cash: scenario.totalPaid },
   ];
   const showFgtsDetails = includeFgts && state.fgtsSalary > 0 && fgtsComparison !== null;
 
@@ -95,7 +95,9 @@ export default function FinancingComparison({
               <div><dt>Desembolso mensal inicial</dt><dd>{brl(strategy.initial)}</dd></div>
               <div><dt>Quitação</dt><dd>{period(strategy.payoff)}</dd></div>
               <div><dt>Juros totais</dt><dd>{brl(strategy.interest)}</dd></div>
-              <div><dt>FGTS aplicado</dt><dd>{brl(strategy.fgts)}</dd></div>
+              <div className="comparison-cash"><dt>Pago do bolso</dt><dd>{brl(state.entry + strategy.cash)}<small>Entrada + prestações e extras em dinheiro</small></dd></div>
+              <div><dt>FGTS utilizado</dt><dd>{brl(strategy.fgts)}</dd></div>
+              <div className="comparison-total"><dt>Total gasto</dt><dd>{brl(state.entry + strategy.cash + strategy.fgts)}<small>Pago do bolso + FGTS utilizado</small></dd></div>
             </dl>
           </article>
         ))}

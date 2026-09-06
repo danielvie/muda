@@ -41,16 +41,24 @@ export function FgtsEvolution({ comparison }: { comparison: FgtsComparisonData }
         <div className="comparison-table-scroll" role="region" aria-label="Evolução anual SAC e PRICE, tabela com rolagem horizontal" tabIndex={0}>
           <table>
             <caption>Projeção FGTS · saldo ao fim do ano, juros e FGTS aplicado no ano</caption>
-            <thead><tr>
-              <th scope="col">Ano</th><th scope="col">Saldo SAC</th><th scope="col">Saldo PRICE</th>
-              <th scope="col">Juros SAC</th><th scope="col">Juros PRICE</th><th scope="col">FGTS SAC</th><th scope="col">FGTS PRICE</th>
-            </tr></thead>
+            <colgroup span={1} /><colgroup span={3} /><colgroup span={3} />
+            <thead>
+              <tr>
+                <th scope="col" rowSpan={2}>Ano</th>
+                <th scope="colgroup" colSpan={3}>SAC</th>
+                <th scope="colgroup" colSpan={3}>PRICE</th>
+              </tr>
+              <tr>
+                <th scope="col">Saldo devedor</th><th scope="col">Juros no ano</th><th scope="col">FGTS no ano</th>
+                <th scope="col">Saldo devedor</th><th scope="col">Juros no ano</th><th scope="col">FGTS no ano</th>
+              </tr>
+            </thead>
             <tbody>{Array.from({ length: maxYears }, (_, index) => {
               const sac = comparison.sac.yearBlocks[index];
               const price = comparison.price.yearBlocks[index];
               return <tr key={index}>
                 <th scope="row">{index + 1}</th>
-                {[sac?.saldoFinal, price?.saldoFinal, sac?.juros, price?.juros, sac?.fgtsAmortizacao, price?.fgtsAmortizacao].map((value, cell) => (
+                {[sac?.saldoFinal, sac?.juros, sac?.fgtsAmortizacao, price?.saldoFinal, price?.juros, price?.fgtsAmortizacao].map((value, cell) => (
                   <td key={cell}>{value === undefined ? "—" : brl(value)}</td>
                 ))}
               </tr>;

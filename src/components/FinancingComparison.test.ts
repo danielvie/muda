@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import { comparisonFixture } from "./FinancingComparison.fixture.ts";
 import { brl } from "../format.ts";
+import { calculateSacPriceScenario } from "../financingProjection.ts";
 import type { FinancingComparisonProps } from "./FinancingComparison.tsx";
 
 // Node strips .ts natively; only JSX and stylesheet imports need a test loader.
@@ -29,13 +30,13 @@ function render(patch: Partial<FinancingComparisonProps> = {}) {
   return renderToStaticMarkup(createElement(FinancingComparison, { ...comparisonFixture, ...patch }));
 }
 
-test("three equally styled strategies expose the same four indicators in the same order", () => {
+test("three equally styled strategies expose the same six indicators in the same order", () => {
   const html = render();
   const cards = [...html.matchAll(/<article class="comparison-strategy">(.*?)<\/article>/gs)];
   assert.equal(cards.length, 3);
   for (const [, card] of cards) {
     assert.deepEqual([...card.matchAll(/<dt>(.*?)<\/dt>/g)].map(match => match[1]), [
-      "Desembolso mensal inicial", "Quitação", "Juros totais", "FGTS aplicado",
+      "Desembolso mensal inicial", "Quitação", "Juros totais", "Pago do bolso", "FGTS utilizado", "Total gasto",
     ]);
     assert.doesNotMatch(card, /Valor efetivo|Total pago|Após o empate/);
   }
@@ -105,6 +106,55 @@ test("cash extras are not counted twice in totals with FGTS and entry", () => {
   const total = html.match(/Total com entrada e FGTS · PRICE \+ diferença<\/dt><dd>(.*?)<\/dd>/)?.[1];
   assert.equal(total, brl(comparisonFixture.state.entry + scenario.totalPaid + scenario.fgtsAmortization));
   assert.notEqual(total, brl(comparisonFixture.state.entry + scenario.totalPaid + scenario.fgtsAmortization + scenario.extraAmortization));
+});
+
+test("all cards separate cash including entry, applied FGTS and total in either mode, with FGTS on or off", () => {
+  for (const fgtsMode of ["PRAZO", "PRESTACAO"] as const) {
+    for (const includeFgts of [true, false]) {
+      const state = { ...comparisonFixture.state, fgtsMode };
+      const scenario = calculateSacPriceScenario(state, includeFgts);
+      const html = render({ state, scenario, includeFgts });
+      const cards = [...html.matchAll(/<article class="comparison-strategy">(.*?)<\/article>/gs)];
+      const projections = [scenario.sac, scenario.price, scenario];
+      cards.forEach(([, card], index) => {
+        const values = [...card.matchAll(/<dd>([^<]*)/g)].map(match => match[1]);
+        const projection = projections[index];
+        assert.equal(values[3], brl(state.entry + projection.totalPaid));
+        assert.equal(values[4], brl(projection.fgtsAmortization));
+        assert.equal(values[5], brl(state.entry + projection.totalPaid + projection.fgtsAmortization));
+        assert.match(card, /Entrada \+ prestações e extras em dinheiro/);
+        assert.match(card, /Pago do bolso \+ FGTS utilizado/);
+        if (!includeFgts) {
+          assert.equal(values[4], brl(0));
+          assert.equal(values[3], values[5]);
+        }
+      });
+    }
+  }
+});
+
+test("a fully paid property shows only entry as cash and total, with no FGTS used", () => {
+  const state = { ...comparisonFixture.state, entry: comparisonFixture.state.property };
+  const html = render({ state, scenario: calculateSacPriceScenario(state, true), fgtsComparison: null });
+  for (const [, card] of html.matchAll(/<article class="comparison-strategy">(.*?)<\/article>/gs)) {
+    const values = [...card.matchAll(/<dd>([^<]*)/g)].map(match => match[1]);
+    assert.equal(values[3], brl(state.entry));
+    assert.equal(values[4], brl(0));
+    assert.equal(values[5], brl(state.entry));
+  }
+});
+
+test("annual columns group SAC values before PRICE values under matching headers", () => {
+  const html = render();
+  assert.match(html, /<th scope="col" rowSpan="2">Ano<\/th>/);
+  assert.deepEqual([...html.matchAll(/<th scope="colgroup" colSpan="3">(.*?)<\/th>/g)].map(match => match[1]), ["SAC", "PRICE"]);
+  const firstRow = html.match(/<tbody><tr>(.*?)<\/tr>/s)?.[1] ?? "";
+  const comparison = comparisonFixture.fgtsComparison!;
+  const sac = comparison.sac.yearBlocks[0];
+  const price = comparison.price.yearBlocks[0];
+  assert.deepEqual([...firstRow.matchAll(/<td>(.*?)<\/td>/g)].map(match => match[1]), [
+    sac.saldoFinal, sac.juros, sac.fgtsAmortizacao, price.saldoFinal, price.juros, price.fgtsAmortizacao,
+  ].map(brl));
 });
 
 test("missing annual rows stay absent, not invented zero-valued payments", () => {

@@ -52,9 +52,11 @@ Aprovada a unificação visual de SAC vs PRICE e Amortização com FGTS, sem alt
 
 - Um único controle Considerar FGTS afeta a comparação. Desligá-lo oculta os campos e os detalhes FGTS, sem apagar salário, crescimento ou modo. O controle fica na workspace e mantém seu estado ao trocar de ambiente; não adiciona persistência nem muda o formato dos estudos.
 - Reduzir prazo, Reduzir prestação, salário e crescimento ficam antes dos resultados, sem menu intermediário.
-- SAC, PRICE e PRICE + diferença têm o mesmo destaque e os mesmos indicadores, na mesma ordem: desembolso mensal inicial, quitação, juros totais e FGTS aplicado. O desembolso de PRICE + diferença inclui a amortização extra, não apenas a prestação.
+- SAC, PRICE e PRICE + diferença têm o mesmo destaque e os mesmos indicadores, na mesma ordem: desembolso mensal inicial, quitação, juros totais, pago do bolso, FGTS utilizado e total gasto. O desembolso de PRICE + diferença inclui a amortização extra, não apenas a prestação.
+- Pago do bolso inclui entrada, prestações e extras em dinheiro. FGTS utilizado mostra apenas o fundo aplicado na dívida. Total gasto soma os dois, sem duplicar extras nem incluir FGTS não utilizado. Esses valores ficam visíveis nos cartões, com a composição explicada abaixo dos números; os custos excluídos continuam indicados no aviso acima.
 - Os cartões ficam empilhados abaixo de 700 px e lado a lado nas larguras maiores. Os valores monetários não são arredondados para milhares na comparação.
 - Detalhes da comparação e evolução anual começam recolhidos. O cruzamento das prestações fica junto à explicação das amortizações extras.
+- A tabela anual começa por Ano, seguido do grupo SAC e depois PRICE. Cada grupo reúne saldo devedor, juros no ano e FGTS no ano, com cabeçalho próprio e divisória entre os sistemas.
 - Os detalhes preservam os totais de PRICE + diferença e, na projeção FGTS, a entrada, soma das prestações, FGTS aplicado, total com entrada e FGTS, prestação após o primeiro uso, quantidade de usos e FGTS não utilizado.
 
 ### Integração com o cálculo corrigido
@@ -69,8 +71,8 @@ O motor corrigido fornece `differenceSchedule`, mas a tabela anual existente ain
 
 ### Verificação da unificação visual
 
-- `npm run test:comparison`: nove testes de renderização, incluindo pagamento real do terceiro cenário e totais sem duplicar extras. Usa Node com `registerHooks`, disponível a partir de 22.15, e TypeScript para carregar TSX nos testes. `FinancingComparison.fixture.ts` agora usa hipóteses fixas avaliadas pelos motores corrigidos.
-- A suíte completa aprovou 109 testes; TypeScript, build de produção e verificação de whitespace passaram.
+- `npm run test:comparison`: doze testes de renderização, incluindo pagamento real do terceiro cenário, composição dos três valores nos cartões com FGTS ligado/desligado e nos dois modos, imóvel sem dívida, totais sem duplicar extras e correspondência entre os grupos de colunas anuais e seus valores. Usa Node com `registerHooks`, disponível a partir de 22.15, e TypeScript para carregar TSX nos testes. `FinancingComparison.fixture.ts` agora usa hipóteses fixas avaliadas pelos motores corrigidos.
+- A suíte completa aprovou 112 testes; TypeScript, build de produção e verificação de whitespace passaram.
 - Aplicativo integrado inspecionado no Chrome em 320, 390 e 1280 px, usando o build de produção. Sem overflow da página, inclusive com detalhes abertos; a tabela tem sua própria rolagem. Os indicadores dos três cartões ficam alinhados no desktop.
 - Salvar/carregar estudo restaurou salário, crescimento e modo. Desligar FGTS zerou sua aplicação nas três estratégias sem mudar a prévia principal. Trocar para Investir e voltar preservou o controle desligado; religá-lo recuperou as configurações. Console sem erros ou avisos.
 - Dependências existentes foram reutilizadas por uma junction local de `node_modules`; não houve validação de instalação limpa.
