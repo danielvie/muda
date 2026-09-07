@@ -755,7 +755,7 @@ function InstallmentList({
             </span>
             <span className="schedule-payment">
               <strong>{money(eliminatedByFgts ? reference.payment : current.payment)}</strong>
-              {((showReferencePayment && paymentChanged) || partialPayoff) && <small className={partialPayoff ? "schedule-original-payment-eliminated" : ""}>original sem FGTS {money(reference.payment)}</small>}
+              {((showReferencePayment && paymentChanged) || partialPayoff) && <small className={partialPayoff ? "schedule-original-payment-eliminated" : ""}>original: {money(reference.payment)}</small>}
             </span>
             <span>{money(eliminatedByFgts ? reference.amortization : current.amortization, true)}</span>
             <span>{money(eliminatedByFgts ? reference.interest : current.interest, true)}</span>
