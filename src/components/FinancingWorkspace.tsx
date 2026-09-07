@@ -198,7 +198,7 @@ function Brand() {
 
 function TopBar({ caption, action }: { caption: string; action?: ReactNode }) {
   return (
-    <header className="sticky top-11.75 z-5 flex min-h-15.5 items-center gap-2.5 border-b border-(--lp-line) bg-(--lp-paper) px-3.5 py-2.5">
+    <div className="flex min-h-15.5 items-center gap-2.5 px-3.5 py-2.5">
       <Brand />
       <span className="min-w-0 flex-1 overflow-hidden text-(--lp-muted) font-mono text-[9px] text-ellipsis whitespace-nowrap max-[420px]:text-[8px]">
         {caption}
@@ -213,7 +213,7 @@ function TopBar({ caption, action }: { caption: string; action?: ReactNode }) {
           </button>
         )}
       </div>
-    </header>
+    </div>
   );
 }
 
@@ -748,7 +748,7 @@ function FinancingResult({
 }) {
   const [open, setOpen] = useState(false);
   const [compact, setCompact] = useState(false);
-  const stickyTop = 109;
+  const stickyTop = 99;
   const stickySentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -928,7 +928,7 @@ function EnvironmentTabs({
 }) {
   return (
     <nav
-      className="sticky top-0 z-10 flex gap-1 border-b border-(--lp-line) bg-(--lp-paper) px-3 py-1.25"
+      className="flex gap-1 border-b border-(--lp-line) bg-(--lp-paper) px-3 py-2"
       role="tablist"
       aria-label="Ambientes financeiros"
     >
@@ -963,13 +963,38 @@ function EnvironmentTabs({
   );
 }
 
+function WorkspaceHeader({
+  environment,
+  onChange,
+}: {
+  environment: Environment;
+  onChange: (value: Environment) => void;
+}) {
+  const caption = environment === "investment"
+    ? "investimento de renda fixa"
+    : environment === "comparison"
+      ? "financiar vs investir"
+      : "financiamento";
+  const action = environment === "investment"
+    ? <span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">RENDA FIXA</span>
+    : environment === "comparison"
+      ? <span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">COMPARAÇÃO</span>
+      : <span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">FINANCIAMENTO</span>;
+
+  return (
+    <header
+      data-environment={environment}
+      className="sticky top-0 z-30 isolate border-b border-(--lp-line) bg-(--lp-paper)"
+    >
+      <EnvironmentTabs value={environment} onChange={onChange} />
+      <TopBar caption={caption} action={action} />
+    </header>
+  );
+}
+
 function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
   return (
-    <div data-environment="investment" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
-      <TopBar
-        caption="investimento de renda fixa"
-        action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">RENDA FIXA</span>}
-      />
+    <div data-environment="investment" className="min-h-[calc(100vh-99px)] bg-(--lp-bg) text-(--lp-ink)">
       <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <Heading
           kicker="INVESTIR · RENDA FIXA"
@@ -992,11 +1017,7 @@ function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
 
 function ComparisonEnvironment() {
   return (
-    <div data-environment="comparison" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
-      <TopBar
-        caption="financiar vs investir"
-        action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">COMPARAÇÃO</span>}
-      />
+    <div data-environment="comparison" className="min-h-[calc(100vh-99px)] bg-(--lp-bg) text-(--lp-ink)">
       <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <Heading
           kicker="COMPARAR ESTRATÉGIAS"
@@ -1021,11 +1042,7 @@ function FinancingView({ props }: { props: LayoutProps }) {
   const { state, result, fgtsComparison, update, studies, saveStudy, loadStudy, removeStudy, clearStudies } = props;
 
   return (
-    <div data-environment="financing" className="min-h-[calc(100vh-47px)] bg-(--lp-bg) text-(--lp-ink)">
-      <TopBar
-        caption="financiamento"
-        action={<span className="text-(--lp-accent) font-mono text-[8px] font-black tracking-[.08em]">FINANCIAMENTO</span>}
-      />
+    <div data-environment="financing" className="min-h-[calc(100vh-99px)] bg-(--lp-bg) text-(--lp-ink)">
       <main className="mx-auto flex w-[calc(100%-24px)] max-w-170 flex-col gap-2 pt-4.5 pb-27.5 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <FinancingPanel {...props} />
         <details className="financing-details"><summary>Ver parcelas e custos do financiamento</summary><FinancingSummary result={result} state={state} /><InstallmentList result={result} /></details>
@@ -1232,7 +1249,7 @@ export default function FinancingWorkspace() {
     <div
       className={`financing-workspace palette-c min-h-screen${environment !== "financing" ? " financing-workspace-secondary" : ""}`}
     >
-      <EnvironmentTabs value={environment} onChange={setEnvironment} />
+      <WorkspaceHeader environment={environment} onChange={setEnvironment} />
       {environment === "financing" ? (
         <FinancingView props={props} />
       ) : environment === "investment" ? (
