@@ -15,16 +15,17 @@ const quota = principal / 420;
 // Independent annuity equation, not the production helper.
 const annuity = (balance: number, i: number, months: number) => i === 0 ? balance / months : balance * i / (1 - Math.pow(1 + i, -months));
 
-test('SAC PRAZO preserves quota and lowers interest and payment after FGTS', () => {
+test('SAC PRAZO preserves every original payment until the partial payoff', () => {
   const original = calculate(state);
   const reduced = calculate(state, true);
   close(reduced.schedule[23].fgtsApplied, 58464);
   close(reduced.schedule[24].interest, (principal - 24 * quota - 58464) * rate);
-  close(reduced.schedule[24].payment, quota + reduced.schedule[24].interest);
-  close(original.schedule[24].payment - reduced.schedule[24].payment, 58464 * rate);
-  for (const row of reduced.schedule.slice(0, -1)) close(row.amortization, quota);
-  assert.ok(reduced.schedule.at(-1)!.amortization <= quota + 0.005);
+  for (const row of reduced.schedule.slice(0, -1)) {
+    close(row.payment, original.schedule[row.month - 1].payment);
+  }
+  assert.ok(reduced.schedule[24].amortization > quota);
   assert.ok(reduced.schedule.length < original.schedule.length);
+  assert.ok(reduced.schedule.at(-1)!.payment <= original.schedule[reduced.schedule.length - 1].payment);
 });
 
 test('research SAC example uses actual balance and unchanged quota after a month-4 extra', () => {
@@ -124,7 +125,10 @@ for (const fgtsMode of ['PRAZO', 'PRESTACAO'] as const) {
     close(result.totalPaid, result.differenceSchedule.reduce((sum, row) => sum + row.payment, 0));
     close(result.differenceSchedule.at(-1)!.balance, 0);
     assert.equal(result.payoffMonth, result.differenceSchedule.length);
-    const first = result.sac.schedule.find(row => result.price.schedule[row.month - 1] && row.payment <= result.price.schedule[row.month - 1].payment + 0.005);
+    const first = result.sacReference.schedule.find(row => {
+      const price = result.priceReference.schedule[row.month - 1];
+      return price && row.scheduledPayment <= price.scheduledPayment + 0.005;
+    });
     assert.equal(result.equalizationMonth, first?.month ?? null);
   });
 }

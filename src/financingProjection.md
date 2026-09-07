@@ -2,7 +2,7 @@
 
 As prestações calculadas incluem apenas principal e juros. Não há TR ou outro indexador, MIP, DFI, tarifas, juros proporcionais por data ou arredondamento contratual mensal. Os resultados não são cotações da CAIXA.
 
-A pesquisa pública confirmou amortização do saldo atual e a escolha entre reduzir prazo ou prestação, mas não confirmou o algoritmo interno de recálculo SAC da CAIXA. A quota constante abaixo é uma hipótese matemática explícita. Compare os resultados com uma simulação do contrato antes de tomar uma decisão.
+A pesquisa pública confirmou amortização do saldo atual e a escolha entre reduzir prazo ou prestação, mas não confirmou o algoritmo interno de recálculo SAC da CAIXA. O recálculo descrito abaixo é uma hipótese matemática explícita. Compare os resultados com uma simulação do contrato antes de tomar uma decisão.
 
 ## Taxa efetiva anual
 
@@ -14,11 +14,17 @@ Os valores numéricos dos defaults foram mantidos como hipóteses efetivas, sem 
 
 ## SAC com redução de prazo
 
-A quota de principal é `A = valorFinanciado / prazoOriginal`. Os juros do mês são `i * saldoInicialDoMes`; o encargo é `A + juros`.
+A quota inicial de principal é `A = valorFinanciado / prazoOriginal`. Os juros do mês são `i * saldoInicialDoMes`; o encargo é `A + juros`.
 
-Após a prestação, a amortização extraordinária abate o saldo. A quota A não muda. No mês seguinte, os juros e a prestação caem, sem reinvestimento automático dessa economia. O prazo termina quando a dívida acaba. A última prestação cobra somente o principal restante e os juros do mês.
+Após a prestação, a amortização extraordinária abate o saldo. No modo `PRAZO`, a projeção preserva em cada mês a prestação da curva original sem FGTS. Como os juros passam a incidir sobre um saldo menor, a diferença aumenta a amortização efetiva de principal naquele mês:
 
-Exemplo da pesquisa, sem encargos: R$ 300.000 em 240 meses, taxa mensal de 0,8%, R$ 50.000 extras após a quarta prestação. Quota R$ 1.250, novo saldo R$ 245.000, prestação seguinte R$ 3.210 e 196 meses restantes. O teste exercita o helper SAC com esse saldo, pois a interface atual não permite eventos extraordinários em datas arbitrárias.
+`amortização efetiva = prestação original do mês - taxa mensal * saldo com FGTS`
+
+A prestação segue a curva SAC original até a quitação antecipada. A última prestação pode ser parcial. As prestações restantes da curva original são marcadas na interface como eliminadas pelo FGTS.
+
+No PRICE, a prestação original é constante. O FGTS reduz o saldo e aumenta a parte de principal de cada pagamento, encurtando o prazo pela mesma lógica.
+
+O indicador SAC ≤ PRICE compara as curvas originais dos dois sistemas. Ele ignora o pagamento parcial da quitação antecipada, que não representa um cruzamento normal entre as prestações.
 
 ## PRICE e redução de prestação
 
@@ -38,7 +44,7 @@ O primeiro uso no mês 24 não é carência obrigatória. A interface não receb
 
 Extras mensais em dinheiro reduzem prazo e não recalculam o encargo. FGTS segue o modo selecionado. Em reduzir prestação, após o FGTS o cenário recalcula seu próprio encargo PRICE com seu próprio saldo, não com o saldo da PRICE sem extras, e com o prazo original restante. As duas políticas são distintas de propósito.
 
-`differenceSchedule` registra pagamento, extra, FGTS e saldo para conferir essa estratégia. O indicador SAC ≤ PRICE mostra apenas o primeiro mês em que a prestação real SAC não supera a PRICE de referência, com ambos ativos, incluindo acertos finais. Não promete empate permanente; outros recálculos podem inverter a comparação.
+`differenceSchedule` registra pagamento, extra, FGTS e saldo para conferir essa estratégia. O indicador SAC ≤ PRICE usa as curvas originais sem FGTS como teste de consistência e não considera o acerto final parcial.
 
 ## Custos e conservação
 
@@ -58,4 +64,4 @@ Os downloads e arquivos temporários foram removidos da raiz. As fontes oficiais
 
 ## Validação
 
-Os testes cobrem quota SAC, juros pós-FGTS, recálculo de prestação, fórmula logarítmica do prazo PRICE, paridade de motores por sistema e modo, taxa efetiva, taxa zero inclusive consumidores de `finance.ts`, conservação de principal e fundos, FGTS que quita, saldo zero, acerto final e PRICE + diferença usando saldo próprio. Não há validação contra uma cotação contratual real da CAIXA nesta suíte.
+Os testes cobrem a preservação da curva original no modo prazo, juros pós-FGTS, recálculo no modo prestação, fórmula logarítmica do prazo PRICE, paridade dos resumos com o motor único, taxa efetiva, taxa zero, conservação de principal e fundos, FGTS que quita, saldo zero, acerto final e PRICE + diferença usando saldo próprio. Não há validação contra uma cotação contratual real da CAIXA nesta suíte.

@@ -1,7 +1,7 @@
 import { annualToMonthlyRate } from "./finance.ts";
 import type { FinancingState } from "./financingControls.ts";
-import { FGTS_DEPOSIT_RATE, FGTS_USE_INTERVAL_MONTHS } from "./fgtsSchedule.ts";
-import { sacPayment, fixedPricePayment } from "./loanPayments.ts";
+import { fgtsDepositForMonth, FGTS_USE_INTERVAL_MONTHS } from "./fgtsPolicy.ts";
+import { sacPayment, fixedPricePayment, originalSacPayment } from "./loanPayments.ts";
 
 const BALANCE_TOLERANCE = 0.005;
 export type ScheduleRow = {
@@ -19,7 +19,9 @@ export type Calculation = {
   fgtsAmortization: number; schedule: ScheduleRow[];
 };
 export type SacPriceScenarioCalculation = {
-  sac: Calculation; price: Calculation; equalizationMonth: number | null;
+  sac: Calculation; price: Calculation;
+  sacReference: Calculation; priceReference: Calculation;
+  equalizationMonth: number | null;
   payoffMonth: number; extraAmortization: number; totalPaid: number; totalInterest: number;
   fgtsAmortization: number; differenceSchedule: DifferenceScheduleRow[];
 };
@@ -27,7 +29,7 @@ export type DifferenceScheduleRow = ScheduleRow & {
   extraApplied: number;
 };
 function fgtsDeposit(state: FinancingState, month: number): number {
-  return state.fgtsSalary > 0 ? state.fgtsSalary * Math.pow(1 + state.fgtsSalaryGrowth / 100, Math.floor((month - 1) / 12)) * FGTS_DEPOSIT_RATE : 0;
+  return fgtsDepositForMonth(state.fgtsSalary, state.fgtsSalaryGrowth / 100, month);
 }
 
 export function calculate(state: FinancingState, includeFgts = false): Calculation {
@@ -46,9 +48,14 @@ export function calculate(state: FinancingState, includeFgts = false): Calculati
   for (let month = 1; month <= termMonths && debt > BALANCE_TOLERANCE; month += 1) {
     if (includeFgts) fgtsAvailable += fgtsDeposit(state, month);
     const interest = debt * monthlyRate;
-    // SAC term reduction preserves the principal quota, not the old payment budget.
-    const scheduledPayment = state.method === "PRICE" ? pricePayment
-      : sacPayment(debt, fixedAmortization, monthlyRate);
+    // Reducing the term preserves the original payment curve. The lower
+    // interest on the FGTS-adjusted balance becomes additional principal.
+    const referencePayment = state.method === "PRICE" ? pricePayment
+      : originalSacPayment(financedAmount, monthlyRate, termMonths, month);
+    const scheduledPayment = includeFgts && state.fgtsMode === "PRAZO"
+      ? referencePayment
+      : state.method === "PRICE" ? pricePayment
+        : sacPayment(debt, fixedAmortization, monthlyRate);
     const amortization = Math.min(debt, Math.max(0, scheduledPayment - interest));
     const payment = amortization + interest;
     debt = Math.max(0, debt - amortization);
@@ -59,9 +66,11 @@ export function calculate(state: FinancingState, includeFgts = false): Calculati
       fgtsAmortization += fgtsApplied;
       debt = Math.max(0, debt - fgtsApplied);
       const remainingMonths = termMonths - month;
-      if (state.fgtsMode === "PRESTACAO" && debt > BALANCE_TOLERANCE && remainingMonths > 0) {
-        fixedAmortization = debt / remainingMonths;
-        pricePayment = fixedPricePayment(debt, monthlyRate, remainingMonths);
+      if (debt > BALANCE_TOLERANCE && remainingMonths > 0) {
+        if (state.fgtsMode === "PRESTACAO") {
+          fixedAmortization = debt / remainingMonths;
+          pricePayment = fixedPricePayment(debt, monthlyRate, remainingMonths);
+        }
       }
     }
     totalPaid += payment;
@@ -77,14 +86,16 @@ export function calculate(state: FinancingState, includeFgts = false): Calculati
 }
 
 export function calculateSacPriceScenario(state: FinancingState, includeFgts = true): SacPriceScenarioCalculation {
-  const sac = calculate({ ...state, method: "SAC" }, includeFgts);
-  const price = calculate({ ...state, method: "PRICE" }, includeFgts);
+  const sacReference = calculate({ ...state, method: "SAC" }, false);
+  const priceReference = calculate({ ...state, method: "PRICE" }, false);
+  const sac = includeFgts ? calculate({ ...state, method: "SAC" }, true) : sacReference;
+  const price = includeFgts ? calculate({ ...state, method: "PRICE" }, true) : priceReference;
   const monthlyRate = annualToMonthlyRate(state.financingRate / 100);
-  // First observed comparison of actual payments, including partial settlement.
-  // Later FGTS recalculations can reverse the comparison; this is not a permanent crossover.
-  const equalizationIndex = sac.schedule.findIndex((row, index) => {
-    const other = price.schedule[index];
-    return other !== undefined && row.payment <= other.payment + BALANCE_TOLERANCE;
+  // This indicator compares the contractual payment curves. It deliberately
+  // ignores a partial final settlement caused by an early payoff.
+  const equalizationIndex = sacReference.schedule.findIndex((row, index) => {
+    const other = priceReference.schedule[index];
+    return other !== undefined && row.scheduledPayment <= other.scheduledPayment + BALANCE_TOLERANCE;
   });
   let debt = price.financedAmount;
   let payoffMonth = debt > BALANCE_TOLERANCE ? price.schedule.length : 0;
@@ -126,7 +137,8 @@ export function calculateSacPriceScenario(state: FinancingState, includeFgts = t
     if (debt <= BALANCE_TOLERANCE) payoffMonth = month;
   }
   return {
-    sac, price, equalizationMonth: equalizationIndex >= 0 ? equalizationIndex + 1 : null,
+    sac, price, sacReference, priceReference,
+    equalizationMonth: equalizationIndex >= 0 ? equalizationIndex + 1 : null,
     payoffMonth, extraAmortization, totalPaid, totalInterest, fgtsAmortization,
     differenceSchedule,
   };

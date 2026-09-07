@@ -622,4 +622,31 @@ button:disabled {
     color: var(--lp-orange);
 }
 
+.schedule-payment {
+    display: grid;
+    gap: 3px;
+}
+
+.schedule-row-eliminated > :not(:first-child) {
+    opacity: .48;
+    text-decoration: line-through;
+}
+
+.schedule-original-payment-eliminated {
+    opacity: .68;
+    text-decoration: line-through;
+}
+
+.schedule-eliminated-divider {
+    min-width: 527px;
+    border-top: 1px solid var(--lp-line);
+    padding: 12px 0 4px;
+    color: var(--lp-muted);
+    font-family: var(--font-sans);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
 

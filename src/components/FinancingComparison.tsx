@@ -34,7 +34,7 @@ export default function FinancingComparison({
   fgtsMonthlyEstimate, fgtsIntervalMonths,
 }: FinancingComparisonProps) {
   const strategies = [
-    { name: "SAC", description: "Quota de principal constante; juros caem com o saldo. Reduzir prestação recalcula a quota.", initial: scenario.sac.financingPayment,
+    { name: "SAC", description: "Prestação decrescente. Ao reduzir prazo, o FGTS preserva a curva original e aumenta a amortização efetiva.", initial: scenario.sac.financingPayment,
       payoff: scenario.sac.schedule.length, interest: scenario.sac.totalInterest, fgts: scenario.sac.fgtsAmortization, cash: scenario.sac.totalPaid },
     { name: "PRICE", description: includeFgts && state.fgtsSalary > 0 && state.fgtsMode === "PRESTACAO"
       ? "O FGTS recalcula as próximas prestações." : "Prestação fixa até o acerto final.", initial: scenario.price.financingPayment,
@@ -63,7 +63,7 @@ export default function FinancingComparison({
               <legend>Como usar o FGTS</legend>
               <div>
                 <button type="button" aria-pressed={state.fgtsMode === "PRAZO"} onClick={() => update({ fgtsMode: "PRAZO" })}>
-                  <strong>Reduzir prazo</strong><span>Antecipa a quitação. SAC mantém a quota de principal; PRICE mantém o encargo.</span>
+                  <strong>Reduzir prazo</strong><span>Mantém a curva original das prestações e usa a economia de juros para antecipar a quitação.</span>
                 </button>
                 <button type="button" aria-pressed={state.fgtsMode === "PRESTACAO"} onClick={() => update({ fgtsMode: "PRESTACAO" })}>
                   <strong>Reduzir prestação</strong><span>Recalcula as próximas prestações pelo prazo restante.</span>
@@ -116,8 +116,8 @@ export default function FinancingComparison({
               <div><dt>Total com entrada e FGTS · PRICE + diferença</dt><dd>{brl(state.entry + scenario.totalPaid + scenario.fgtsAmortization)}</dd></div>
             </dl>
             <p className="comparison-note">Em PRICE + diferença, o dinheiro do bolso inclui prestações e extras em dinheiro, sem entrada e FGTS. A amortização extra já está nesse total e não deve ser somada novamente.</p>
-            <p className="comparison-note">Sem SAC ativa, não há extra. Extras em dinheiro reduzem prazo; no modo reduzir prestação, somente o FGTS recalcula o encargo pelo saldo próprio e prazo restante.</p>
-            <p className="comparison-crossing">Primeiro mês SAC ≤ PRICE: <strong>{scenario.equalizationMonth === null ? "sem cruzamento com ambos os financiamentos ativos" : period(scenario.equalizationMonth)}</strong>. Compara prestações reais, incluindo o acerto final. Não indica empate permanente; a relação pode mudar após novos usos do FGTS.</p>
+            <p className="comparison-note">Sem SAC ativa, não há extra. Extras em dinheiro reduzem prazo; o FGTS recalcula cada estratégia conforme o modo escolhido e o saldo próprio.</p>
+            <p className="comparison-crossing">Primeiro mês da prestação SAC de referência ≤ PRICE: <strong>{scenario.equalizationMonth === null ? "não ocorre no prazo original" : period(scenario.equalizationMonth)}</strong>. Compara as curvas originais sem FGTS e ignora o acerto final parcial.</p>
           </section>
           {showFgtsDetails && <FgtsDetails comparison={fgtsComparison} entry={state.entry} />}
           {includeFgts && <p className="comparison-note">Estratégia hipotética de FGTS: saldo inicial zero, depósitos de 8% do salário e reajuste anual informado, sem 13º, remuneração do fundo ou distribuição de resultados. O primeiro uso no mês {fgtsIntervalMonths} é uma hipótese, não uma carência obrigatória. Elegibilidade, saldo disponível, intervalo entre usos e data de pagamento dependem das regras do FGTS e do contrato.</p>}

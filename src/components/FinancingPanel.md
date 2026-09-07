@@ -69,7 +69,7 @@ O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. O mínimo autom�
 
 ## Comparação unificada
 
-Aprovada a unificação visual de SAC vs PRICE e Amortização com FGTS, sem alterar os motores financeiros. O painel principal e os controles de faixa permanecem como estavam.
+Aprovada a unificação visual de SAC vs PRICE e Amortização com FGTS. O painel principal e os controles de faixa permanecem como estavam.
 
 - Um único controle Considerar FGTS afeta a comparação. Desligá-lo oculta os campos e os detalhes FGTS, sem apagar salário, crescimento ou modo. O controle fica na workspace e mantém seu estado ao trocar de ambiente; não adiciona persistência nem muda o formato dos estudos.
 - Reduzir prazo, Reduzir prestação, salário e crescimento ficam antes dos resultados, sem menu intermediário.
@@ -82,11 +82,11 @@ Aprovada a unificação visual de SAC vs PRICE e Amortização com FGTS, sem alt
 
 ### Integração com o cálculo corrigido
 
-O layout usa a correção financeira de `9814da4`, documentada em `src/financingProjection.md`. Os três cartões consomem `calculateSacPriceScenario`; os detalhes FGTS e sua tabela anual consomem `buildFgtsComparison`. Ambos usam taxa efetiva anual e têm paridade coberta pelos testes. O aviso antigo sobre taxas divergentes foi removido.
+O layout usa o motor `calculate` por meio de `calculateSacPriceScenario`, documentado em `src/financingProjection.md`. Os cartões, os detalhes do financiamento e os resumos FGTS derivam desse mesmo cronograma. `buildFgtsComparisonFromCalculations` apenas agrega os meses em blocos anuais; não recalcula o financiamento.
 
-O desembolso inicial de PRICE + diferença vem de `differenceSchedule[0].payment`. Seu total do bolso já inclui extras em dinheiro; a composição com FGTS soma apenas `fgtsAmortization`, e a composição com entrada soma também `state.entry`. Os rótulos distinguem esses totais. O indicador SAC ≤ PRICE considera prestações reais e não promete empate permanente.
+O desembolso inicial de PRICE + diferença vem de `differenceSchedule[0].payment`. Seu total do bolso já inclui extras em dinheiro; a composição com FGTS soma apenas `fgtsAmortization`, e a composição com entrada soma também `state.entry`. Os rótulos distinguem esses totais. O indicador SAC ≤ PRICE compara as curvas originais e ignora o acerto final parcial.
 
-Reduzir prazo mantém a quota de principal no SAC e o encargo na PRICE. Os avisos de ausência de TR, seguros, tarifas e custos de posse permanecem visíveis fora dos detalhes. Hipóteses e limites do FGTS ficam explicados nos detalhes, sem tratar o primeiro uso no mês 24 como carência obrigatória.
+Reduzir prazo preserva a curva original das prestações no SAC e na PRICE. A queda dos juros aumenta a amortização efetiva e antecipa a quitação. O detalhamento identifica o acerto final parcial, mostra ao lado sua prestação original e risca os meses seguintes eliminados pelo FGTS. Reduzir prestação mostra cada novo pagamento junto do valor original sem FGTS. Os avisos de ausência de TR, seguros, tarifas e custos de posse permanecem visíveis fora dos detalhes.
 
 O motor corrigido fornece `differenceSchedule`, mas a tabela anual existente ainda apresenta somente SAC e PRICE. A interface informa esse limite de apresentação, sem indicar que falta um cálculo.
 

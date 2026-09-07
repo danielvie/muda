@@ -37,13 +37,15 @@ test("FGTS permite reduzir o prazo ou o valor das prestações", () => {
   }
 });
 
-test('SAC reduzir prazo mantém a quota de principal nos anos completos', () => {
+test('SAC reduzir prazo preserves the original payment curve and amortizes more principal', () => {
   const comparison = projection('PRAZO');
   const quota = (input.valorImovel - input.entrada) / input.prazoMeses;
   const rate = annualToMonthlyRate(input.taxaAnual);
-  const saldoAposFgts = input.valorImovel - input.entrada - 24 * quota - 24 * input.salarioMensal * 0.08;
-  close(comparison.sac.prestacaoAposPrimeiroFgts!, quota + saldoAposFgts * rate);
-  for (const year of comparison.sac.yearBlocks.slice(0, -1)) {
+  const saldoAntesDoFgts = input.valorImovel - input.entrada - 24 * quota;
+  const proximaPrestacaoSemFgts = quota + saldoAntesDoFgts * rate;
+  close(comparison.sac.prestacaoAposPrimeiroFgts!, proximaPrestacaoSemFgts);
+  assert.ok(comparison.sac.yearBlocks[2].amortizacaoProgramada > 12 * quota);
+  for (const year of comparison.sac.yearBlocks.slice(0, 2)) {
     close(year.amortizacaoProgramada, 12 * quota);
   }
   for (const p of [comparison.sac, comparison.price]) {

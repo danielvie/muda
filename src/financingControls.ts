@@ -1,4 +1,4 @@
-import type { FgtsMode } from "./fgtsSchedule.ts";
+import type { FgtsMode } from "./fgtsPolicy.ts";
 
 export type FinancingState = {
   property: number;

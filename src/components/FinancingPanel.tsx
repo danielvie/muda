@@ -16,7 +16,8 @@ type Props = {
   onSaveRangePreference: (field: FinancingField, bounds: Bounds) => PreferenceResult;
   onRestoreRangePreference: (field: FinancingField) => PreferenceResult;
   state: FinancingState;
-  result: { financingPayment: number; financingPaymentEnd: number; financedAmount: number; totalInterest: number };
+  result: { financingPayment: number; financingPaymentEnd: number; financedAmount: number; totalInterest: number; fgtsAmortization: number };
+  includeFgts: boolean;
   update: (patch: Partial<FinancingState>) => void;
   automaticEntry: boolean;
   onAutomaticEntryChange: (enabled: boolean) => void;
@@ -47,7 +48,7 @@ function AmountInput({ id, value, min, max, step, monetary, onChange }: { id: st
 }
 
 export default function FinancingPanel(props: Props) {
-  const { state, result, update, automaticEntry, onAutomaticEntryChange } = props;
+  const { state, result, includeFgts, update, automaticEntry, onAutomaticEntryChange } = props;
   const [selected, setSelected] = useState<FinancingField>("property");
   const [savedState, setSavedState] = useState<FinancingState | null>(null);
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
@@ -91,7 +92,7 @@ export default function FinancingPanel(props: Props) {
         </div>
         <output aria-live="polite">{money(result.financingPayment)}</output>
         <small>Última parcela de {money(result.financingPaymentEnd)}</small>
-        {showPaymentInfo && <p id={paymentInfoId} className="fc-payment-info">Principal e juros, sem FGTS nesta prévia, sem TR ou outro indexador, seguros e tarifas. Taxa efetiva anual. Não é cotação CAIXA; confira a simulação contratual.</p>}
+        {showPaymentInfo && <p id={paymentInfoId} className="fc-payment-info">Principal e juros, {includeFgts && result.fgtsAmortization > 0.005 ? `com FGTS no modo ${state.fgtsMode === "PRAZO" ? "reduzir prazo" : "reduzir prestação"}` : "sem FGTS"}, sem TR ou outro indexador, seguros e tarifas. Taxa efetiva anual. Não é cotação CAIXA; confira a simulação contratual.</p>}
         <div className="fc-method" role="group" aria-label="Sistema de amortização">
           <div className="flex">
             <button type="button" className="fc-save-study" onClick={() => { props.saveStudy(); setSavedState(state); }}>Salvar estudo</button>

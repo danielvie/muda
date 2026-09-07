@@ -56,7 +56,7 @@ test("details and annual evolution start collapsed with corrected totals and lim
   assert.match(html, /sem TR ou outro indexador, seguros, tarifas e custos de posse/);
   assert.match(html, /Não é cotação CAIXA/);
   assert.match(html, /não uma carência obrigatória/);
-  assert.match(html, /Não indica empate permanente/);
+  assert.match(html, /curvas originais sem FGTS e ignora o acerto final parcial/);
   assert.match(html, /scope="col"/);
   assert.match(html, /role="region"[^>]*tabindex="0"/);
 });
@@ -88,7 +88,7 @@ test("no crossing, no debt and final settlement use explicit labels", () => {
     ...comparisonFixture.scenario, equalizationMonth: null, payoffMonth: 0, differenceSchedule: [],
     sac: { ...comparisonFixture.scenario.sac, schedule: [] },
   } });
-  assert.match(html, /sem cruzamento com ambos os financiamentos ativos/);
+  assert.match(html, /não ocorre no prazo original/);
   assert.match(html, /Sem dívida/);
   assert.doesNotMatch(html, /NaN|undefined|Infinity/);
 });

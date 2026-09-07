@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -8,6 +9,7 @@ import {
 } from "react";
 import FinanceVsInvest from "./FinanceVsInvest.tsx";
 import { calculate, calculateSacPriceScenario, type Calculation } from "../financingProjection.ts";
+import { buildFinancingDetailRows } from "../financingDetails.ts";
 import FinancingPanel from "./FinancingPanel.tsx";
 import { updateFinancing, type Bounds, type FinancingField, type FinancingState } from "../financingControls.ts";
 import { normalizeControlRanges, type ControlRanges } from "../financingGesture.ts";
@@ -15,8 +17,9 @@ import { readRangePreferences, resolveRangePreferences, saveRangePreference, res
 import InvestmentProjection from "./InvestmentProjection.tsx";
 import { readValuePreferences, resolveValuePreferences, saveValuePreference, removeValuePreference, type ValuePreferences, type ValuePreferenceResult } from "../financingValuePreferences.ts";
 import FinancingComparison, { type FinancingComparisonScenario } from "./FinancingComparison.tsx";
+import SimulationExportPanel from "./SimulationExportPanel.tsx";
 import {
-  buildFgtsComparison,
+  buildFgtsComparisonFromCalculations,
   FGTS_USE_INTERVAL_MONTHS,
   FGTS_DEPOSIT_RATE,
   type FgtsComparison as FgtsComparisonData,
@@ -61,6 +64,7 @@ type LayoutProps = {
   onRangeChange: (field: FinancingField, bounds: Bounds) => void;
   state: FinancingState;
   result: Calculation;
+  referenceResult: Calculation;
   fgtsComparison: FgtsComparisonData | null;
   comparisonScenario: FinancingComparisonScenario;
   includeFgts: boolean;
@@ -105,6 +109,13 @@ function money(value: number, compact = false) {
 
 function decimal(value: number) {
   return value.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+}
+
+function duration(months: number) {
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  if (!years) return `${rest} ${rest === 1 ? "mês" : "meses"}`;
+  return `${years} ${years === 1 ? "ano" : "anos"}${rest ? ` e ${rest} ${rest === 1 ? "mês" : "meses"}` : ""}`;
 }
 
 const SLIDER_SPECS: Record<SliderKey, SliderSpec> = {
@@ -654,7 +665,9 @@ function FinancingSummary({
       <ResultNumber
         label="Juros totais"
         value={money(result.totalInterest, true)}
-        note={`${state.method} · ${Math.round(state.termMonths / 12)} anos`}
+        note={result.fgtsAmortization > 0.005
+          ? `${state.method} · quitação em ${duration(result.schedule.length)}`
+          : `${state.method} · ${Math.round(state.termMonths / 12)} anos`}
       />
       <ResultNumber
         label="Saldo no fim do prazo"
@@ -665,14 +678,24 @@ function FinancingSummary({
   );
 }
 
-function InstallmentList({ result }: { result: Calculation }) {
+function InstallmentList({
+  result,
+  referenceResult,
+  fgtsMode,
+}: {
+  result: Calculation;
+  referenceResult: Calculation;
+  fgtsMode: FinancingState["fgtsMode"];
+}) {
   const [mode, setMode] = useState<"yearly" | "monthly">("yearly");
-  const visibleRows =
-    mode === "monthly"
-      ? result.schedule
-      : result.schedule.filter(
-          (row) => row.month <= 12 || row.month % 12 === 0,
-        );
+  const rows = buildFinancingDetailRows(result, referenceResult, fgtsMode);
+  const hasFgts = result.fgtsAmortization > 0.005;
+  const showReferencePayment = hasFgts && fgtsMode === "PRESTACAO";
+  const payoffMonth = result.schedule.at(-1)?.month ?? 0;
+  const eliminatedCount = rows.filter(row => row.eliminatedByFgts).length;
+  const visibleRows = mode === "monthly"
+    ? rows
+    : rows.filter(({ month }) => month <= 12 || month % 12 === 0 || month === payoffMonth);
   return (
     <div className="mt-1.25 rounded-b-[14px] border border-(--lp-line) bg-(--lp-paper) px-3.5 pt-3.75 pb-2">
       <header className="mb-3.25 flex items-end justify-between gap-3 max-[420px]:items-start max-[420px]:flex-col">
@@ -708,31 +731,44 @@ function InstallmentList({ result }: { result: Calculation }) {
       <div className="schedule-table">
         <div className="schedule-head">
           <span>Parcela</span>
-          <span>Pagamento</span>
+          <span>{showReferencePayment ? "Com FGTS" : "Pagamento"}</span>
           <span>Amortização</span>
           <span>Juros</span>
           <span>Saldo</span>
         </div>
-        {visibleRows.map((row) => (
-          <div className="schedule-row" key={row.month}>
+        {visibleRows.map(({ month, current, reference, eliminatedByFgts, earlyPayoff, partialPayoff }, index) => {
+          const paymentChanged = Math.abs(current.payment - reference.payment) > 0.005;
+          return <Fragment key={month}>
+            {eliminatedByFgts && !visibleRows[index - 1]?.eliminatedByFgts && <div className="schedule-eliminated-divider">Parcelas originais eliminadas pelo FGTS</div>}
+            <div className={`schedule-row${eliminatedByFgts ? " schedule-row-eliminated" : ""}`}>
             <span className="grid gap-0.75">
-              <b>{row.month}</b>
+              <b>{month}</b>
               <small>
-                {row.month <= 12
-                  ? "primeiro ano"
-                  : `ano ${Math.ceil(row.month / 12)}`}
+                {eliminatedByFgts
+                  ? "eliminada pelo FGTS"
+                  : earlyPayoff
+                    ? current.fgtsApplied > 0.005 ? "quitação com FGTS" : "quitação antecipada"
+                    : month <= 12
+                      ? "primeiro ano"
+                      : `ano ${Math.ceil(month / 12)}`}
               </small>
             </span>
-            <strong>{money(row.payment)}</strong>
-            <span>{money(row.amortization, true)}</span>
-            <span>{money(row.interest, true)}</span>
-            <span>{money(row.balance, true)}</span>
-          </div>
-        ))}
+            <span className="schedule-payment">
+              <strong>{money(eliminatedByFgts ? reference.payment : current.payment)}</strong>
+              {((showReferencePayment && paymentChanged) || partialPayoff) && <small className={partialPayoff ? "schedule-original-payment-eliminated" : ""}>original sem FGTS {money(reference.payment)}</small>}
+            </span>
+            <span>{money(eliminatedByFgts ? reference.amortization : current.amortization, true)}</span>
+            <span>{money(eliminatedByFgts ? reference.interest : current.interest, true)}</span>
+            <span>{money(eliminatedByFgts ? reference.balance : current.balance, true)}</span>
+            </div>
+          </Fragment>;
+        })}
       </div>
       <footer className="mt-2.5 text-(--lp-muted) text-[9px] leading-[1.3]">
         {mode === "monthly"
-          ? `${visibleRows.length} parcelas exibidas`
+          ? eliminatedCount > 0
+            ? `${result.schedule.length} pagas · ${eliminatedCount} eliminadas pelo FGTS`
+            : `${visibleRows.length} parcelas exibidas`
           : `${visibleRows.length} pontos no tempo · troque para Mensal para ver todas`}
       </footer>
     </div>
@@ -801,7 +837,7 @@ function FinancingResult({
       </div>
       <section>
         <FinancingSummary result={result} state={state} />
-        {open && <InstallmentList result={result} />}
+        {open && <InstallmentList result={result} referenceResult={result} fgtsMode={state.fgtsMode} />}
       </section>
     </>
   );
@@ -1039,13 +1075,13 @@ function ComparisonEnvironment() {
 }
 
 function FinancingView({ props }: { props: LayoutProps }) {
-  const { state, result, fgtsComparison, update, studies, saveStudy, loadStudy, removeStudy, clearStudies } = props;
+  const { state, result, referenceResult, fgtsComparison, update, studies, saveStudy, loadStudy, removeStudy, clearStudies } = props;
 
   return (
     <div data-environment="financing" className="min-h-[calc(100vh-99px)] bg-(--lp-bg) text-(--lp-ink)">
       <main className="mx-auto flex w-[calc(100%-24px)] max-w-170 flex-col gap-2 pt-4.5 pb-27.5 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
         <FinancingPanel {...props} />
-        <details className="financing-details"><summary>Ver parcelas e custos do financiamento</summary><FinancingSummary result={result} state={state} /><InstallmentList result={result} /></details>
+        <details className="financing-details"><summary>Ver parcelas e custos do financiamento{result.fgtsAmortization > 0.005 ? " com FGTS" : ""}</summary><FinancingSummary result={result} state={state} /><InstallmentList result={result} referenceResult={referenceResult} fgtsMode={state.fgtsMode} /></details>
         <details className="financing-details"><summary>Estudos salvos · {studies.length}</summary>
           <button type="button" className="financing-save" onClick={() => saveStudy()}>Salvar simulação atual</button>
           {studies.length > 0 ? <StudyShelf studies={studies} currentPayment={result.financingPayment} loadStudy={loadStudy} removeStudy={removeStudy} clearStudies={clearStudies} /> : <p className="pb-3 text-sm">Salve uma simulação para comparar outras combinações.</p>}
@@ -1059,6 +1095,11 @@ function FinancingView({ props }: { props: LayoutProps }) {
           update={update}
           fgtsMonthlyEstimate={state.fgtsSalary * FGTS_DEPOSIT_RATE}
           fgtsIntervalMonths={FGTS_USE_INTERVAL_MONTHS}
+        />
+        <SimulationExportPanel
+          state={state}
+          result={result}
+          includeFgts={props.includeFgts}
         />
 
       </main>
@@ -1126,13 +1167,14 @@ export default function FinancingWorkspace() {
     studies.reduce((highest, study) => Math.max(highest, study.id), 0),
   );
   const [includeFgts, setIncludeFgts] = useState(true);
-  const result = useMemo(() => calculate(state), [state]);
   const comparisonScenario = useMemo(
     () => calculateSacPriceScenario(state, includeFgts),
     [state, includeFgts],
   );
+  const result = state.method === "SAC" ? comparisonScenario.sac : comparisonScenario.price;
+  const referenceResult = state.method === "SAC" ? comparisonScenario.sacReference : comparisonScenario.priceReference;
   const fgtsComparison = useMemo(
-    () => buildFgtsComparison({
+    () => buildFgtsComparisonFromCalculations({
       valorImovel: state.property,
       entrada: state.entry,
       taxaAnual: state.financingRate / 100,
@@ -1140,8 +1182,8 @@ export default function FinancingWorkspace() {
       salarioMensal: state.fgtsSalary,
       crescimentoSalarioAnual: state.fgtsSalaryGrowth / 100,
       modo: state.fgtsMode,
-    }),
-    [state],
+    }, comparisonScenario.sac, comparisonScenario.price),
+    [state, comparisonScenario],
   );
   const update = useCallback(
     (patch: Partial<FinancingState>) => setState(previous => updateFinancing(previous, patch, automaticEntry)),
@@ -1234,6 +1276,7 @@ export default function FinancingWorkspace() {
     onRangeChange,
     state,
     result,
+    referenceResult,
     fgtsComparison,
     comparisonScenario,
     includeFgts,

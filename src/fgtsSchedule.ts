@@ -1,14 +1,16 @@
-import { annualToMonthlyRate } from "./finance.ts";
-import { fixedPricePayment, sacPayment } from "./loanPayments.ts";
+import type { FinancingState } from "./financingControls.ts";
+import { calculate, type Calculation, type ScheduleRow } from "./financingProjection.ts";
+import {
+  fgtsDepositForMonth,
+  FGTS_DEPOSIT_RATE,
+  FGTS_USE_INTERVAL_MONTHS,
+  type FgtsMode,
+} from "./fgtsPolicy.ts";
 
-export const FGTS_DEPOSIT_RATE = 0.08;
-export const FGTS_USE_INTERVAL_MONTHS = 24;
-
-const BALANCE_TOLERANCE = 0.005;
+export { FGTS_DEPOSIT_RATE, FGTS_USE_INTERVAL_MONTHS } from "./fgtsPolicy.ts";
+export type { FgtsMode } from "./fgtsPolicy.ts";
 
 type FinancingMethod = "SAC" | "PRICE";
-
-export type FgtsMode = "PRAZO" | "PRESTACAO";
 
 export type FgtsScheduleInput = {
   valorImovel: number;
@@ -62,141 +64,118 @@ export type FgtsComparison = {
   price: FgtsMethodProjection;
 };
 
-function createYearBlock(ano: number, mes: number, saldoInicial: number): FgtsYearBlock {
+function startingBalance(row: ScheduleRow) {
+  return row.balance + row.amortization + row.fgtsApplied;
+}
+
+function summarizeYear(
+  rows: ScheduleRow[],
+  input: FgtsScheduleInput,
+  yearIndex: number,
+): FgtsYearBlock {
+  const first = rows[0];
+  const last = rows.at(-1)!;
   return {
-    ano,
-    mesInicio: mes,
-    mesFim: mes,
-    saldoInicial,
-    saldoFinal: saldoInicial,
-    primeiraPrestacao: 0,
-    ultimaPrestacao: 0,
-    prestacoes: 0,
-    juros: 0,
-    amortizacaoProgramada: 0,
-    fgtsGerado: 0,
-    fgtsAmortizacao: 0,
+    ano: yearIndex + 1,
+    mesInicio: first.month,
+    mesFim: last.month,
+    saldoInicial: startingBalance(first),
+    saldoFinal: last.balance,
+    primeiraPrestacao: first.payment,
+    ultimaPrestacao: last.payment,
+    prestacoes: rows.reduce((sum, row) => sum + row.payment, 0),
+    juros: rows.reduce((sum, row) => sum + row.interest, 0),
+    amortizacaoProgramada: rows.reduce((sum, row) => sum + row.amortization, 0),
+    fgtsGerado: rows.reduce(
+      (sum, row) => sum + fgtsDepositForMonth(input.salarioMensal, input.crescimentoSalarioAnual, row.month),
+      0,
+    ),
+    fgtsAmortizacao: rows.reduce((sum, row) => sum + row.fgtsApplied, 0),
   };
 }
 
-function projectMethod(input: FgtsScheduleInput, metodo: FinancingMethod): FgtsMethodProjection {
-  const prazoOriginalMeses = Math.max(1, Math.trunc(input.prazoMeses));
-  const pv = Math.max(0, input.valorImovel - input.entrada);
-  const taxaMensal = annualToMonthlyRate(input.taxaAnual);
-  let amortizacaoSac = pv / prazoOriginalMeses;
-  let prestacaoPrice = fixedPricePayment(pv, taxaMensal, prazoOriginalMeses);
-
-  let saldo = pv;
-  let fgtsDisponivel = 0;
-  let prestacoes = 0;
-  let juros = 0;
-  let fgtsGerado = 0;
-  let fgtsAmortizacao = 0;
-  let fgtsAcionamentos = 0;
-  let primeiraPrestacao = 0;
-  let prestacaoAposPrimeiroFgts: number | null = null;
-  const yearBlocks: FgtsYearBlock[] = [];
-
-  for (let mes = 1; mes <= prazoOriginalMeses && saldo > BALANCE_TOLERANCE; mes += 1) {
-    const saldoInicial = saldo;
-    const salarioDoMes = input.salarioMensal * Math.pow(
-      1 + input.crescimentoSalarioAnual,
-      Math.floor((mes - 1) / 12),
-    );
-    const fgtsDoMes = salarioDoMes * FGTS_DEPOSIT_RATE;
-    const taxaJuros = saldoInicial * taxaMensal;
-    const prestacaoPlanejada = metodo === "PRICE" ? prestacaoPrice
-      : sacPayment(saldoInicial, amortizacaoSac, taxaMensal);
-    const amortizacaoPlanejada = prestacaoPlanejada - taxaJuros;
-    const amortizacaoProgramada = Math.min(saldoInicial, Math.max(0, amortizacaoPlanejada));
-    const prestacao = amortizacaoProgramada + taxaJuros;
-    if (mes === 1) primeiraPrestacao = prestacao;
-
-    saldo = Math.max(0, saldoInicial - amortizacaoProgramada);
-    fgtsDisponivel += fgtsDoMes;
-    fgtsGerado += fgtsDoMes;
-    prestacoes += prestacao;
-    juros += taxaJuros;
-
-    let amortizacaoComFgts = 0;
-    if (mes % FGTS_USE_INTERVAL_MONTHS === 0 && saldo > BALANCE_TOLERANCE) {
-      amortizacaoComFgts = Math.min(saldo, fgtsDisponivel);
-      if (amortizacaoComFgts > BALANCE_TOLERANCE) fgtsAcionamentos += 1;
-      fgtsDisponivel -= amortizacaoComFgts;
-      fgtsAmortizacao += amortizacaoComFgts;
-      saldo = Math.max(0, saldo - amortizacaoComFgts);
-
-      const mesesRestantes = prazoOriginalMeses - mes;
-      if (input.modo === "PRESTACAO" && saldo > BALANCE_TOLERANCE && mesesRestantes > 0) {
-        amortizacaoSac = saldo / mesesRestantes;
-        prestacaoPrice = fixedPricePayment(saldo, taxaMensal, mesesRestantes);
-      }
-
-      if (fgtsAcionamentos === 1 && amortizacaoComFgts > BALANCE_TOLERANCE) {
-        const proximoJuro = saldo * taxaMensal;
-        const proximaPrestacaoPlanejada = metodo === "PRICE" ? prestacaoPrice
-          : sacPayment(saldo, amortizacaoSac, taxaMensal);
-        const proximaAmortizacao = Math.min(saldo, Math.max(0, proximaPrestacaoPlanejada - proximoJuro));
-        prestacaoAposPrimeiroFgts = proximaAmortizacao + proximoJuro;
-      }
-    }
-
-    const ano = Math.ceil(mes / 12);
-    const block = yearBlocks[ano - 1] ?? createYearBlock(ano, mes, saldoInicial);
-    block.mesFim = mes;
-    block.saldoFinal = saldo;
-    block.primeiraPrestacao = block.primeiraPrestacao || prestacao;
-    block.ultimaPrestacao = prestacao;
-    block.prestacoes += prestacao;
-    block.juros += taxaJuros;
-    block.amortizacaoProgramada += amortizacaoProgramada;
-    block.fgtsGerado += fgtsDoMes;
-    block.fgtsAmortizacao += amortizacaoComFgts;
-    yearBlocks[ano - 1] = block;
-  }
+function summarizeMethod(
+  input: FgtsScheduleInput,
+  metodo: FinancingMethod,
+  calculation: Calculation,
+): FgtsMethodProjection {
+  const firstFgtsIndex = calculation.schedule.findIndex(row => row.fgtsApplied > 0.005);
+  const fgtsGerado = calculation.schedule.reduce(
+    (sum, row) => sum + fgtsDepositForMonth(input.salarioMensal, input.crescimentoSalarioAnual, row.month),
+    0,
+  );
+  const years = Math.ceil(calculation.schedule.length / 12);
+  const yearBlocks = Array.from({ length: years }, (_, index) =>
+    summarizeYear(calculation.schedule.slice(index * 12, index * 12 + 12), input, index),
+  );
 
   return {
     metodo,
     modo: input.modo,
-    prazoOriginalMeses,
-    prazoFinalMeses: yearBlocks.at(-1)?.mesFim ?? 0,
-    primeiraPrestacao,
-    prestacaoAposPrimeiroFgts,
-    prestacoes,
-    juros,
+    prazoOriginalMeses: Math.max(1, Math.trunc(input.prazoMeses)),
+    prazoFinalMeses: calculation.schedule.length,
+    primeiraPrestacao: calculation.financingPayment,
+    prestacaoAposPrimeiroFgts: firstFgtsIndex < 0
+      ? null
+      : calculation.schedule[firstFgtsIndex + 1]?.payment ?? 0,
+    prestacoes: calculation.totalPaid,
+    juros: calculation.totalInterest,
     fgtsGerado,
-    fgtsAmortizacao,
-    fgtsAcionamentos,
-    fgtsNaoUtilizado: fgtsDisponivel,
-    valorEfetivoImovel: input.entrada + prestacoes + fgtsAmortizacao,
+    fgtsAmortizacao: calculation.fgtsAmortization,
+    fgtsAcionamentos: calculation.schedule.filter(row => row.fgtsApplied > 0.005).length,
+    fgtsNaoUtilizado: Math.max(0, fgtsGerado - calculation.fgtsAmortization),
+    valorEfetivoImovel: input.entrada + calculation.totalPaid + calculation.fgtsAmortization,
     yearBlocks,
   };
 }
 
-export function buildFgtsComparison(
-  input: FgtsScheduleInput,
-): FgtsComparison | null {
-  if (
-    !Number.isFinite(input.valorImovel) ||
-    !Number.isFinite(input.entrada) ||
-    !Number.isFinite(input.taxaAnual) ||
-    !Number.isFinite(input.prazoMeses) ||
-    !Number.isFinite(input.salarioMensal) ||
-    input.salarioMensal <= 0 ||
-    !Number.isFinite(input.crescimentoSalarioAnual) ||
-    input.crescimentoSalarioAnual < 0 ||
-    (input.modo !== "PRAZO" && input.modo !== "PRESTACAO")
-  ) {
-    return null;
-  }
+function validInput(input: FgtsScheduleInput) {
+  return (
+    Number.isFinite(input.valorImovel) &&
+    Number.isFinite(input.entrada) &&
+    Number.isFinite(input.taxaAnual) &&
+    Number.isFinite(input.prazoMeses) &&
+    Number.isFinite(input.salarioMensal) &&
+    input.salarioMensal > 0 &&
+    Number.isFinite(input.crescimentoSalarioAnual) &&
+    input.crescimentoSalarioAnual >= 0 &&
+    (input.modo === "PRAZO" || input.modo === "PRESTACAO")
+  );
+}
 
+export function buildFgtsComparisonFromCalculations(
+  input: FgtsScheduleInput,
+  sac: Calculation,
+  price: Calculation,
+): FgtsComparison | null {
+  if (!validInput(input)) return null;
   return {
     modo: input.modo,
     salarioMensal: input.salarioMensal,
     crescimentoSalarioAnual: input.crescimentoSalarioAnual,
     fgtsMensalEstimado: input.salarioMensal * FGTS_DEPOSIT_RATE,
     intervaloUsoMeses: FGTS_USE_INTERVAL_MONTHS,
-    sac: projectMethod(input, "SAC"),
-    price: projectMethod(input, "PRICE"),
+    sac: summarizeMethod(input, "SAC", sac),
+    price: summarizeMethod(input, "PRICE", price),
   };
+}
+
+export function buildFgtsComparison(
+  input: FgtsScheduleInput,
+): FgtsComparison | null {
+  if (!validInput(input)) return null;
+
+  const state: FinancingState = {
+    property: input.valorImovel,
+    entry: input.entrada,
+    financingRate: input.taxaAnual * 100,
+    termMonths: input.prazoMeses,
+    fgtsSalary: input.salarioMensal,
+    fgtsSalaryGrowth: input.crescimentoSalarioAnual * 100,
+    fgtsMode: input.modo,
+    method: "SAC",
+  };
+  const sac = calculate(state, true);
+  const price = calculate({ ...state, method: "PRICE" }, true);
+  return buildFgtsComparisonFromCalculations(input, sac, price);
 }
