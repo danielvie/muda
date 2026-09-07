@@ -1,6 +1,14 @@
 # Financiamento com barra simples e alça Foco
 
-Promovido por escolha do usuário: variante 2 do protótipo de recorte com alças auxiliares. A dinâmica das laterais foi ajustada na promoção.
+## Atualização promovida: selo de atalho na Entrada
+
+Promovida por escolha do usuário: variante 5 do protótipo de cinco tratamentos para a Entrada, commit `c6b108b` na branch local `prototype/entry-button`.
+
+A área `Entrada mínima de 20%` saiu do painel. O cartão de Entrada mantém a posição e ganhou um selo discreto `↗ 20%` no canto superior direito. O selo usa `minimumEntry(valor do imóvel)` como alvo, aplica a entrada ao tocar e recebe destaque enquanto a entrada atual estiver abaixo de 20%. Editar o imóvel ou a Entrada continua manual e não impõe esse mínimo automaticamente.
+
+O protótipo completo permanece na branch de origem para consulta. A interface principal mantém apenas a variante promovida.
+
+Histórico da implementação anterior: a variante 2 do protótipo de recorte com alças auxiliares foi promovida. A dinâmica das laterais foi ajustada naquela promoção.
 
 ## Comportamento aprovado
 
@@ -65,7 +73,7 @@ Salvar padrão salva somente o valor confirmado do campo selecionado. Não salva
 - No teclado, a barra aceita setas, PageUp/PageDown e Home/End. Na alça, esquerda/direita escolhem o ponto; − restaura mínimo; + prepara máximo em dobro; Enter aplica; Escape cancela.
 - Soltar ou perder captura encerra o gesto. Mudar de campo ou alterar a simulação cancela qualquer prévia anterior.
 
-O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. O mínimo automático de 20%, estudos existentes e os dois modos de FGTS são preservados. As faixas temporárias ficam em memória; apenas comandos explícitos persistem padrões. Os estudos usam a chave de armazenamento existente.
+O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. A Entrada continua manual; o selo de 20% é uma ação explícita e não altera a regra de edição dos campos. Estudos existentes, os dois modos de FGTS e as faixas temporárias são preservados. Apenas comandos explícitos persistem padrões. Os estudos usam a chave de armazenamento existente.
 
 ## Comparação unificada
 
@@ -108,7 +116,8 @@ O motor corrigido fornece `differenceSchedule`, mas a tabela anual existente ain
 - `financingRangeDrop.ts`: recorte, restauração de mínimo, duplicação do máximo e classificação do ponto de soltura.
 - `financingGesture.ts`: configuração por unidade, normalização das faixas e controles da barra.
 - `financingControls.ts`: regras financeiras, formato brasileiro e ticks.
-- `FinancingWorkspace.tsx`: valores, faixas, estudos, ativação compartilhada de FGTS e composição dos painéis.
+- `FinancingPanel.tsx` e `FinancingPanel.css`: cartão de Entrada com selo de atalho para aplicar 20%, sem política automática visível.
+- `FinancingWorkspace.tsx`: valores, faixas, estudos, FGTS e composição dos painéis.
 - `FinancingComparison.tsx` e `.css`: controles FGTS e cartões das três estratégias, sem fórmulas financeiras novas.
 - `FgtsComparison.tsx`: detalhes e evolução anual SAC/PRICE da projeção FGTS.
 - `financingProjection.ts` e `loanPayments.ts`: prestações previstas, cronograma SAC/PRICE e cenário com amortizações extras. A regra de redução de prazo está documentada em `src/financingProjection.md`.

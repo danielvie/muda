@@ -58,8 +58,6 @@ type LayoutProps = {
   rangePreferences: RangePreferences;
   onSaveRangePreference: (field: FinancingField, bounds: Bounds) => PreferenceResult;
   onRestoreRangePreference: (field: FinancingField) => PreferenceResult;
-  automaticEntry: boolean;
-  onAutomaticEntryChange: (enabled: boolean) => void;
   ranges: ControlRanges;
   onRangeChange: (field: FinancingField, bounds: Bounds) => void;
   state: FinancingState;
@@ -1156,7 +1154,6 @@ function persistStudies(studies: Study[]) {
 }
 
 export default function FinancingWorkspace() {
-  const [automaticEntry, setAutomaticEntry] = useState(false);
   const [rangePreferences, setRangePreferences] = useState<RangePreferences>(readRangePreferences);
   const [controlRanges, setControlRanges] = useState<ControlRanges>(() => resolveRangePreferences(rangePreferences));
   const [environment, setEnvironment] = useState<Environment>("financing");
@@ -1186,13 +1183,13 @@ export default function FinancingWorkspace() {
     [state, comparisonScenario],
   );
   const update = useCallback(
-    (patch: Partial<FinancingState>) => setState(previous => updateFinancing(previous, patch, automaticEntry)),
-    [automaticEntry],
+    (patch: Partial<FinancingState>) => setState(previous => updateFinancing(previous, patch, false)),
+    [],
   );
-  const ranges = normalizeControlRanges(controlRanges, state, automaticEntry);
+  const ranges = normalizeControlRanges(controlRanges, state, false);
   useEffect(() => {
-    setControlRanges(previous => normalizeControlRanges(previous, state, automaticEntry));
-  }, [state, automaticEntry]);
+    setControlRanges(previous => normalizeControlRanges(previous, state, false));
+  }, [state]);
   const onRangeChange = (field: FinancingField, next: Bounds) => setControlRanges(previous => ({ ...previous, [field]: next }));
   const onSaveRangePreference = (field: FinancingField, bounds: Bounds) => {
     const result = saveRangePreference(field, bounds);
@@ -1214,12 +1211,6 @@ export default function FinancingWorkspace() {
     if (result.ok) setValuePreferences(result.preferences);
     return result;
   };
-  const onAutomaticEntryChange = (enabled: boolean) => {
-    setAutomaticEntry(enabled);
-    if (enabled) setState(previous => updateFinancing(previous, {}, true));
-  };
-
-
   const saveStudy = useCallback(
     (label = "Estudo") => {
       nextStudyId.current += 1;
@@ -1247,10 +1238,10 @@ export default function FinancingWorkspace() {
           fgtsSalary: study.state.fgtsSalary ?? 0,
           fgtsSalaryGrowth: study.state.fgtsSalaryGrowth ?? 0,
           fgtsMode: study.state.fgtsMode === "PRESTACAO" ? "PRESTACAO" : "PRAZO",
-        }, {}, automaticEntry));
+        }, {}, false));
       }
     },
-    [studies, automaticEntry],
+    [studies],
   );
   const removeStudy = useCallback(
     (id: number) =>
@@ -1270,8 +1261,6 @@ export default function FinancingWorkspace() {
     rangePreferences,
     onSaveRangePreference,
     onRestoreRangePreference,
-    automaticEntry,
-    onAutomaticEntryChange,
     ranges,
     onRangeChange,
     state,

@@ -19,8 +19,6 @@ type Props = {
   result: { financingPayment: number; financingPaymentEnd: number; financedAmount: number; totalInterest: number; fgtsAmortization: number };
   includeFgts: boolean;
   update: (patch: Partial<FinancingState>) => void;
-  automaticEntry: boolean;
-  onAutomaticEntryChange: (enabled: boolean) => void;
   ranges: ControlRanges;
   onRangeChange: (field: FinancingField, bounds: Bounds) => void;
   saveStudy: () => void;
@@ -48,15 +46,15 @@ function AmountInput({ id, value, min, max, step, monetary, onChange }: { id: st
 }
 
 export default function FinancingPanel(props: Props) {
-  const { state, result, includeFgts, update, automaticEntry, onAutomaticEntryChange } = props;
+  const { state, result, includeFgts, update } = props;
   const [selected, setSelected] = useState<FinancingField>("property");
   const [savedState, setSavedState] = useState<FinancingState | null>(null);
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
   const field = FINANCING_FIELDS.find(candidate => candidate.key === selected)!;
-  const spec = controlSpec(selected, state, automaticEntry);
+  const spec = controlSpec(selected, state, false);
   const bounds = normalizeControlRange(props.ranges[selected], spec);
   const defaults = resolveRangePreferences(props.rangePreferences);
-  const defaultApplied = resetControlRange(selected, state, automaticEntry, defaults);
+  const defaultApplied = resetControlRange(selected, state, false, defaults);
   const id = useId();
   const paymentInfoId = `${id}-payment-info`;
   const floor = minimumEntry(state.property);
@@ -104,15 +102,35 @@ export default function FinancingPanel(props: Props) {
         </div>
       </div>
       <div className="fc-card-body">
-        <div className="fc-targets" role="group" aria-label="Escolha o que ajustar">{FINANCING_FIELDS.map(candidate => <button type="button" key={candidate.key} aria-pressed={selected === candidate.key} onClick={() => setSelected(candidate.key)}><span>{candidate.short}</span><strong>{display(candidate.key, fieldValue(candidate.key, state))}</strong></button>)}</div>
-        <button className="fc-auto-entry" type="button" role="switch" aria-checked={automaticEntry} onClick={() => onAutomaticEntryChange(!automaticEntry)}><span><strong>Entrada mínima de 20%</strong><small>{automaticEntry ? `Automático · mínimo atual ${money(floor)}` : "Desativado · entrada manual"}</small></span><span className="fc-switch-track" aria-hidden="true"><span /></span></button>
-        {automaticEntry && <p className="fc-help">Ao mudar o imóvel, mantém a entrada atual ou aumenta para 20%. Entradas maiores não são reduzidas.</p>}
+        <div className="fc-targets" role="group" aria-label="Escolha o que ajustar">
+          {FINANCING_FIELDS.map(candidate => candidate.key === "entry" ? (
+            <div className={`fc-entry-target${state.entry < floor ? " fc-entry-target-under" : ""}`} key={candidate.key}>
+              <button type="button" className="fc-target-entry" aria-pressed={selected === candidate.key} onClick={() => setSelected(candidate.key)}>
+                <span>{candidate.short}</span>
+                <strong>{display(candidate.key, fieldValue(candidate.key, state))}</strong>
+              </button>
+              <button
+                type="button"
+                className={`fc-entry-shortcut${state.entry < floor ? " fc-entry-shortcut-needed" : ""}`}
+                aria-label={`Aplicar entrada de 20%: ${money(floor)}`}
+                title={`Aplicar entrada de 20%: ${money(floor)}`}
+                onClick={() => update({ entry: floor })}
+              >
+                <span>20%</span>
+              </button>
+            </div>
+          ) : (
+            <button type="button" key={candidate.key} aria-pressed={selected === candidate.key} onClick={() => setSelected(candidate.key)}>
+              <span>{candidate.short}</span>
+              <strong>{display(candidate.key, fieldValue(candidate.key, state))}</strong>
+            </button>
+          ))}
+        </div>
         {state.entry > state.property && <p role="status" className="fc-warning">A entrada supera o valor do imóvel. Não há saldo a financiar; ajuste a entrada se necessário.</p>}
         <div className="fc-adjustment">
           <label className="fc-input-label" htmlFor={id}><span>{field.label}</span><small>{field.unit}</small></label>
           <div className="fc-number-row"><AmountInput key={selected} id={id} value={spec.value} min={spec.min} max={spec.max} step={field.step} monetary={field.monetary} onChange={change} /></div>
           <p className="fc-help">Se digitar, confirme com Enter ou saia do campo.</p>
-          {selected === "entry" && <button type="button" className="fc-entry-shortcut" onClick={() => update({ entry: floor })}><span>Usar 20% do imóvel</span><strong>{money(floor)}</strong></button>}
           <FinancingValuePreference key={`value-${selected}`} label={field.label} value={state[selected]} saved={props.valuePreferences[selected]}
             format={value => display(selected, selected === "termMonths" ? value / 12 : value)}
             onSave={() => props.onSaveValuePreference(selected)} onRemove={() => props.onRemoveValuePreference(selected)}

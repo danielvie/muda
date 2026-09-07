@@ -20,25 +20,26 @@
 .financing-panel :focus-visible { outline:3px solid #4c9aff; outline-offset:3px; }
 .financing-panel button[aria-pressed=true] { background:var(--lp-accent); color:white; border-color:var(--lp-accent); }
 .fc-targets { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; }
-.fc-targets button { display:grid; gap:3px; text-align:left; padding:9px 12px; min-height:64px; }
-.fc-targets button > span { font-size:13px; font-weight:500; }
-.fc-targets button strong { font-size:16px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
-.financing-panel .fc-auto-entry { display:flex; align-items:center; justify-content:space-between; gap:8px 12px; text-align:left; padding:12px; }
-.fc-auto-entry > span:first-child { display:grid; gap:4px; }
-.fc-auto-entry strong { font-size:14px; }
-.fc-auto-entry small { font-size:12px; font-weight:400; color:var(--lp-muted); }
-.fc-switch-track { width:48px; height:28px; border-radius:20px; background:#77858a; padding:3px; flex-shrink:0; }
-.fc-switch-track > span { display:block; width:22px; height:22px; background:white; border-radius:50%; }
-.fc-auto-entry[aria-checked=true] .fc-switch-track { background:var(--lp-accent); }
-.fc-auto-entry[aria-checked=true] .fc-switch-track > span { transform:translateX(20px); }
+.fc-targets > button,
+.fc-target-entry { display:grid; gap:3px; min-width:0; min-height:64px; padding:9px 12px; text-align:left; }
+.fc-targets > button > span,
+.fc-target-entry > span { font-size:13px; font-weight:500; }
+.fc-targets > button strong,
+.fc-target-entry strong { font-size:16px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.fc-entry-target { position:relative; min-width:0; min-height:64px; }
+.fc-entry-target .fc-target-entry { width:100%; height:100%; }
+.financing-panel .fc-entry-shortcut { position:absolute; top:7px; right:7px; z-index:1; display:inline-flex; align-items:center; justify-content:center; gap:4px; min-width:0; min-height:30px; border:1px solid var(--lp-line); border-radius:6px; padding:5px 7px; background:var(--lp-bg); color:var(--lp-muted); font-family:var(--font-mono); font-size:9px; font-weight:850; line-height:1; }
+.financing-panel .fc-entry-shortcut:hover,.financing-panel .fc-entry-shortcut:focus-visible { border-color:var(--lp-accent); color:var(--lp-accent); outline:0; }
+.financing-panel .fc-entry-shortcut:active { transform:translateY(1px); }
+.financing-panel .fc-entry-shortcut-needed { border-color:var(--lp-orange); background:var(--lp-action-bg); color:#49312a; box-shadow:0 0 0 2px color-mix(in srgb,var(--lp-orange) 18%,transparent); }
+.financing-panel .fc-entry-shortcut-needed:hover,.financing-panel .fc-entry-shortcut-needed:focus-visible { border-color:var(--lp-orange); background:color-mix(in srgb,var(--lp-action-bg) 82%,white); color:#49312a; }
+.financing-panel .fc-entry-shortcut b { font-size:12px; line-height:1; }
 .fc-help { font-size:12px; color:var(--lp-muted); line-height:1.45; }
 .fc-warning { padding:10px; border:1px solid var(--lp-line); font-size:13px; }
 .fc-adjustment { display:grid; gap:8px; }
 .fc-input-label { display:flex; align-items:baseline; justify-content:space-between; font-size:15px; font-weight:650; }
 .fc-input-label small { color:var(--lp-muted); font-size:12px; font-weight:500; }
 .fc-number-row input { width:100%; min-width:0; height:58px; border:1px solid var(--lp-line); border-radius:9px; padding:8px 10px; font-size:28px; font-weight:650; font-variant-numeric:tabular-nums; background:var(--lp-bg); color:var(--lp-ink); }
-.financing-panel .fc-entry-shortcut { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:4px 10px; color:var(--lp-accent); font-size:14px; text-align:left; border-style:dashed; }
-.fc-entry-shortcut strong { font-size:15px; }
 .fc-method { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; border-top:1px solid #ffffff30; padding-top:12px; }
 .fc-method > span { flex:1 1 auto; min-width:0; font-size:14px; color:#e0e8f3; }
 .fc-method .fc-save-status:empty { display:none; }
