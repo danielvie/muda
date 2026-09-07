@@ -50,12 +50,14 @@ export default function FinancingPanel(props: Props) {
   const { state, result, update, automaticEntry, onAutomaticEntryChange } = props;
   const [selected, setSelected] = useState<FinancingField>("property");
   const [savedState, setSavedState] = useState<FinancingState | null>(null);
+  const [showPaymentInfo, setShowPaymentInfo] = useState(false);
   const field = FINANCING_FIELDS.find(candidate => candidate.key === selected)!;
   const spec = controlSpec(selected, state, automaticEntry);
   const bounds = normalizeControlRange(props.ranges[selected], spec);
   const defaults = resolveRangePreferences(props.rangePreferences);
   const defaultApplied = resetControlRange(selected, state, automaticEntry, defaults);
   const id = useId();
+  const paymentInfoId = `${id}-payment-info`;
   const floor = minimumEntry(state.property);
   const change = (value: number) => {
     if (!Number.isFinite(value)) return;
@@ -73,9 +75,32 @@ export default function FinancingPanel(props: Props) {
   return <section className="financing-panel">
     <h1>Quanto fica a parcela?</h1>
     <div className="fc-card">
-      <div className="fc-payment"><span>Primeira prestação estimada · {state.method}</span><output aria-live="polite">{money(result.financingPayment)}</output><small>Última parcela de {money(result.financingPaymentEnd)}</small><small>Principal e juros, sem FGTS nesta prévia, sem TR ou outro indexador, seguros e tarifas. Taxa efetiva anual. Não é cotação CAIXA; confira a simulação contratual.</small>
-        <div className="fc-method" role="group" aria-label="Sistema de amortização"><span>Sistema</span>{(["SAC", "PRICE"] as const).map(method => <button type="button" key={method} aria-pressed={state.method === method} onClick={() => update({ method })}>{method}</button>)}</div>
-        <div className="fc-save-row"><button type="button" className="fc-save-study" onClick={() => { props.saveStudy(); setSavedState(state); }}>Salvar estudo</button><span role="status">{savedState === state ? "Adicionado aos estudos." : ""}</span></div>
+      <div className="fc-payment">
+        <div className="fc-payment-heading">
+          <span>Primeira prestação estimada · {state.method}</span>
+          <button
+            type="button"
+            className="fc-info-button"
+            aria-label="Mostrar informações sobre a estimativa"
+            aria-expanded={showPaymentInfo}
+            aria-controls={paymentInfoId}
+            onClick={() => setShowPaymentInfo(previous => !previous)}
+          >
+            i
+          </button>
+        </div>
+        <output aria-live="polite">{money(result.financingPayment)}</output>
+        <small>Última parcela de {money(result.financingPaymentEnd)}</small>
+        {showPaymentInfo && <p id={paymentInfoId} className="fc-payment-info">Principal e juros, sem FGTS nesta prévia, sem TR ou outro indexador, seguros e tarifas. Taxa efetiva anual. Não é cotação CAIXA; confira a simulação contratual.</p>}
+        <div className="fc-method" role="group" aria-label="Sistema de amortização">
+          <div className="flex">
+            <button type="button" className="fc-save-study" onClick={() => { props.saveStudy(); setSavedState(state); }}>Salvar estudo</button>
+          </div>
+          <div className="flex gap-2 grow justify-end">
+            {(["SAC", "PRICE"] as const).map(method => <button type="button" key={method} aria-pressed={state.method === method} onClick={() => update({ method })}>{method}</button>)}
+          </div>
+          <span className="fc-save-status" role="status">{savedState === state ? "Adicionado aos estudos." : ""}</span>
+        </div>
       </div>
       <div className="fc-card-body">
         <div className="fc-targets" role="group" aria-label="Escolha o que ajustar">{FINANCING_FIELDS.map(candidate => <button type="button" key={candidate.key} aria-pressed={selected === candidate.key} onClick={() => setSelected(candidate.key)}><span>{candidate.short}</span><strong>{display(candidate.key, fieldValue(candidate.key, state))}</strong></button>)}</div>
