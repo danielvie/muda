@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from "react";
 import { minimumEntry, formatFinancingNumber, parseFinancingNumber, snapFinancingValue, type Bounds, type FinancingField, type FinancingState } from "../financingControls.ts";
 import { FINANCING_FIELDS, controlSpec, normalizeControlRange, resetControlRange, type ControlRanges } from "../financingGesture.ts";
 import FinancingRangeControl from "./FinancingRangeControl.tsx";
+import FinancingCrossing from "./FinancingCrossing.tsx";
 import FinancingRangePreferences from "./FinancingRangePreferences.tsx";
 import FinancingValuePreference from "./FinancingValuePreference.tsx";
 import type { ValuePreferences, ValuePreferenceResult } from "../financingValuePreferences.ts";
@@ -18,6 +19,7 @@ type Props = {
   state: FinancingState;
   result: { financingPayment: number; financingPaymentEnd: number; financedAmount: number; totalInterest: number; fgtsAmortization: number };
   includeFgts: boolean;
+  equalizationMonth: number | null;
   update: (patch: Partial<FinancingState>) => void;
   ranges: ControlRanges;
   onRangeChange: (field: FinancingField, bounds: Bounds) => void;
@@ -70,6 +72,7 @@ export default function FinancingPanel(props: Props) {
     onChange: (value: number, nextBounds: Bounds) => { change(value); props.onRangeChange(selected, nextBounds); },
     onBoundsChange: (nextBounds: Bounds) => props.onRangeChange(selected, nextBounds),
     onResetRange: () => props.onRangeChange(selected, defaultApplied),
+    onSaveRange: () => props.onSaveRangePreference(selected, bounds),
   };
   return <section className="financing-panel">
     <h1>Quanto fica a parcela?</h1>
@@ -90,7 +93,10 @@ export default function FinancingPanel(props: Props) {
         </div>
         <output aria-live="polite">{money(result.financingPayment)}</output>
         <small>Última parcela de {money(result.financingPaymentEnd)}</small>
-        {showPaymentInfo && <p id={paymentInfoId} className="fc-payment-info">Principal e juros, {includeFgts && result.fgtsAmortization > 0.005 ? `com FGTS no modo ${state.fgtsMode === "PRAZO" ? "reduzir prazo" : "reduzir prestação"}` : "sem FGTS"}, sem TR ou outro indexador, seguros e tarifas. Taxa efetiva anual. Não é cotação CAIXA; confira a simulação contratual.</p>}
+        {showPaymentInfo && <div id={paymentInfoId} className="fc-payment-info">
+          <p><FinancingCrossing month={props.equalizationMonth} /></p>
+          <p>Principal e juros, {includeFgts && result.fgtsAmortization > 0.005 ? `com FGTS no modo ${state.fgtsMode === "PRAZO" ? "reduzir prazo" : "reduzir prestação"}` : "sem FGTS"}, sem TR ou outro indexador, seguros e tarifas. Taxa efetiva anual. Não é cotação CAIXA; confira a simulação contratual.</p>
+        </div>}
         <div className="fc-method" role="group" aria-label="Sistema de amortização">
           <div className="flex">
             <button type="button" className="fc-save-study" onClick={() => { props.saveStudy(); setSavedState(state); }}>Salvar estudo</button>

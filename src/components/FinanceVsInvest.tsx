@@ -3,17 +3,18 @@ import { brl, toNumber, formatNumber } from "../format";
 import { useMemory } from "../memory";
 import {
   buildFinanceVsInvestProjection,
-  defaultFinanceVsInvestFields,
   getInitialComparisonBudget,
   type FinanceVsInvestFields,
   type FinanceVsInvestMonth,
 } from "../financeVsInvestProjection";
 
+import { readFinanceVsInvestFields, saveFinanceVsInvestFields } from "../financeVsInvestPreferences.ts";
+import type { FinancingState } from "../financingControls.ts";
+
 type NumericField = Exclude<keyof FinanceVsInvestFields, "amortizationMethod">;
 type ComparisonFieldHistory = Partial<Record<NumericField, string[]>>;
 
 const FIELD_HISTORY_KEY = "muda.financeVsInvest.fieldHistory.v1";
-const FIELDS_STORAGE_KEY = "muda.financeVsInvest.fields.v1";
 const ADVANCED_OPEN_STORAGE_KEY = "muda.financeVsInvest.advancedOpen.v1";
 const FIELD_HISTORY_LIMIT = 3;
 
@@ -110,15 +111,6 @@ function readFieldHistory(): ComparisonFieldHistory {
     return parsed && typeof parsed === "object" ? parsed : {};
   } catch {
     return {};
-  }
-}
-
-function readSavedFields(): FinanceVsInvestFields {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(FIELDS_STORAGE_KEY) ?? "{}") as Partial<FinanceVsInvestFields>;
-    return { ...defaultFinanceVsInvestFields, ...parsed };
-  } catch {
-    return defaultFinanceVsInvestFields;
   }
 }
 
@@ -421,9 +413,19 @@ function MonthlyDetailsTable({ data }: { data: FinanceVsInvestMonth[] }) {
   );
 }
 
-export default function FinanceVsInvest() {
+type Props = {
+  financingState?: FinancingState;
+} & ({ fields: FinanceVsInvestFields; onFieldsChange: (fields: FinanceVsInvestFields) => void }
+  | { fields?: undefined; onFieldsChange?: undefined });
+
+export default function FinanceVsInvest(props: Props = {}) {
   const { fields: sourceFields } = useMemory();
-  const [fields, setFields] = useState<FinanceVsInvestFields>(readSavedFields);
+  const [localFields, setLocalFields] = useState<FinanceVsInvestFields>(readFinanceVsInvestFields);
+  const fields = props.fields ?? localFields;
+  const setFields = (next: FinanceVsInvestFields) => {
+    if (props.onFieldsChange) props.onFieldsChange(next);
+    else { setLocalFields(next); saveFinanceVsInvestFields(next); }
+  };
   const [fieldHistory, setFieldHistory] = useState<ComparisonFieldHistory>(readFieldHistory);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(readAdvancedOpen);
   const [importNote, setImportNote] = useState("");
@@ -431,11 +433,7 @@ export default function FinanceVsInvest() {
   const automaticBudget = getInitialComparisonBudget(fields);
 
   const updateField = <K extends keyof FinanceVsInvestFields>(key: K, value: FinanceVsInvestFields[K]) => {
-    setFields((current) => {
-      const next = { ...current, [key]: value };
-      localStorage.setItem(FIELDS_STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+    setFields({ ...fields, [key]: value });
   };
 
   const toggleAdvanced = () => {
@@ -469,30 +467,23 @@ export default function FinanceVsInvest() {
   };
 
   const importFinancing = () => {
-    setFields((current) => {
-      const next = {
-      ...current,
-      availableMoney: sourceFields.entrada,
-      propertyPrice: sourceFields.valorImovel,
-      financingAnnualRate: sourceFields.taxaFinAnual,
-      financingTermMonths: sourceFields.prazoMeses,
-      amortizationMethod: sourceFields.metodoAmortizacao,
-      };
-      localStorage.setItem(FIELDS_STORAGE_KEY, JSON.stringify(next));
-      return next;
+    const financing = props.financingState;
+    setFields({
+      ...fields,
+      availableMoney: financing ? String(financing.entry) : sourceFields.entrada,
+      propertyPrice: financing ? String(financing.property) : sourceFields.valorImovel,
+      financingAnnualRate: financing ? String(financing.financingRate) : sourceFields.taxaFinAnual,
+      financingTermMonths: financing ? String(financing.termMonths) : sourceFields.prazoMeses,
+      amortizationMethod: financing?.method ?? sourceFields.metodoAmortizacao,
     });
     setImportNote("Valores importados de Financiamento.");
   };
 
   const importInvestment = () => {
-    setFields((current) => {
-      const next = {
-      ...current,
+    setFields({
+      ...fields,
       availableMoney: sourceFields.saldoInicial,
       investmentAnnualReturn: sourceFields.taxaInvestAnual,
-      };
-      localStorage.setItem(FIELDS_STORAGE_KEY, JSON.stringify(next));
-      return next;
     });
     setImportNote("Valores importados de Investimento.");
   };

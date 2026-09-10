@@ -18,6 +18,10 @@ _Avoid_: Plan, recommendation
 A user-supplied economic condition used to construct a scenario, such as a rate, cost, growth expectation, or time horizon.
 _Avoid_: Fact, forecast
 
+**Dados de entrada**:
+The primary values and choices defining the current financial scenarios, including rates, amounts, periods and FGTS choices. They exclude calculated installments, balances, returns and comparison outcomes.
+_Avoid_: Dados derivados, resultados
+
 **Housing strategy**:
 The strategy being compared for the household’s housing need: **Financiar** or **Investir**.
 _Avoid_: Option, alternative
@@ -141,6 +145,28 @@ _Avoid_: Income growth
 **Crescimento do salário**:
 The assumed annual increase in the decision-maker’s monthly salary used to estimate future FGTS deposits.
 _Avoid_: Guaranteed raise, investment return
+
+### Financing payoff choices
+
+**Desembolso do bolso até quitar**:
+The gross cash committed by the household from Entrada through a scenario's payoff, including scheduled payments and extra amortization or investment contributions. It excludes FGTS and investment earnings and does not count redemption as another cash contribution.
+_Avoid_: Total gasto, juros totais, custo líquido
+
+**Sobra investida ao quitar**:
+The invested balance remaining immediately after a scenario's debt is paid off. It excludes investment growth after that date and is reported separately from Desembolso do bolso até quitar.
+_Avoid_: Saldo no fim do horizonte, desconto no desembolso
+
+**Comparação de amortização**:
+The comparison of amortizing monthly versus investing and amortizing the accumulated balance at the original SAC/PRICE crossing, with equal monthly budgets and the same evaluation date. The result compares remaining investment and FGTS minus outstanding debt; payoff time and cash committed through payoff are complementary measures.
+_Avoid_: Empate apenas por desembolso igual, melhor investimento garantido
+
+**Data comum de amortização**:
+The first month in which original PRICE payments equal or exceed original SAC payments, before FGTS or extra amortization changes either trajectory. It is a shared comparison and lump-sum amortization date, not a promise that the investment can pay off the whole debt.
+_Avoid_: Quitação automática, cruzamento das curvas alteradas
+
+**Posição financeira na data comum**:
+The remaining investment plus unused FGTS minus outstanding debt at the shared evaluation date. Equal property value and equally funded budgets allow the strategies to be compared without treating FGTS as freely spendable cash.
+_Avoid_: Desembolso do bolso, rendimento isolado
 
 ### Projection and comparison
 

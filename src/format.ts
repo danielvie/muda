@@ -41,6 +41,14 @@ export function formatNumber(n: number) {
     }).format(n);
 }
 
+export function formatMonths(months: number | null): string {
+    if (months === null) return "Não ocorre no prazo";
+    if (months === 0) return "Sem dívida";
+    const years = Math.floor(months / 12);
+    const rest = months % 12;
+    return [years ? `${years} ${years === 1 ? "ano" : "anos"}` : "", rest ? `${rest} ${rest === 1 ? "mês" : "meses"}` : ""].filter(Boolean).join(" e ");
+}
+
 export function brl(v: number) {
     return new Intl.NumberFormat("pt-BR", {
         style: "currency",

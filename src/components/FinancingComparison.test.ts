@@ -8,14 +8,13 @@ import ts from "typescript";
 import { comparisonFixture } from "./FinancingComparison.fixture.ts";
 import { brl } from "../format.ts";
 import { calculateSacPriceScenario } from "../financingProjection.ts";
+import { compareAmortization } from "../amortizationComparison.ts";
 import type { FinancingComparisonProps } from "./FinancingComparison.tsx";
 
-// Node strips .ts natively; only JSX and stylesheet imports need a test loader.
 const hooks = registerHooks({
   load(url, context, nextLoad) {
     if (url.endsWith(".css")) return { format: "module", source: "export {};", shortCircuit: true };
-    if (url.endsWith(".tsx")) return {
-      format: "module", shortCircuit: true,
+    if (url.endsWith(".tsx")) return { format: "module", shortCircuit: true,
       source: ts.transpileModule(readFileSync(new URL(url), "utf8"), {
         compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
       }).outputText,
@@ -25,140 +24,140 @@ const hooks = registerHooks({
 });
 const { default: FinancingComparison } = await import("./FinancingComparison.tsx");
 hooks.deregister();
-
 function render(patch: Partial<FinancingComparisonProps> = {}) {
   return renderToStaticMarkup(createElement(FinancingComparison, { ...comparisonFixture, ...patch }));
 }
+function cards(html: string) {
+  return [...html.matchAll(/<article class="comparison-strategy[^"\n]*"[^>]*>(.*?)<\/article>/gs)].map(match => match[1]);
+}
 
-test("three equally styled strategies expose the same six indicators in the same order", () => {
+test("one merged decision panel contains both open strategies, with SAC and PRICE remaining as references", () => {
   const html = render();
-  const cards = [...html.matchAll(/<article class="comparison-strategy">(.*?)<\/article>/gs)];
-  assert.equal(cards.length, 3);
-  for (const [, card] of cards) {
-    assert.deepEqual([...card.matchAll(/<dt>(.*?)<\/dt>/g)].map(match => match[1]), [
-      "Desembolso mensal inicial", "Quitação", "Juros totais", "Pago do bolso", "FGTS utilizado", "Total gasto",
-    ]);
-    assert.doesNotMatch(card, /Valor efetivo|Total pago|Após o empate/);
-  }
+  assert.equal((html.match(/class="amortization-comparison"/g) ?? []).length, 1);
+  const panels = cards(html);
+  assert.equal(panels.length, 4);
+  assert.deepEqual(panels.map(card => card.match(/<h4[^>]*>(.*?)<\/h4>/)![1]), [
+    "SAC", "PRICE", "Amortizar todo mês", "Investir até o cruzamento e amortizar",
+  ]);
+  assert.doesNotMatch(html, /comparison-payoff-summary|comparison-selector|Quitar quando o investimento cobrir|PRICE \+ diferença|Rendimento acumulado ≥ saldo devedor/);
   assert.equal((html.match(/type="checkbox"/g) ?? []).length, 1);
-  assert.doesNotMatch(html, /featured|Amortização com FGTS|Três cenários de amortização/);
+  assert.equal((html.match(/placeholder="Informe a taxa anual"/g) ?? []).length, 1);
 });
 
-test("details and annual evolution start collapsed with corrected totals and limitations", () => {
-  const html = render();
-  assert.equal((html.match(/<details class="comparison-details">/g) ?? []).length, 2);
-  assert.doesNotMatch(html, /<details[^>]*\bopen\b/);
-  assert.doesNotMatch(html, /convenção de taxa diferente|aguarda.*revisão|Mantém as prestações previstas/);
-  assert.match(html, /cronograma de PRICE \+ diferença ainda não é exibido nesta tabela/);
-  assert.match(html, /Soma das prestações pagas/);
-  assert.match(html, /Do bolso no financiamento/);
-  assert.match(html, /Total com entrada e FGTS/);
-  assert.match(html, /sem TR ou outro indexador, seguros, tarifas e custos de posse/);
-  assert.match(html, /Não é cotação CAIXA/);
-  assert.match(html, /não uma carência obrigatória/);
-  assert.match(html, /curvas originais sem FGTS e ignora o acerto final parcial/);
-  assert.match(html, /scope="col"/);
-  assert.match(html, /role="region"[^>]*tabindex="0"/);
+test("a missing or invalid rate does not invent a winner, zero is a valid comparison", () => {
+  assert.match(render(), /Informe a rentabilidade para comparar as duas estratégias/);
+  const invalid = render({ investmentRate: "-1" });
+  assert.match(invalid, /aria-invalid="true"/);
+  assert.match(invalid, /Informe uma taxa anual entre 0% e 100%/);
+  const state = { ...comparisonFixture.state, financingRate: 11 };
+  const html = render({ investmentRate: "0", amortizationComparison: compareAmortization(state, false, 0) });
+  assert.match(html, /Amortizar todo mês<\/strong> deixa/);
+  assert.doesNotMatch(html, /Aguardando as premissas/);
 });
 
-test("FGTS off hides controls and both legacy projections without mutating assumptions", () => {
-  const before = structuredClone(comparisonFixture.state);
-  const html = render({ includeFgts: false });
-  assert.doesNotMatch(html, /type="number"|Detalhes da projeção FGTS|Evolução anual do saldo/);
-  assert.match(html, /foram preservados/);
-  assert.deepEqual(comparisonFixture.state, before);
-  assert.equal((html.match(/<article /g) ?? []).length, 3);
+test("14% investing vs 11% debt shows partial amortization and the position advantage, not a cash-only tie", () => {
+  const state = { ...comparisonFixture.state, property: 800000, entry: 120000, financingRate: 11, termMonths: 420, fgtsSalary: 0 };
+  const comparison = compareAmortization(state, false, 14);
+  assert.equal(comparison.status, "ready");
+  if (comparison.status !== "ready") return;
+  const html = render({ state, scenario: calculateSacPriceScenario(state, false), investmentRate: "14", includeFgts: false, amortizationComparison: comparison });
+  assert.match(html, /Comparação no mês 105 · 8 anos e 9 meses/);
+  assert.match(html, /Investir até o cruzamento e amortizar<\/strong> deixa/);
+  assert.ok(html.includes(brl(comparison.advantage)));
+  assert.match(html, /A dívida não foi quitada; as prestações continuam/);
+  assert.match(html, /Um desembolso igual não significa empate/);
+  const values = cards(html).slice(2).map(card => [...card.matchAll(/<dd>([^<]*)/g)].map(m => m[1]));
+  assert.equal(values[0][0], values[1][0]);
+  assert.equal(values[0][1], brl(comparison.amortize.atCrossing.debt));
+  assert.equal(values[1][1], brl(comparison.invest.atCrossing.debt));
+  assert.equal(values[1][4], brl(comparison.invest.atCrossing.fgtsUsed));
+  assert.equal(values[1][5], brl(comparison.invest.atCrossing.fgtsRemaining));
 });
 
-test("missing salary keeps comparison visible and asks for it next to FGTS controls", () => {
-  const html = render({ state: { ...comparisonFixture.state, fgtsSalary: 0 }, fgtsComparison: null });
-  assert.match(html, /Informe o salário para considerar FGTS nas três estratégias/);
-  assert.doesNotMatch(html, /Detalhes da projeção FGTS|Evolução anual do saldo/);
-  assert.equal((html.match(/<article /g) ?? []).length, 3);
+test("no debt, absent crossing and a genuine financial tie have explicit labels", () => {
+  assert.match(render({ investmentRate: "14", amortizationComparison: { status: "no-debt" } }), /Sem dívida a financiar/);
+  assert.match(render({ investmentRate: "14", amortizationComparison: { status: "no-crossing" } }), /Nenhuma data de resgate foi inventada/);
+  const state = { ...comparisonFixture.state, financingRate: 0 };
+  assert.match(render({ investmentRate: "14", amortizationComparison: compareAmortization(state, false, 14) }), /Posição financeira equivalente/);
 });
 
-test("payment-reduction copy does not call the PRICE installment fixed", () => {
-  const html = render({ state: { ...comparisonFixture.state, fgtsMode: "PRESTACAO" } });
-  assert.match(html, /O FGTS recalcula as próximas prestações/);
-  assert.doesNotMatch(html, /Prestação fixa até/);
-});
-
-test("no crossing, no debt and final settlement use explicit labels", () => {
-  const html = render({ scenario: {
-    ...comparisonFixture.scenario, equalizationMonth: null, payoffMonth: 0, differenceSchedule: [],
-    sac: { ...comparisonFixture.scenario.sac, schedule: [] },
-  } });
-  assert.match(html, /não ocorre no prazo original/);
-  assert.match(html, /Sem dívida/);
-  assert.doesNotMatch(html, /NaN|undefined|Infinity/);
-});
-
-test("third strategy displays its actual first cash payment rather than the SAC budget", () => {
-  const scenario = comparisonFixture.scenario;
-  const html = render({ scenario: { ...scenario, differenceSchedule: [{ ...scenario.differenceSchedule[0], payment: 1234.56 }] } });
-  const thirdCard = [...html.matchAll(/<article class="comparison-strategy">(.*?)<\/article>/gs)][2][1];
-  assert.equal(thirdCard.match(/<dd>(.*?)<\/dd>/)?.[1], brl(1234.56));
-});
-
-test("cash extras are not counted twice in totals with FGTS and entry", () => {
-  const html = render();
-  const scenario = comparisonFixture.scenario;
-  const total = html.match(/Total com entrada e FGTS · PRICE \+ diferença<\/dt><dd>(.*?)<\/dd>/)?.[1];
-  assert.equal(total, brl(comparisonFixture.state.entry + scenario.totalPaid + scenario.fgtsAmortization));
-  assert.notEqual(total, brl(comparisonFixture.state.entry + scenario.totalPaid + scenario.fgtsAmortization + scenario.extraAmortization));
-});
-
-test("all cards separate cash including entry, applied FGTS and total in either mode, with FGTS on or off", () => {
+test("reference totals preserve original SAC and PRICE loans in both FGTS modes", () => {
   for (const fgtsMode of ["PRAZO", "PRESTACAO"] as const) {
-    for (const includeFgts of [true, false]) {
+    for (const includeFgts of [false, true]) {
       const state = { ...comparisonFixture.state, fgtsMode };
       const scenario = calculateSacPriceScenario(state, includeFgts);
       const html = render({ state, scenario, includeFgts });
-      const cards = [...html.matchAll(/<article class="comparison-strategy">(.*?)<\/article>/gs)];
-      const projections = [scenario.sac, scenario.price, scenario];
-      cards.forEach(([, card], index) => {
-        const values = [...card.matchAll(/<dd>([^<]*)/g)].map(match => match[1]);
-        const projection = projections[index];
-        assert.equal(values[3], brl(state.entry + projection.totalPaid));
-        assert.equal(values[4], brl(projection.fgtsAmortization));
-        assert.equal(values[5], brl(state.entry + projection.totalPaid + projection.fgtsAmortization));
-        assert.match(card, /Entrada \+ prestações e extras em dinheiro/);
-        assert.match(card, /Pago do bolso \+ FGTS utilizado/);
-        if (!includeFgts) {
-          assert.equal(values[4], brl(0));
-          assert.equal(values[3], values[5]);
-        }
+      cards(html).slice(0, 2).forEach((card, index) => {
+        const loan = [scenario.sac, scenario.price][index];
+        const values = [...card.matchAll(/<dd>([^<]*)/g)].map(m => m[1]);
+        assert.equal(values[0], brl(loan.financingPayment));
+        assert.equal(values[2], brl(state.entry + loan.totalPaid));
+        assert.equal(values[3], brl(loan.totalInterest));
+        assert.equal(values[4], brl(loan.fgtsAmortization));
+        assert.equal(values[5], brl(state.entry + loan.totalPaid + loan.fgtsAmortization));
       });
     }
   }
 });
 
-test("a fully paid property shows only entry as cash and total, with no FGTS used", () => {
-  const state = { ...comparisonFixture.state, entry: comparisonFixture.state.property };
-  const html = render({ state, scenario: calculateSacPriceScenario(state, true), fgtsComparison: null });
-  for (const [, card] of html.matchAll(/<article class="comparison-strategy">(.*?)<\/article>/gs)) {
-    const values = [...card.matchAll(/<dd>([^<]*)/g)].map(match => match[1]);
-    assert.equal(values[3], brl(state.entry));
-    assert.equal(values[4], brl(0));
-    assert.equal(values[5], brl(state.entry));
+test("FGTS controls can be disabled without losing assumptions or the merged scenarios", () => {
+  const before = structuredClone(comparisonFixture.state);
+  const html = render({ includeFgts: false });
+  assert.match(html, /foram preservados/);
+  assert.doesNotMatch(html, /type="number"|placeholder="Informe o salário"|Detalhes da projeção FGTS/);
+  assert.equal(cards(html).length, 4);
+  assert.deepEqual(comparisonFixture.state, before);
+});
+
+test("salary is masked and read-only when loaded hidden; its monthly FGTS estimate is not exposed", () => {
+  const html = render({ salaryHidden: true });
+  assert.match(html, /type="password"[^>]*readOnly=""/);
+  assert.match(html, /Revelar salário para editar/);
+  assert.match(html, /Limpar salário/);
+  assert.match(html, /FGTS estimado oculto junto com o salário/);
+  assert.doesNotMatch(html, /FGTS estimado: R\$/);
+  assert.match(render({ salaryHidden: false }), /Ocultar salário/);
+  assert.match(render({ fgtsMemoryFeedback: { ok: false, message: "Falha na memória" } }), /role="alert">Falha na memória/);
+});
+
+test("salary clear and visibility icons are inside the input container, with accessible labels", () => {
+  const html = render({ salaryHidden: true });
+  const inputGroup = html.match(/<div class="comparison-salary-input">(.*?)<\/div>/s)![1];
+  assert.match(inputGroup, /type="password"/);
+  const buttons = [...inputGroup.matchAll(/<button[^>]*aria-label="([^"]+)"[^>]*>(.*?)<\/button>/gs)];
+  assert.deepEqual(buttons.map(match => match[1]), ["Limpar salário", "Revelar salário para editar"]);
+  for (const [, , content] of buttons) {
+    assert.match(content, /<svg[^>]*aria-hidden="true"[^>]*focusable="false"/);
+    assert.equal(content.replace(/<[^>]+>/g, ""), "");
   }
+  assert.doesNotMatch(html, /comparison-salary-actions/);
+  const visible = render({ salaryHidden: false });
+  assert.match(visible, /aria-label="Ocultar salário"/);
+  assert.match(visible, /d="m3 3 18 18"/);
 });
 
-test("annual columns group SAC values before PRICE values under matching headers", () => {
+test("rate persistence explains local storage and reports failures", () => {
+  assert.match(render(), /Taxas válidas são salvas automaticamente/);
+  assert.match(render(), /Apagar o campo remove a taxa salva/);
+  assert.match(render({ investmentRateStorageError: "Falha ao guardar taxa" }), /role="alert">Falha ao guardar taxa/);
+});
+
+test("reference details start collapsed and preserve model limitations", () => {
   const html = render();
-  assert.match(html, /<th scope="col" rowSpan="2">Ano<\/th>/);
-  assert.deepEqual([...html.matchAll(/<th scope="colgroup" colSpan="3">(.*?)<\/th>/g)].map(match => match[1]), ["SAC", "PRICE"]);
-  const firstRow = html.match(/<tbody><tr>(.*?)<\/tr>/s)?.[1] ?? "";
-  const comparison = comparisonFixture.fgtsComparison!;
-  const sac = comparison.sac.yearBlocks[0];
-  const price = comparison.price.yearBlocks[0];
-  assert.deepEqual([...firstRow.matchAll(/<td>(.*?)<\/td>/g)].map(match => match[1]), [
-    sac.saldoFinal, sac.juros, sac.fgtsAmortizacao, price.saldoFinal, price.juros, price.fgtsAmortizacao,
-  ].map(brl));
+  assert.doesNotMatch(html, /<details[^>]*\bopen\b/);
+  assert.match(html, /Não é cotação CAIXA/);
+  assert.match(html, /não uma carência obrigatória/);
+  assert.match(html, /curvas originais sem FGTS/);
+  assert.match(html, /Não representa as estratégias de amortizar mensalmente/);
 });
 
-test("missing annual rows stay absent, not invented zero-valued payments", () => {
+test("annual reference columns retain SAC then PRICE values, and missing years are not zeroed", () => {
+  const html = render();
+  assert.deepEqual([...html.matchAll(/<th scope="colgroup" colSpan="3">(.*?)<\/th>/g)].map(m => m[1]), ["SAC", "PRICE"]);
+  const firstRow = html.match(/<tbody><tr>(.*?)<\/tr>/s)![1];
   const comparison = comparisonFixture.fgtsComparison!;
-  const html = render({ fgtsComparison: { ...comparison, price: { ...comparison.price, yearBlocks: [] } } });
-  assert.equal((html.match(/<td>—<\/td>/g) ?? []).length, comparison.sac.yearBlocks.length * 3);
+  const sac = comparison.sac.yearBlocks[0], price = comparison.price.yearBlocks[0];
+  assert.deepEqual([...firstRow.matchAll(/<td>(.*?)<\/td>/g)].map(m => m[1]), [sac.saldoFinal, sac.juros, sac.fgtsAmortizacao, price.saldoFinal, price.juros, price.fgtsAmortizacao].map(brl));
+  const missing = render({ fgtsComparison: { ...comparison, price: { ...comparison.price, yearBlocks: [] } } });
+  assert.equal((missing.match(/<td>—<\/td>/g) ?? []).length, comparison.sac.yearBlocks.length * 3);
 });

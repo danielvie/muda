@@ -11,6 +11,8 @@ const state: FinancingState = {
 
 export const comparisonFixture: FinancingComparisonProps = {
   state,
+  salaryHidden: false, onToggleSalaryVisibility: () => {}, onClearFgtsSalary: () => true, fgtsMemoryFeedback: null,
+  investmentRate: "", investmentRateStorageError: null, onInvestmentRateChange: () => {}, amortizationComparison: null,
   scenario: calculateSacPriceScenario(state, true),
   fgtsComparison: buildFgtsComparison({
     valorImovel: state.property, entrada: state.entry, taxaAnual: state.financingRate / 100,

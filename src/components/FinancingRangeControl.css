@@ -18,6 +18,10 @@
 .frc-limits { display:flex; justify-content:space-between; gap:12px; font-size:12px; color:var(--lp-muted); }
 .frc-limits span { min-width:0; overflow-wrap:anywhere; }
 .frc-limits span:last-child { text-align:right; }
+.frc-save-range-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }
+.financing-panel .frc-save-range { min-height:44px; padding:8px 12px; color:var(--lp-accent); font-size:12px; }
+.frc-save-range-row span { flex:1 1 150px; font-size:12px; color:var(--lp-muted); overflow-wrap:anywhere; }
+.frc-save-range-row span[role=alert] { color:var(--lp-orange); }
 .frc-focus-row { display:grid; grid-template-columns:minmax(0,1fr) 88px minmax(0,1fr); align-items:center; gap:8px; }
 .frc-step { margin:0; font-size:12px; color:var(--lp-muted); }
 .frc-value-action { grid-column:1; grid-row:1; min-width:0; }

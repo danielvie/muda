@@ -18,7 +18,7 @@
 .financing-comparison .comparison-intro { margin-top: 8px; color: var(--lp-muted); font-size: 12px; line-height: 1.5; }
 .comparison-controls { display: grid; gap: 14px; border-radius: 10px; padding: 14px; background: color-mix(in srgb, var(--lp-accent) 5%, var(--lp-paper)); border: 1px solid var(--lp-line); }
 .comparison-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; font-size: 14px; font-weight: 800; cursor: pointer; }
-.comparison-toggle input { width: 22px; height: 22px; accent-color: var(--lp-accent); cursor: pointer; }
+.comparison-toggle input { flex-shrink:0; width: 22px; height: 22px; accent-color: var(--lp-accent); cursor: pointer; }
 .comparison-modes { min-width: 0; padding: 0; margin: 0; border: 0; }
 .comparison-modes legend { padding: 0 0 8px; font-size: 12px; font-weight: 700; }
 .comparison-modes > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -27,15 +27,35 @@
 .comparison-modes strong { display: block; font-size: 12px; }
 .comparison-modes span { display: block; margin-top: 5px; color: var(--lp-muted); font-size: 11px; line-height: 1.4; }
 .comparison-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.comparison-fields > label { display: grid; gap: 6px; min-width: 0; font-size: 12px; font-weight: 700; }
-.comparison-fields label > div { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 48px; padding: 0 10px; background: var(--lp-paper); border: 1px solid var(--lp-line); border-radius: 6px; }
+.comparison-fields > label, .comparison-salary-field > label { display: grid; align-content:start; gap: 6px; min-width: 0; font-size: 12px; font-weight: 700; }
+.comparison-salary-field { display:grid; gap:6px; min-width:0; }
+.comparison-salary-icon { display:inline-flex; flex:0 0 36px; align-items:center; justify-content:center; width:36px; height:36px; padding:8px; border:0; border-radius:5px; background:transparent; color:var(--lp-accent); cursor:pointer; }
+.comparison-salary-icon svg { display:block; width:20px; height:20px; }
+.comparison-salary-icon:hover { background:color-mix(in srgb,var(--lp-accent) 8%,transparent); }
+.comparison-salary-icon:disabled { opacity:.5; cursor:default; }
+@media (pointer:coarse) { .comparison-salary-icon { flex-basis:44px; width:44px; height:44px; } }
+.comparison-salary-field input[readonly] { cursor:default; }
+.comparison-fields label > div, .comparison-salary-input { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 48px; padding: 0 10px; background: var(--lp-paper); border: 1px solid var(--lp-line); border-radius: 6px; }
 .comparison-fields input { width: 100%; min-width: 0; min-height: 46px; border: 0; background: transparent; color: var(--lp-ink); font-size: 16px; font-variant-numeric: tabular-nums; }
-.comparison-fields label > div > span { flex-shrink: 0; font-size: 11px; color: var(--lp-muted); }
+.comparison-fields label > div > span, .comparison-salary-input > span { flex-shrink: 0; font-size: 11px; color: var(--lp-muted); }
+.comparison-salary-input { gap:2px; padding-right:4px; }
+.comparison-salary-input > span { margin-right:4px; }
 .financing-comparison .comparison-note { font-size: 12px; line-height: 1.5; color: var(--lp-muted); }
-.comparison-strategies { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.comparison-strategy { min-width: 0; display: grid; grid-template-rows: subgrid; grid-row: span 2; gap: 16px; padding: 12px; border: 1px solid var(--lp-line); border-radius: 10px; }
+.amortization-comparison { display:grid; gap:18px; min-width:0; padding:16px; border:1px solid var(--lp-accent); border-radius:12px; }
+.comparison-references { display:grid; gap:14px; min-width:0; }
+.comparison-common-date, .comparison-conclusion { padding:14px; border-radius:8px; background:color-mix(in srgb,var(--lp-accent) 6%,var(--lp-paper)); font-size:13px; line-height:1.5; }
+.comparison-conclusion { display:grid; gap:10px; }
+.comparison-payoff-verdict { font-size:15px; line-height:1.5; }
+.comparison-payoff-verdict strong, .comparison-primary dd { color:var(--lp-accent); }
+.comparison-followup { padding-top:12px; }
+.comparison-strategies { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; min-width:0; }
+.comparison-strategy { min-width: 0; display: grid; gap: 18px; padding: 16px; border: 1px solid var(--lp-line); border-radius: 10px; }
+.comparison-investment-input { display:grid; gap:12px; min-width:0; }
+.comparison-investment-input .comparison-fields { grid-template-columns:minmax(0,1fr); max-width:320px; }
 .comparison-strategy header p { margin-top: 6px; font-size: 11px; line-height: 1.45; color: var(--lp-muted); }
-.comparison-strategy dl { display: grid; grid-template-rows: repeat(3, minmax(56px, auto)) minmax(92px, auto) minmax(56px, auto) minmax(96px, auto); gap: 8px; }
+.comparison-strategy dl { display: grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.comparison-strategy dl > div { min-width:0; }
+.comparison-strategy dl > div:nth-child(n+3) { border-top:1px solid var(--lp-line); padding-top:12px; }
 .comparison-strategy dt { font-size: 11px; line-height: 1.4; color: var(--lp-muted); }
 .comparison-strategy dd { margin-top: 4px; font-size: 15px; font-weight: 800; line-height: 1.4; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .comparison-strategy dd small { display: block; margin-top: 5px; color: var(--lp-muted); font-size: 11px; font-weight: 400; line-height: 1.4; }
@@ -63,11 +83,8 @@
 .financing-comparison :is(button, input, summary, [tabindex]):focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; }
 @media (max-width: 699px) {
   .financing-comparison { padding: 16px; gap: 16px; }
-  .comparison-strategies { grid-template-columns: minmax(0, 1fr); }
-  .comparison-strategy { display: grid; grid-row: auto; grid-template-rows: auto auto; gap: 12px; padding: 14px; }
-  .comparison-strategy dl { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; gap: 12px; }
-  .comparison-strategy dl > div:nth-child(3), .comparison-strategy .comparison-total { grid-column: 1 / -1; }
-  .comparison-strategy dl > div:nth-child(5) { border-top: 1px solid var(--lp-line); padding-top: 12px; }
+  .comparison-strategy { gap: 14px; padding: 14px; }
+  .comparison-strategy dl { gap: 12px; }
   .comparison-fgts-details { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 420px) {
@@ -77,4 +94,10 @@
   .comparison-fields { grid-template-columns: minmax(0, 1fr); }
   .comparison-modes button { padding: 8px; }
   .comparison-strategy dd { font-size: 14px; }
+  .amortization-comparison { padding:12px; }
+  .amortization-comparison .comparison-strategy dl { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width: 360px) {
+  .comparison-strategy dl { grid-template-columns:minmax(0,1fr); }
+  .comparison-strategy dl > div:nth-child(n+2) { border-top:1px solid var(--lp-line); padding-top:12px; }
 }

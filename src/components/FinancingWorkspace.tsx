@@ -17,7 +17,14 @@ import { readRangePreferences, resolveRangePreferences, saveRangePreference, res
 import InvestmentProjection from "./InvestmentProjection.tsx";
 import { readValuePreferences, resolveValuePreferences, saveValuePreference, removeValuePreference, type ValuePreferences, type ValuePreferenceResult } from "../financingValuePreferences.ts";
 import FinancingComparison, { type FinancingComparisonScenario } from "./FinancingComparison.tsx";
+import { compareAmortization, parseInvestmentRate, type AmortizationComparison } from "../amortizationComparison.ts";
+import { readInvestmentRate, saveInvestmentRate } from "../investmentRatePreference.ts";
+import { readFgtsPreferences, saveFgtsPreferences, clearSavedFgtsSalary, type FgtsPreferences } from "../fgtsPreferences.ts";
 import SimulationExportPanel from "./SimulationExportPanel.tsx";
+import type { ProgramInputs } from "../simulationExport.ts";
+import { useMemory } from "../memory.tsx";
+import type { FinanceVsInvestFields } from "../financeVsInvestProjection.ts";
+import { readFinanceVsInvestFields, saveFinanceVsInvestFields } from "../financeVsInvestPreferences.ts";
 import {
   buildFgtsComparisonFromCalculations,
   FGTS_USE_INTERVAL_MONTHS,
@@ -52,6 +59,11 @@ type QuickAction = {
 };
 
 type LayoutProps = {
+  programInputs: ProgramInputs;
+  salaryHidden: boolean;
+  onToggleSalaryVisibility: () => void;
+  onClearFgtsSalary: () => boolean;
+  fgtsMemoryFeedback: { ok: boolean; message: string } | null;
   valuePreferences: ValuePreferences;
   onSaveValuePreference: (field: FinancingField) => ValuePreferenceResult;
   onRemoveValuePreference: (field: FinancingField) => ValuePreferenceResult;
@@ -65,6 +77,10 @@ type LayoutProps = {
   referenceResult: Calculation;
   fgtsComparison: FgtsComparisonData | null;
   comparisonScenario: FinancingComparisonScenario;
+  investmentRate: string;
+  investmentRateStorageError: string | null;
+  onInvestmentRateChange: (value: string) => void;
+  amortizationComparison: AmortizationComparison | null;
   includeFgts: boolean;
   onIncludeFgtsChange: (enabled: boolean) => void;
   update: (patch: Partial<FinancingState>) => void;
@@ -1049,7 +1065,11 @@ function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
   );
 }
 
-function ComparisonEnvironment() {
+function ComparisonEnvironment({ fields, onFieldsChange, financingState }: {
+  fields: FinanceVsInvestFields;
+  onFieldsChange: (fields: FinanceVsInvestFields) => void;
+  financingState: FinancingState;
+}) {
   return (
     <div data-environment="comparison" className="min-h-[calc(100vh-99px)] bg-(--lp-bg) text-(--lp-ink)">
       <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
@@ -1065,7 +1085,7 @@ function ComparisonEnvironment() {
           description="Coloque as duas estratégias lado a lado e veja patrimônio, fluxo mensal e ponto de virada."
         />
         <section className="pane">
-          <FinanceVsInvest />
+          <FinanceVsInvest fields={fields} onFieldsChange={onFieldsChange} financingState={financingState} />
         </section>
       </main>
     </div>
@@ -1078,7 +1098,7 @@ function FinancingView({ props }: { props: LayoutProps }) {
   return (
     <div data-environment="financing" className="min-h-[calc(100vh-99px)] bg-(--lp-bg) text-(--lp-ink)">
       <main className="mx-auto flex w-[calc(100%-24px)] max-w-170 flex-col gap-2 pt-4.5 pb-27.5 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
-        <FinancingPanel {...props} />
+        <FinancingPanel {...props} equalizationMonth={props.comparisonScenario.equalizationMonth} />
         <details className="financing-details"><summary>Ver parcelas e custos do financiamento{result.fgtsAmortization > 0.005 ? " com FGTS" : ""}</summary><FinancingSummary result={result} state={state} /><InstallmentList result={result} referenceResult={referenceResult} fgtsMode={state.fgtsMode} /></details>
         <details className="financing-details"><summary>Estudos salvos · {studies.length}</summary>
           <button type="button" className="financing-save" onClick={() => saveStudy()}>Salvar simulação atual</button>
@@ -1087,18 +1107,22 @@ function FinancingView({ props }: { props: LayoutProps }) {
         <FinancingComparison
           state={state}
           scenario={props.comparisonScenario}
+          investmentRate={props.investmentRate}
+          investmentRateStorageError={props.investmentRateStorageError}
+          onInvestmentRateChange={props.onInvestmentRateChange}
+          amortizationComparison={props.amortizationComparison}
           fgtsComparison={fgtsComparison}
+          salaryHidden={props.salaryHidden}
+          onToggleSalaryVisibility={props.onToggleSalaryVisibility}
+          onClearFgtsSalary={props.onClearFgtsSalary}
+          fgtsMemoryFeedback={props.fgtsMemoryFeedback}
           includeFgts={props.includeFgts}
           onIncludeFgtsChange={props.onIncludeFgtsChange}
           update={update}
           fgtsMonthlyEstimate={state.fgtsSalary * FGTS_DEPOSIT_RATE}
           fgtsIntervalMonths={FGTS_USE_INTERVAL_MONTHS}
         />
-        <SimulationExportPanel
-          state={state}
-          result={result}
-          includeFgts={props.includeFgts}
-        />
+        <SimulationExportPanel inputs={props.programInputs} salaryHidden={props.salaryHidden} />
 
       </main>
     </div>
@@ -1154,20 +1178,44 @@ function persistStudies(studies: Study[]) {
 }
 
 export default function FinancingWorkspace() {
+  const { fields: investmentFields } = useMemory();
+  const [financeVsInvestFields, setFinanceVsInvestFields] = useState(readFinanceVsInvestFields);
+  const onFinanceVsInvestFieldsChange = (fields: FinanceVsInvestFields) => {
+    setFinanceVsInvestFields(fields);
+    saveFinanceVsInvestFields(fields);
+  };
   const [rangePreferences, setRangePreferences] = useState<RangePreferences>(readRangePreferences);
   const [controlRanges, setControlRanges] = useState<ControlRanges>(() => resolveRangePreferences(rangePreferences));
   const [environment, setEnvironment] = useState<Environment>("financing");
   const [valuePreferences, setValuePreferences] = useState<ValuePreferences>(readValuePreferences);
-  const [state, setState] = useState<FinancingState>(() => resolveValuePreferences(valuePreferences));
+  const [initialFgtsPreferences] = useState(readFgtsPreferences);
+  const [state, setState] = useState<FinancingState>(() => ({ ...resolveValuePreferences(valuePreferences), ...initialFgtsPreferences }));
+  const [salaryHidden, setSalaryHidden] = useState(() => (initialFgtsPreferences.fgtsSalary ?? 0) > 0);
+  const [fgtsMemoryFeedback, setFgtsMemoryFeedback] = useState<{ ok: boolean; message: string } | null>(null);
   const [studies, setStudies] = useState<Study[]>(readSavedStudies);
   const nextStudyId = useRef(
     studies.reduce((highest, study) => Math.max(highest, study.id), 0),
   );
   const [includeFgts, setIncludeFgts] = useState(true);
+  const [investmentRate, setInvestmentRate] = useState(readInvestmentRate);
+  const [investmentRateStorageError, setInvestmentRateStorageError] = useState<string | null>(null);
+  const onInvestmentRateChange = (value: string) => {
+    setInvestmentRate(value);
+    if (value.trim() && parseInvestmentRate(value) === null) {
+      setInvestmentRateStorageError(null);
+      return;
+    }
+    const result = saveInvestmentRate(value);
+    setInvestmentRateStorageError(result.ok ? null : result.error);
+  };
   const comparisonScenario = useMemo(
     () => calculateSacPriceScenario(state, includeFgts),
     [state, includeFgts],
   );
+  const amortizationComparison = useMemo(() => {
+    const rate = parseInvestmentRate(investmentRate);
+    return rate === null ? null : compareAmortization(state, includeFgts, rate);
+  }, [state, includeFgts, investmentRate]);
   const result = state.method === "SAC" ? comparisonScenario.sac : comparisonScenario.price;
   const referenceResult = state.method === "SAC" ? comparisonScenario.sacReference : comparisonScenario.priceReference;
   const fgtsComparison = useMemo(
@@ -1182,10 +1230,27 @@ export default function FinancingWorkspace() {
     }, comparisonScenario.sac, comparisonScenario.price),
     [state, comparisonScenario],
   );
-  const update = useCallback(
-    (patch: Partial<FinancingState>) => setState(previous => updateFinancing(previous, patch, false)),
-    [],
-  );
+  const update = useCallback((patch: Partial<FinancingState>) => {
+    setState(previous => updateFinancing(previous, patch, false));
+    const preferences: FgtsPreferences = {};
+    for (const field of ["fgtsSalary", "fgtsSalaryGrowth"] as const) {
+      const value = patch[field];
+      if (typeof value === "number" && Number.isFinite(value)) preferences[field] = Math.max(0, value);
+    }
+    if (Object.keys(preferences).length) {
+      const result = saveFgtsPreferences(preferences);
+      setFgtsMemoryFeedback({ ok: result.ok, message: result.ok ? "Memória do FGTS atualizada neste navegador." : result.error });
+    }
+  }, []);
+  const onClearFgtsSalary = () => {
+    const result = clearSavedFgtsSalary();
+    if (result.ok) {
+      setState(previous => ({ ...previous, fgtsSalary: 0 }));
+      setSalaryHidden(false);
+    }
+    setFgtsMemoryFeedback({ ok: result.ok, message: result.ok ? "Salário removido deste campo e da memória. Crescimento anual preservado." : result.error });
+    return result.ok;
+  };
   const ranges = normalizeControlRanges(controlRanges, state, false);
   useEffect(() => {
     setControlRanges(previous => normalizeControlRanges(previous, state, false));
@@ -1233,6 +1298,8 @@ export default function FinancingWorkspace() {
     (id: number) => {
       const study = studies.find((candidate) => candidate.id === id);
       if (study) {
+        setSalaryHidden((study.state.fgtsSalary ?? 0) > 0);
+        setFgtsMemoryFeedback(null);
         setState(updateFinancing({
           ...study.state,
           fgtsSalary: study.state.fgtsSalary ?? 0,
@@ -1255,6 +1322,17 @@ export default function FinancingWorkspace() {
   }, [studies]);
 
   const props: LayoutProps = {
+    salaryHidden,
+    onToggleSalaryVisibility: () => setSalaryHidden(previous => !previous),
+    onClearFgtsSalary,
+    fgtsMemoryFeedback,
+    programInputs: {
+      financing: state,
+      includeFgts,
+      priceInvestment: { annualRate: investmentRate },
+      investment: investmentFields,
+      financeVsInvest: financeVsInvestFields,
+    },
     valuePreferences,
     onSaveValuePreference,
     onRemoveValuePreference,
@@ -1268,6 +1346,10 @@ export default function FinancingWorkspace() {
     referenceResult,
     fgtsComparison,
     comparisonScenario,
+    investmentRate,
+    investmentRateStorageError,
+    onInvestmentRateChange,
+    amortizationComparison,
     includeFgts,
     onIncludeFgtsChange: setIncludeFgts,
     update,
@@ -1287,7 +1369,7 @@ export default function FinancingWorkspace() {
       ) : environment === "investment" ? (
         <InvestmentEnvironment financingEntry={state.entry} />
       ) : (
-        <ComparisonEnvironment />
+        <ComparisonEnvironment fields={financeVsInvestFields} onFieldsChange={onFinanceVsInvestFieldsChange} financingState={state} />
       )}
     </div>
   );

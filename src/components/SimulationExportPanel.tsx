@@ -1,24 +1,16 @@
 import { useMemo, useRef, useState } from "react";
-import type { FinancingState } from "../financingControls.ts";
-import type { Calculation } from "../financingProjection.ts";
-import { formatSimulationValues } from "../simulationExport.ts";
+import { formatProgramInputs, maskSalaryForPreview, type ProgramInputs } from "../simulationExport.ts";
 
-export default function SimulationExportPanel({
-  state,
-  result,
-  includeFgts,
-}: {
-  state: FinancingState;
-  result: Calculation;
-  includeFgts: boolean;
-}) {
+export default function SimulationExportPanel({ inputs, salaryHidden = false }: { inputs: ProgramInputs; salaryHidden?: boolean }) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState("");
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const text = useMemo(
-    () => formatSimulationValues(state, result, includeFgts),
-    [state, result, includeFgts],
+    () => formatProgramInputs(inputs),
+    [inputs],
   );
+
+  const previewText = salaryHidden ? maskSalaryForPreview(text) : text;
 
   const copyValues = async () => {
     try {
@@ -27,8 +19,8 @@ export default function SimulationExportPanel({
       setStatus("Valores copiados.");
       return;
     } catch {
-      const textArea = textAreaRef.current ?? document.createElement("textarea");
-      const temporary = !textAreaRef.current;
+      const temporary = !textAreaRef.current || previewText !== text;
+      const textArea = temporary ? document.createElement("textarea") : textAreaRef.current!;
       if (temporary) {
         textArea.value = text;
         textArea.setAttribute("readonly", "");
@@ -44,7 +36,7 @@ export default function SimulationExportPanel({
       setStatus(
         copied
           ? "Valores copiados."
-          : "Não foi possível copiar. Selecione o texto manualmente.",
+          : salaryHidden ? "Não foi possível copiar. Revele o salário para copiar a prévia completa manualmente." : "Não foi possível copiar. Selecione o texto manualmente.",
       );
     }
   };
@@ -60,16 +52,17 @@ export default function SimulationExportPanel({
             EXPORTAR
           </span>
           <h2 id="simulation-export-title" className="mt-1 text-[18px] tracking-tight">
-            Copiar valores da simulação
+            Copiar premissas do programa
           </h2>
           <p className="mt-1 max-w-120 text-(--lp-muted) text-[11px] leading-[1.4]">
-            O texto abaixo acompanha as configurações e os resultados atuais.
+            Dados atuais de Financiar, Investir e Comparar. Não inclui resultados calculados, estudos salvos, histórico ou preferências de interface.
           </p>
         </div>
         <div className="flex shrink-0 gap-2 max-[559px]:w-full">
           <button
             type="button"
             className="min-h-11 flex-1 rounded-[7px] border border-(--lp-ink) bg-(--lp-ink) px-3.5 text-white text-[10px] font-black hover:opacity-85 focus-visible:outline-2 focus-visible:outline-(--lp-accent) focus-visible:outline-offset-2"
+            aria-label="Copiar todos os dados de entrada"
             onClick={copyValues}
           >
             copiar
@@ -86,18 +79,17 @@ export default function SimulationExportPanel({
           </button>
         </div>
       </header>
+      {salaryHidden && <p className="text-(--lp-muted) text-[11px]">O salário está oculto nesta prévia. Copiar inclui o salário, mesmo quando ele está oculto na tela.</p>}
+      <p className="text-(--lp-muted) text-[10px]" role="status" aria-live="polite">{status}</p>
       {open && <div id="simulation-export-content" className="grid gap-3">
         <textarea
           ref={textAreaRef}
           className="min-h-55 w-full resize-y rounded-[7px] border border-(--lp-line) bg-(--lp-bg) p-3 font-mono text-[11px] leading-[1.55] text-(--lp-ink) outline-none focus-visible:border-(--lp-accent) focus-visible:ring-2 focus-visible:ring-(--lp-accent)"
-          aria-label="Valores atuais da simulação"
+          aria-label="Dados de entrada atuais do programa"
           readOnly
-          value={text}
+          value={previewText}
           onFocus={(event) => event.currentTarget.select()}
         />
-        <p className="min-h-4 text-(--lp-muted) text-[10px]" role="status" aria-live="polite">
-          {status}
-        </p>
       </div>}
     </section>
   );

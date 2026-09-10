@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import { sliderControlKey, sliderControlValue, type ControlSpec } from "../financingGesture.ts";
 import { proposeRangeDrop, proposalAtPoint, type RangeDropProposal, type RangeDropTrack } from "../financingRangeDrop.ts";
 import type { Bounds } from "../financingControls.ts";
+import type { PreferenceResult } from "../financingRangePreferences.ts";
 import "./FinancingRangeControl.css";
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
   onChange: (value: number, bounds: Bounds) => void;
   onBoundsChange: (bounds: Bounds) => void;
   onResetRange: () => void;
+  onSaveRange?: () => PreferenceResult;
   valuePreferenceAction?: ReactNode;
   valuePreferenceDetails?: ReactNode;
 };
@@ -33,6 +35,7 @@ export default function FinancingRangeControl(props: Props) {
   const proposal = useRef<RangeDropProposal | null>(null);
   const [preview, setPreview] = useState<RangeDropProposal | null>(null);
   const [active, setActive] = useState(false);
+  const [saveResult, setSaveResult] = useState<PreferenceResult | null>(null);
   const [message, setMessage] = useState('Arraste Foco até um ponto da barra para recortar.');
   const helpId = useId();
   const setProposal = (next: RangeDropProposal | null) => { proposal.current = next; setPreview(next); };
@@ -70,6 +73,7 @@ export default function FinancingRangeControl(props: Props) {
     return () => { session.current = null; proposal.current = null; window.removeEventListener('blur', stop); document.removeEventListener('visibilitychange', stop); };
   }, []);
   useEffect(() => { cancel(); }, [props.bounds.min, props.bounds.max, props.spec.value, props.spec.min, props.spec.max]);
+  useEffect(() => { setSaveResult(null); }, [props.label, props.bounds.min, props.bounds.max]);
   const { bounds, spec, format } = props;
   const width = Math.max(spec.step, bounds.max - bounds.min);
   const percent = (value: number) => Math.max(0, Math.min(100, (value - bounds.min) / width * 100));
@@ -90,6 +94,14 @@ export default function FinancingRangeControl(props: Props) {
       <span className="frc-drop-zone" role="img" aria-label="Soltar à direita: duplicar limite máximo" data-active={preview?.intent === 'expand-max'} title="Duplicar o máximo sem mudar o mínimo">→<small>2×</small></span>
     </div>
     <div className="frc-limits" aria-hidden="true"><span>{format(bounds.min)}</span><span>{format(bounds.max)}</span></div>
+    {props.onSaveRange && <div className="frc-save-range-row">
+      <button type="button" className="frc-save-range" disabled={active}
+        aria-label={`Salvar faixa atual de ${props.label} como padrão`}
+        onClick={() => setSaveResult(props.onSaveRange!())}>Salvar faixa atual</button>
+      <span role={saveResult && !saveResult.ok ? "alert" : "status"}>
+        {saveResult ? saveResult.ok ? "Faixa padrão salva neste navegador." : saveResult.error : "Só os limites da faixa, não o valor."}
+      </span>
+    </div>}
     <div className="frc-focus-row">
       {props.valuePreferenceAction && <div className="frc-value-action">{props.valuePreferenceAction}</div>}
       <button ref={helper} type="button" className="frc-focus" aria-label={`Arrastar Foco de ${props.label}`} aria-describedby={helpId} disabled={spec.max <= spec.min} data-active={active}

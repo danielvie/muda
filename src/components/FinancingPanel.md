@@ -34,7 +34,7 @@ O gesto sempre calcula a prévia a partir da faixa inicial. Movimentos repetidos
 
 Cada campo tem um painel recolhido com sua faixa padrão. Existem somente três comandos que escrevem essa preferência:
 
-1. Salvar faixa atual como padrão: copia os limites em uso, uma única vez.
+1. Salvar faixa atual como padrão: copia os limites em uso, uma única vez. O atalho Salvar faixa atual fica logo abaixo dos limites da barra, antes do trio Salvar padrão, Foco e Resetar faixa. Usa o mesmo salvamento de Minha faixa, sem abrir o painel, e mostra sucesso ou erro no próprio local.
 2. Editar limites e Salvar: valida os dois valores e guarda o novo padrão.
 3. Restaurar padrão do aplicativo: remove a personalização daquele campo, sem afetar os demais.
 
@@ -73,20 +73,47 @@ Salvar padrão salva somente o valor confirmado do campo selecionado. Não salva
 - No teclado, a barra aceita setas, PageUp/PageDown e Home/End. Na alça, esquerda/direita escolhem o ponto; − restaura mínimo; + prepara máximo em dobro; Enter aplica; Escape cancela.
 - Soltar ou perder captura encerra o gesto. Mudar de campo ou alterar a simulação cancela qualquer prévia anterior.
 
+O painel principal, os detalhes, os estudos e a comparação usam a mesma largura do contêiner da workspace, limitada a 680 px. O painel principal não tem um limite próprio menor no desktop. As bordas foram conferidas no navegador em 320, 390, 700 e 1280 px.
+
 O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. A Entrada continua manual; o selo de 20% é uma ação explícita e não altera a regra de edição dos campos. Estudos existentes, os dois modos de FGTS e as faixas temporárias são preservados. Apenas comandos explícitos persistem padrões. Os estudos usam a chave de armazenamento existente.
 
-## Comparação unificada
+## Comparação atual
+
+O painel único Amortizar agora ou investir para amortizar depois reúne duas estratégias abertas, com o mesmo orçamento e avaliação no cruzamento das curvas originais. A conclusão considera investimento, dívida e FGTS remanescente na mesma data. SAC e PRICE seguem como referências separadas. A regra completa, a memória de salário com ocultação visual e a exportação somente de premissas estão em [amortizationComparison.md](../amortizationComparison.md).
+
+## Histórico anterior à comparação no cruzamento
+
+As seções abaixo registram as etapas anteriores, substituídas pelo painel mesclado descrito acima. Os motores de investimento com quitação por cobertura e o resumo por desembolso foram removidos.
 
 Aprovada a unificação visual de SAC vs PRICE e Amortização com FGTS. O painel principal e os controles de faixa permanecem como estavam.
 
 - Um único controle Considerar FGTS afeta a comparação. Desligá-lo oculta os campos e os detalhes FGTS, sem apagar salário, crescimento ou modo. O controle fica na workspace e mantém seu estado ao trocar de ambiente; não adiciona persistência nem muda o formato dos estudos.
 - Reduzir prazo, Reduzir prestação, salário e crescimento ficam antes dos resultados, sem menu intermediário.
-- SAC, PRICE e PRICE + diferença têm o mesmo destaque e os mesmos indicadores, na mesma ordem: desembolso mensal inicial, quitação, juros totais, pago do bolso, FGTS utilizado e total gasto. O desembolso de PRICE + diferença inclui a amortização extra, não apenas a prestação.
-- Pago do bolso inclui entrada, prestações e extras em dinheiro. FGTS utilizado mostra apenas o fundo aplicado na dívida. Total gasto soma os dois, sem duplicar extras nem incluir FGTS não utilizado. Esses valores ficam visíveis nos cartões, com a composição explicada abaixo dos números; os custos excluídos continuam indicados no aviso acima.
-- Os cartões ficam empilhados abaixo de 700 px e lado a lado nas larguras maiores. Os valores monetários não são arredondados para milhares na comparação.
-- Detalhes da comparação e evolução anual começam recolhidos. O cruzamento das prestações fica junto à explicação das amortizações extras.
+- SAC, PRICE, PRICE + diferença e PRICE + investimento aparecem em quatro painéis abertos, um abaixo do outro, em todas as larguras. Não há seletor nem necessidade de abrir cada cenário. A taxa de investimento e a opção de quitar com investimento ficam na workspace e sobrevivem à troca de ambiente. Somente a taxa é lembrada entre visitas, sem mudança no formato dos estudos.
+- Os indicadores do financiamento mantêm a ordem: desembolso mensal inicial, quitação, juros totais, pago do bolso, FGTS utilizado e total gasto. O desembolso de PRICE + diferença inclui a amortização extra, não apenas a prestação.
+- Nos cenários sem investimento, Pago do bolso inclui entrada, prestações e extras em dinheiro. FGTS utilizado mostra apenas o fundo aplicado na dívida. Total gasto soma os dois, sem duplicar extras nem incluir FGTS não utilizado. PRICE + investimento separa dinheiro aportado de dinheiro gasto no apartamento, conforme as fórmulas abaixo. Esses valores ficam visíveis nos cartões, com a composição explicada abaixo dos números; os custos excluídos continuam indicados no aviso acima.
+- Cada painel de cenário ocupa toda a largura disponível, com indicadores em duas colunas e uma coluna até 360 px, para não quebrar os valores monetários. Os valores monetários não são arredondados para milhares na comparação.
+- Detalhes da comparação e evolução anual começam recolhidos. O cruzamento das prestações também está no informativo junto ao valor da primeira parcela, com o mês exato, o período em anos e meses e a ressalva de que compara curvas sem FGTS.
 - A tabela anual começa por Ano, seguido do grupo SAC e depois PRICE. Cada grupo reúne saldo devedor, juros no ano e FGTS no ano, com cabeçalho próprio e divisória entre os sistemas.
 - Os detalhes preservam os totais de PRICE + diferença e, na projeção FGTS, a entrada, soma das prestações, FGTS aplicado, total com entrada e FGTS, prestação após o primeiro uso, quantidade de usos e FGTS não utilizado.
+
+### PRICE + investimento
+
+`priceDifferenceInvestment.ts` usa os cronogramas SAC e PRICE já calculados. O aporte mensal é a diferença positiva entre as prestações efetivamente pagas, inclusive seus acertos finais, somente enquanto ambos os financiamentos estão ativos. A regra é reavaliada a cada mês. Quando PRICE ≥ SAC, não há aporte. Por padrão, o investimento não altera a dívida nem resgata dinheiro para quitá-la.
+
+A opção Quitar quando o investimento cobrir a dívida começa desligada. Quando ligada, o motor testa o saldo total investido, incluindo aportes e rendimentos, depois dos juros do investimento, aporte, prestação PRICE e FGTS do mês. Se o saldo cobre a dívida restante, resgata exatamente essa dívida, registra a quitação e encerra prestações e aportes. A sobra continua rendendo até o fim do prazo original. Não há resgate se o financiamento já foi quitado, inclusive pelo FGTS. A taxa zero também permite quitar usando apenas os aportes.
+
+O resgate e os totais até esse mês ficam em `DifferenceInvestment.payoff`; cada linha registra `redemption`. A conservação do investimento é `saldo final = aportes + rendimentos − resgate`. Os cronogramas SAC, PRICE e PRICE + diferença originais não são alterados. A tabela anual continua mostrando a PRICE original e avisa que não reflete essa quitação.
+
+A taxa começa com o último valor válido salvo neste navegador, ou vazia se não houver preferência. Deve ser informada como rentabilidade efetiva anual líquida estimada, entre 0% e 100%. A interface aceita vírgula decimal. Zero simula somente o acúmulo dos aportes. Aportes ocorrem no fim do mês, depois do rendimento do saldo anterior. O saldo continua rendendo até o fim do prazo original, mesmo se o FGTS antecipar a quitação. A taxa é uma hipótese constante, não uma garantia, e não há cálculo separado de tributação.
+
+A taxa é salva automaticamente ao editar um valor válido, inclusive zero, na chave `muda.financing.investmentRate.v1`. O documento versionado guarda `annualRatePercent` como número; a interface restaura a vírgula decimal sem arredondar a precisão. Apagar o campo remove a taxa salva. Digitação inválida não sobrescreve a preferência anterior. A leitura inicial não grava nada; dados inválidos são ignorados. Falha ao gravar ou remover mostra erro no cenário, preserva o valor salvo e permite continuar a simulação local. A memória não inclui a opção de quitação, FGTS, estudos nem as demais configurações.
+
+O indicador Rendimento acumulado ≥ saldo devedor mostra o primeiro mês em que somente o rendimento líquido acumulado cobre a dívida PRICE restante. Não usa os aportes nem apenas o rendimento daquele mês. Compara os valores no fim do mês, após a prestação e o FGTS, e exibe o mês, o período em anos e meses e os dois valores. Só considera saldo devedor maior que meio centavo, para não anunciar a quitação já concluída como cruzamento. Sem taxa, pede a rentabilidade; sem dívida, informa isso; sem cruzamento, informa que não ocorre antes da quitação no horizonte simulado. O indicador não resgata recursos nem altera os cronogramas. Os testes cobrem os dois modos FGTS, igualdade, primeiro cruzamento, rendimento zero, ausência de dívida e exclusão dos meses após a quitação.
+
+No cenário PRICE + investimento, Pago do bolso agora inclui entrada, prestações pagas e todos os aportes feitos, com a opção ligada ou desligada. Total gasto contabiliza o dinheiro destinado ao apartamento: entrada + prestações pagas + FGTS aplicado + resgate usado na quitação. Não soma os aportes novamente ao resgate e não inclui o saldo que permanece investido. O cenário mostra separadamente aportes acumulados, rendimento líquido estimado, saldo investido no fim do prazo e resgate usado na quitação.
+
+Quando há quitação com investimento, os indicadores usam somente as prestações, juros e FGTS até aquele mês. Sem taxa válida, a opção ligada não apresenta os totais da PRICE original como resultado da quitação. Desligá-la restaura a projeção sem resgate. O indicador de rendimento sozinho continua separado: ele só compara meses com dívida ativa e explica quando a opção quitou a dívida antes desse cruzamento.
 
 ### Integração com o cálculo corrigido
 
@@ -97,6 +124,13 @@ O desembolso inicial de PRICE + diferença vem de `differenceSchedule[0].payment
 Reduzir prazo preserva a curva original das prestações no SAC e na PRICE. A queda dos juros aumenta a amortização efetiva e antecipa a quitação. O detalhamento identifica o acerto final parcial, mostra ao lado sua prestação original e risca os meses seguintes eliminados pelo FGTS. Reduzir prestação mostra cada novo pagamento junto do valor original sem FGTS. Os avisos de ausência de TR, seguros, tarifas e custos de posse permanecem visíveis fora dos detalhes.
 
 O motor corrigido fornece `differenceSchedule`, mas a tabela anual existente ainda apresenta somente SAC e PRICE. A interface informa esse limite de apresentação, sem indicar que falta um cálculo.
+
+### Verificação dos cenários e dos novos atalhos
+
+- `npm test`: 161 testes passaram. A memória da taxa cobre restauração, zero, vírgula, precisão, remoção, dados inválidos e armazenamento bloqueado. No navegador, 8,5% voltou após recarregar; apagar removeu a preferência, e uma falha simulada exibiu erro sem perder a taxa anterior. A quitação com investimento tem testes de igualdade, taxa zero, sobra investida, primeiro mês elegível, dois modos FGTS, conservação da dívida e dos recursos, ausência de cobranças e aportes posteriores, restauração ao desligar a opção e composição dos totais na interface. `npm run check`, `npm run build` e `git diff --check` passaram. Os testes novos cobrem os quatro cenários, taxa obrigatória, taxa zero, vírgula decimal, os dois modos de FGTS, aportes após diferenças positivas, interrupção dos aportes no cruzamento ou na quitação e rendimento até o horizonte original. O motor PRICE + diferença não foi alterado.
+- No navegador, o atalho salvou as faixas dos quatro campos sem abrir Minha faixa nem salvar valores padrão. Foco pelo teclado recortou o imóvel de R$ 800 mil para a faixa de R$ 700 mil a R$ 900 mil, preservando seu valor. Falha de armazenamento simulada mostrou erro junto ao atalho e preservou a preferência anterior.
+- O informativo da parcela mostrou mês 111, 9 anos e 3 meses, para as hipóteses iniciais. Os quatro painéis de cenário ficam visíveis ao mesmo tempo, com os mesmos indicadores do financiamento na mesma ordem. Trocar o modo FGTS, desligá-lo e trocar de ambiente preserva a rentabilidade digitada; taxas inválidas ocultaram o saldo calculado e zero mostrou aportes sem rendimento.
+- Build de produção inspecionado em 320, 390 e 1280 px, sem overflow da página. Os indicadores usam uma coluna em 320 px e duas nas demais larguras; valores monetários de teste não quebraram. Console sem erros ou avisos.
 
 ### Verificação da unificação visual
 
@@ -118,7 +152,14 @@ O motor corrigido fornece `differenceSchedule`, mas a tabela anual existente ain
 - `financingControls.ts`: regras financeiras, formato brasileiro e ticks.
 - `FinancingPanel.tsx` e `FinancingPanel.css`: cartão de Entrada com selo de atalho para aplicar 20%, sem política automática visível.
 - `FinancingWorkspace.tsx`: valores, faixas, estudos, FGTS e composição dos painéis.
-- `FinancingComparison.tsx` e `.css`: controles FGTS e cartões das três estratégias, sem fórmulas financeiras novas.
+- `FinancingComparison.tsx` e `.css`: controles FGTS, painel mesclado e referências SAC/PRICE.
+- `AmortizationComparisonPanel.tsx`: premissas comuns, estratégias abertas e conclusão integrada, sem fórmulas financeiras.
+- `FinancingCrossing.tsx`: texto do cruzamento compartilhado entre o informativo da parcela e os detalhes da comparação.
+- `amortizationComparison.ts`: orçamento comum, amortização mensal ou acumulada no cruzamento, projeção posterior e comparação de posição financeira.
+- `investmentRatePreference.ts`: memória local versionada da taxa anual de investimento.
+- `fgtsPreferences.ts` e `FgtsSalaryField.tsx`: memória de salário/crescimento e controle visual de revelar/limpar.
+- `simulationExport.ts` e `SimulationExportPanel.tsx`: exportação de premissas atuais e prévia com salário oculto.
+- `financeVsInvestPreferences.ts`: leitura/gravação dos campos de Comparar, mantidos vivos na workspace.
 - `FgtsComparison.tsx`: detalhes e evolução anual SAC/PRICE da projeção FGTS.
 - `financingProjection.ts` e `loanPayments.ts`: prestações previstas, cronograma SAC/PRICE e cenário com amortizações extras. A regra de redução de prazo está documentada em `src/financingProjection.md`.
 

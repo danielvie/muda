@@ -37,7 +37,7 @@ export function FgtsEvolution({ comparison }: { comparison: FgtsComparisonData }
     <details className="comparison-details">
       <summary>Evolução anual do saldo devedor e do FGTS</summary>
       <div className="comparison-details-content">
-        <p className="comparison-note">Esta tabela mostra a evolução anual de SAC e PRICE. O cronograma de PRICE + diferença ainda não é exibido nesta tabela.</p>
+        <p className="comparison-note">Esta tabela mostra somente as referências SAC e PRICE com o FGTS selecionado, sem extras do bolso. Não representa as estratégias de amortizar mensalmente ou investir até o cruzamento.</p>
         <div className="comparison-table-scroll" role="region" aria-label="Evolução anual SAC e PRICE, tabela com rolagem horizontal" tabIndex={0}>
           <table>
             <caption>Projeção FGTS · saldo ao fim do ano, juros e FGTS aplicado no ano</caption>

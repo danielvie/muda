@@ -7,7 +7,9 @@
 .fc-payment-heading > span { font-size:14px; color:#e0e8f3; }
 .financing-panel .fc-info-button { width:32px; min-width:32px; height:32px; min-height:32px; padding:0; border-color:#ffffff70; border-radius:50%; background:transparent; color:white; font-size:15px; font-weight:800; line-height:1; }
 .financing-panel .fc-info-button:hover,.financing-panel .fc-info-button:active { border-color:white; background:#ffffff18; }
-.fc-payment-info { margin:0; font-size:12px; color:#e0e8f3; line-height:1.45; }
+.fc-payment-info { display:grid; gap:8px; margin:6px 0; font-size:12px; color:#e0e8f3; line-height:1.45; }
+.fc-payment-info p { margin:0; }
+.fc-payment-info strong { color:var(--lp-yellow); }
 .fc-payment output { font-size:clamp(28px,10vw,44px); font-weight:800; line-height:1.1; letter-spacing:-.045em; color:var(--lp-yellow); font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .fc-payment small { font-size:13px; color:#e0e8f3; }
 .financing-panel .fc-save-study { min-height:48px; background:transparent; color:white; border-color:#e0e8f3; white-space:nowrap; }
@@ -53,5 +55,4 @@
 .financing-details { border:1px solid var(--lp-line); border-radius:12px; padding:0 16px; background:var(--lp-paper); font-size:15px; }
 .financing-details > summary { cursor:pointer; min-height:48px; padding:14px 0; }
 .financing-save { min-height:48px; border:1px solid var(--lp-line); border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:14px; }
-@media(min-width:700px) { .financing-panel { max-width:520px; margin-inline:auto; } }
 @media(max-width:360px) { .fc-card-body { padding:12px; gap:12px; } .fc-targets button { padding:8px; } .fc-targets button strong,.fc-costs dd { font-size:15px; } }
