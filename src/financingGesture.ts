@@ -11,7 +11,7 @@ export const DEFAULT_CONTROL_RANGES: ControlRanges = {
   property: { min: 0, max: 2000000 }, entry: { min: 0, max: 800000 },
   financingRate: { min: 0, max: 20 }, termMonths: { min: 1, max: 40 },
 };
-export type ControlSpec = { value: number; min: number; max: number; step: number; monetary: boolean };
+export type ControlSpec = { value: number; min: number; max: number; step: number; monetary: boolean; focusHalfWidth?: number };
 const MAX = Number.MAX_SAFE_INTEGER;
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 const clean = (n: number) => Number(n.toFixed(8));

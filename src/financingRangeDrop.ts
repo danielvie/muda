@@ -17,8 +17,9 @@ export function proposeRangeDrop(intent: RangeDropIntent, bounds: Bounds, spec: 
   let cropEdge: 'min' | 'max' | null = null;
   if (intent === 'crop-center') {
     target = spec.value;
-    const min = spec.value - FOCUS_CROP_HALF_WIDTH;
-    const max = spec.value + FOCUS_CROP_HALF_WIDTH;
+    const halfWidth = spec.focusHalfWidth ?? FOCUS_CROP_HALF_WIDTH;
+    const min = spec.value - halfWidth;
+    const max = spec.value + halfWidth;
     next = normalizeControlRange({ min, max }, spec);
     limited = min < spec.min || max > spec.max;
   } else if (intent === 'reset-min') {

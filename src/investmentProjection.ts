@@ -1,8 +1,9 @@
 import {
     projectInvestment,
     type InvestmentProjectionResult,
-} from "./finance";
-import { brl, toNumber } from "./format";
+} from "./finance.ts";
+import { brl } from "./format.ts";
+import { parseInvestmentInput } from "./investmentControls.ts";
 import type { FieldMemory } from "./memory.tsx";
 
 export type InvestmentProjectionView = {
@@ -17,18 +18,12 @@ export type InvestmentProjectionView = {
 export function buildInvestmentProjection(
     fields: FieldMemory,
 ): InvestmentProjectionView | null {
-    const meses = Number(fields.mesesProj);
-    const taxaAnual = Number(fields.taxaInvestAnual) / 100;
-    const saldoInicial = toNumber(fields.saldoInicial);
-    const aporteMensal = toNumber(fields.aporteMensal);
-
-    if (
-        !Number.isFinite(meses) ||
-        !Number.isFinite(taxaAnual) ||
-        !Number.isFinite(saldoInicial) ||
-        !Number.isFinite(aporteMensal)
-    )
-        return null;
+    const meses = parseInvestmentInput("mesesProj", fields.mesesProj);
+    const taxa = parseInvestmentInput("taxaInvestAnual", fields.taxaInvestAnual);
+    const saldoInicial = parseInvestmentInput("saldoInicial", fields.saldoInicial);
+    const aporteMensal = parseInvestmentInput("aporteMensal", fields.aporteMensal);
+    if (meses === null || taxa === null || saldoInicial === null || aporteMensal === null) return null;
+    const taxaAnual = taxa / 100;
 
     const result = projectInvestment({
         saldoInicial,

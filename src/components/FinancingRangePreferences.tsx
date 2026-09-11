@@ -1,15 +1,18 @@
 import { useId, useState } from "react";
 import { formatFinancingNumber, parseFinancingNumber, type Bounds, type FinancingField } from "../financingControls.ts";
-import { validateRangePreference, type PreferenceResult } from "../financingRangePreferences.ts";
+import { validateRangePreference } from "../financingRangePreferences.ts";
+import type { PreferenceActionResult } from "../preferenceResult.ts";
 import "./FinancingRangePreferences.css";
 
 type Props = {
-  field: FinancingField; label: string; unit: string; monetary: boolean;
+  label: string; unit: string; monetary: boolean;
   current: Bounds; saved: Bounds; applied: Bounds; customized: boolean;
   format: (value: number) => string;
-  onSave: (bounds: Bounds) => PreferenceResult;
-  onRestore: () => PreferenceResult;
-};
+  inputFormat?: (value: number) => string;
+  parseInput?: (raw: string) => number;
+  onSave: (bounds: Bounds) => PreferenceActionResult;
+  onRestore: () => PreferenceActionResult;
+} & ({ field: FinancingField; validate?: never } | { field?: never; validate: (bounds: Bounds) => string | null });
 export default function FinancingRangePreferences(p: Props) {
   const [editing, setEditing] = useState(false);
   const [draftMin, setDraftMin] = useState('');
@@ -20,12 +23,12 @@ export default function FinancingRangePreferences(p: Props) {
   const id = useId();
   const format = (value: number) => p.monetary ? `R$ ${formatFinancingNumber(value, true)}` : p.format(value);
   const edit = () => {
-    setDraftMin(formatFinancingNumber(p.saved.min, p.monetary));
-    setDraftMax(formatFinancingNumber(p.saved.max, p.monetary));
+    setDraftMin(p.inputFormat ? p.inputFormat(p.saved.min) : formatFinancingNumber(p.saved.min, p.monetary));
+    setDraftMax(p.inputFormat ? p.inputFormat(p.saved.max) : formatFinancingNumber(p.saved.max, p.monetary));
     setEditing(true); setError(null); setInvalid(false); setMessage('');
   };
   const save = (bounds: Bounds) => {
-    const validation = validateRangePreference(p.field, bounds);
+    const validation = p.validate ? p.validate(bounds) : validateRangePreference(p.field, bounds);
     if (validation) { setError(validation); setInvalid(true); setMessage(''); return; }
     const result = p.onSave(bounds);
     if (!result.ok) { setError(result.error); setInvalid(false); setMessage(''); return; }
@@ -44,7 +47,7 @@ export default function FinancingRangePreferences(p: Props) {
     <div className="rp-body">
       <header><h3>Faixa padrão de {p.label.toLocaleLowerCase('pt-BR')}</h3><small>{p.customized ? 'Salva neste navegador' : 'Padrão do aplicativo'}</small></header>
       <p>Usada nas próximas visitas e ao tocar em Resetar faixa. Crop e expansão não alteram este padrão.</p>
-      {editing ? <form aria-label={`Editar faixa padrão de ${p.label}`} onSubmit={event => { event.preventDefault(); save({ min: parseFinancingNumber(draftMin), max: parseFinancingNumber(draftMax) }); }}>
+      {editing ? <form aria-label={`Editar faixa padrão de ${p.label}`} onSubmit={event => { event.preventDefault(); save({ min: (p.parseInput ?? parseFinancingNumber)(draftMin), max: (p.parseInput ?? parseFinancingNumber)(draftMax) }); }}>
         <div className="rp-fields">
           <label htmlFor={`${id}-min`}><span>Mínimo · {p.unit}</span><input id={`${id}-min`} type="text" inputMode="decimal" autoComplete="off" value={draftMin} aria-invalid={invalid || undefined} aria-describedby={error ? `${id}-error` : undefined} onChange={event => { setDraftMin(event.target.value); setError(null); setInvalid(false); }} /></label>
           <label htmlFor={`${id}-max`}><span>Máximo · {p.unit}</span><input id={`${id}-max`} type="text" inputMode="decimal" autoComplete="off" value={draftMax} aria-invalid={invalid || undefined} aria-describedby={error ? `${id}-error` : undefined} onChange={event => { setDraftMax(event.target.value); setError(null); setInvalid(false); }} /></label>

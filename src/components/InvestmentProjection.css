@@ -1,0 +1,23 @@
+.investment-projection { min-width:0; }
+.investment-targets { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.investment-targets button { display:grid; align-content:start; gap:4px; min-width:0; min-height:72px; padding:12px; text-align:left; border:1px solid var(--lp-line); border-radius:9px; background:var(--lp-paper); color:var(--lp-ink); cursor:pointer; touch-action:manipulation; }
+.investment-targets button:hover { border-color:var(--lp-accent); }
+.investment-targets button[aria-pressed=true] { border-color:var(--lp-accent); background:var(--lp-accent); color:white; }
+.investment-targets span { font-size:13px; font-weight:500; }
+.investment-targets strong { font-size:17px; font-weight:750; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.investment-input-error { margin:0; color:#b3392f; font-size:12px; line-height:1.5; }
+.investment-range { display:grid; gap:12px; min-width:0; margin-top:20px; color:var(--lp-ink); }
+.investment-input-label { display:flex; align-items:baseline; justify-content:space-between; gap:12px; font-size:15px; font-weight:650; }
+.investment-input-label small { font-size:12px; font-weight:400; color:var(--lp-muted); }
+.investment-value-input { width:100%; min-width:0; height:58px; border:1px solid var(--lp-line); border-radius:9px; padding:8px 10px; font-size:28px; font-weight:650; font-variant-numeric:tabular-nums; background:var(--lp-bg); color:var(--lp-ink); }
+.investment-value-input[aria-invalid=true] { border-color:#b3392f; }
+.investment-range h3 { margin:0; font-size:16px; font-weight:700; }
+.investment-range button { min-height:44px; min-width:0; border:1px solid var(--lp-line); border-radius:9px; padding:10px 12px; font:inherit; font-size:14px; font-weight:650; cursor:pointer; background:var(--lp-paper); color:var(--lp-ink); touch-action:manipulation; }
+.investment-range button:hover { border-color:var(--lp-accent); }
+.investment-range button:disabled { opacity:.4; cursor:default; }
+.investment-period-unit { display:flex; gap:8px; }
+.investment-period-unit button { min-width:80px; }
+.investment-period-unit button[aria-pressed=true] { background:var(--lp-accent); border-color:var(--lp-accent); color:white; }
+.investment-range .fc-help { margin:0; font-size:12px; line-height:1.45; color:var(--lp-muted); }
+.investment-projection :focus-visible { outline:2px solid var(--lp-accent); outline-offset:3px; }
+@media (max-width:360px) { .investment-targets button { padding:9px; } .investment-targets strong { font-size:15px; } }

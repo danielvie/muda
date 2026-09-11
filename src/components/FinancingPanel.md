@@ -77,6 +77,10 @@ O painel principal, os detalhes, os estudos e a comparação usam a mesma largur
 
 O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. A Entrada continua manual; o selo de 20% é uma ação explícita e não altera a regra de edição dos campos. Estudos existentes, os dois modos de FGTS e as faixas temporárias são preservados. Apenas comandos explícitos persistem padrões. Os estudos usam a chave de armazenamento existente.
 
+## Investir e aba inicial
+
+Investir usa os mesmos controles de slider, Foco e preferências, com quatro botões seletores e um único campo de apoio. As preferências de Investir são independentes das de Financiar. A aplicação lembra a última aba selecionada, incluindo Investir e Comparar. Regras, unidades, armazenamento e validação estão em [InvestmentProjection.md](InvestmentProjection.md).
+
 ## Comparação atual
 
 O painel PRICE+ reúne duas estratégias abertas, amortizar todo mês e investir para amortizar depois. O destaque mostra dinheiro do bolso aplicado no apartamento, FGTS utilizado, total do bolso + FGTS e tempo para quitar, todos até a quitação de cada estratégia. O resumo compara essa soma entre estratégias. Rendimentos usados e total pago incluindo rendimentos ficam em Entender os valores. Aportes e rendimentos que permanecem investidos não contam como gasto. A conclusão patrimonial no cruzamento das curvas originais fica nos detalhes, assim como a composição dos totais. A taxa de investimento não bloqueia o resultado de amortizar mensalmente. SAC e PRICE seguem como referências separadas. A regra completa, a memória de salário com ocultação visual e a exportação somente de premissas estão em [amortizationComparison.md](../amortizationComparison.md).

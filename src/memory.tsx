@@ -1,4 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import type { Bounds } from "./financingControls.ts";
+import { DEFAULT_INVESTMENT_VALUES, type InvestmentField, type InvestmentRanges, type InvestmentPeriodUnit } from "./investmentControls.ts";
+import { applyInvestmentDefaults, readInvestmentValues, readInvestmentRanges, resolveInvestmentRanges, saveInvestmentValue, saveInvestmentRange, readInvestmentPeriodUnit, saveInvestmentPeriodUnit, type InvestmentValuePreferences, type InvestmentRangePreferences } from "./investmentPreferences.ts";
+import type { PreferenceActionResult } from "./preferenceResult.ts";
 
 const storageKey = "muda:fields";
 const historyStorageKey = "muda:field-history";
@@ -18,10 +22,7 @@ export type FieldMemory = {
 type FieldHistory = Partial<Record<keyof FieldMemory, string[]>>;
 
 const defaults: FieldMemory = {
-  saldoInicial: "50000",
-  aporteMensal: "2000",
-  taxaInvestAnual: "10",
-  mesesProj: "24",
+  ...DEFAULT_INVESTMENT_VALUES,
   valorImovel: "800000",
   entrada: "180000",
   taxaFinAnual: "12",
@@ -30,14 +31,15 @@ const defaults: FieldMemory = {
 };
 
 function readSavedMemory(): FieldMemory {
-  if (typeof localStorage === "undefined") return { ...defaults };
+  let fields = { ...defaults };
   try {
-    const raw = localStorage.getItem(storageKey);
-    if (raw) {
-      return { ...defaults, ...JSON.parse(raw) };
-    }
+    const raw = globalThis.localStorage.getItem(storageKey);
+    if (raw) fields = { ...fields, ...JSON.parse(raw) };
   } catch {}
-  return { ...defaults };
+  for (const key of Object.keys(DEFAULT_INVESTMENT_VALUES) as InvestmentField[]) {
+    if (typeof fields[key] !== "string") fields[key] = defaults[key];
+  }
+  return applyInvestmentDefaults(fields, readInvestmentValues());
 }
 
 function readSavedHistory(): FieldHistory {
@@ -55,6 +57,18 @@ type MemoryContextType = {
   fieldHistory: FieldHistory;
   updateField: <K extends keyof FieldMemory>(key: K, value: FieldMemory[K]) => void;
   rememberFieldValue: <K extends keyof FieldMemory>(key: K, value: FieldMemory[K]) => void;
+  investmentControls: {
+    selected: InvestmentField;
+    periodUnit: InvestmentPeriodUnit;
+    setPeriodUnit: (unit: InvestmentPeriodUnit) => PreferenceActionResult;
+    select: (field: InvestmentField) => void;
+    ranges: InvestmentRanges;
+    setRange: (field: InvestmentField, bounds: Bounds) => void;
+    valuePreferences: InvestmentValuePreferences;
+    rangePreferences: InvestmentRangePreferences;
+    saveValue: (field: InvestmentField, value: number | null) => PreferenceActionResult;
+    saveRange: (field: InvestmentField, bounds: Bounds | null) => PreferenceActionResult;
+  };
 };
 
 const MemoryContext = createContext<MemoryContextType | null>(null);
@@ -62,17 +76,36 @@ const MemoryContext = createContext<MemoryContextType | null>(null);
 export function MemoryProvider({ children }: { children: React.ReactNode }) {
   const [fields, setFields] = useState<FieldMemory>(readSavedMemory);
   const [fieldHistory, setFieldHistory] = useState<FieldHistory>(readSavedHistory);
+  const [selected, select] = useState<InvestmentField>("saldoInicial");
+  const [periodUnit, setPeriodUnit] = useState(readInvestmentPeriodUnit);
+  const [valuePreferences, setValuePreferences] = useState(readInvestmentValues);
+  const [rangePreferences, setRangePreferences] = useState(readInvestmentRanges);
+  const [ranges, setRanges] = useState(() => resolveInvestmentRanges(rangePreferences));
+  const investmentControls: MemoryContextType["investmentControls"] = {
+    selected, select, periodUnit, ranges, valuePreferences, rangePreferences,
+    setPeriodUnit: unit => {
+      setPeriodUnit(unit);
+      return saveInvestmentPeriodUnit(unit);
+    },
+    setRange: (field, bounds) => setRanges(previous => ({ ...previous, [field]: bounds })),
+    saveValue: (field, value) => {
+      const result = saveInvestmentValue(field, value);
+      if (result.ok) setValuePreferences(result.preferences);
+      return result;
+    },
+    saveRange: (field, bounds) => {
+      const result = saveInvestmentRange(field, bounds);
+      if (result.ok) setRangePreferences(result.preferences);
+      return result;
+    },
+  };
 
   useEffect(() => {
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(storageKey, JSON.stringify(fields));
-    }
+    try { globalThis.localStorage.setItem(storageKey, JSON.stringify(fields)); } catch {}
   }, [fields]);
 
   useEffect(() => {
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(historyStorageKey, JSON.stringify(fieldHistory));
-    }
+    try { globalThis.localStorage.setItem(historyStorageKey, JSON.stringify(fieldHistory)); } catch {}
   }, [fieldHistory]);
 
   const updateField = <K extends keyof FieldMemory>(key: K, value: FieldMemory[K]) => {
@@ -90,7 +123,7 @@ export function MemoryProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <MemoryContext.Provider value={{ fields, fieldHistory, updateField, rememberFieldValue }}>
+    <MemoryContext.Provider value={{ fields, fieldHistory, updateField, rememberFieldValue, investmentControls }}>
       {children}
     </MemoryContext.Provider>
   );

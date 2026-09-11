@@ -1,4 +1,4 @@
-import { formatNumber, toNumber } from "./format";
+import { formatNumber, toNumber } from "./format.ts";
 
 export function parseMathExpression(raw: string): number | null {
     if (raw == null) return null;

@@ -15,6 +15,7 @@ import { updateFinancing, type Bounds, type FinancingField, type FinancingState 
 import { normalizeControlRanges, type ControlRanges } from "../financingGesture.ts";
 import { readRangePreferences, resolveRangePreferences, saveRangePreference, restoreRangePreference, type RangePreferences, type PreferenceResult } from "../financingRangePreferences.ts";
 import InvestmentProjection from "./InvestmentProjection.tsx";
+import { readEnvironmentPreference, saveEnvironmentPreference, type Environment } from "../environmentPreference.ts";
 import { readValuePreferences, resolveValuePreferences, saveValuePreference, removeValuePreference, type ValuePreferences, type ValuePreferenceResult } from "../financingValuePreferences.ts";
 import FinancingComparison, { type FinancingComparisonScenario } from "./FinancingComparison.tsx";
 import { compareAmortization, parseInvestmentRate, type AmortizationComparison } from "../amortizationComparison.ts";
@@ -967,8 +968,6 @@ function Heading({
   );
 }
 
-type Environment = "financing" | "investment" | "comparison";
-
 function EnvironmentTabs({
   value,
   onChange,
@@ -1042,7 +1041,7 @@ function WorkspaceHeader({
   );
 }
 
-function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
+function InvestmentEnvironment() {
   return (
     <div data-environment="investment" className="min-h-[calc(100vh-99px)] bg-(--lp-bg) text-(--lp-ink)">
       <main className="mx-auto w-[calc(100%-24px)] max-w-170 pt-4.5 pb-15 min-[700px]:w-[calc(100%-48px)] min-[700px]:pt-7 max-[420px]:w-[calc(100%-18px)]">
@@ -1055,10 +1054,10 @@ function InvestmentEnvironment({ financingEntry }: { financingEntry: number }) {
               acumular?
             </>
           }
-          description="Calcule saldo final, aportes e rendimento. A entrada do financiamento pode ser usada como saldo inicial."
+          description="Escolha o que ajustar e use a barra para calcular saldo final, aportes e rendimento."
         />
         <section className="pane">
-          <InvestmentProjection financingEntry={financingEntry} />
+          <InvestmentProjection />
         </section>
       </main>
     </div>
@@ -1186,7 +1185,13 @@ export default function FinancingWorkspace() {
   };
   const [rangePreferences, setRangePreferences] = useState<RangePreferences>(readRangePreferences);
   const [controlRanges, setControlRanges] = useState<ControlRanges>(() => resolveRangePreferences(rangePreferences));
-  const [environment, setEnvironment] = useState<Environment>("financing");
+  const [environment, setEnvironment] = useState<Environment>(readEnvironmentPreference);
+  const [environmentMemoryError, setEnvironmentMemoryError] = useState<string | null>(null);
+  const onEnvironmentChange = (next: Environment) => {
+    setEnvironment(next);
+    const result = saveEnvironmentPreference(next);
+    setEnvironmentMemoryError(result.ok ? null : result.error);
+  };
   const [valuePreferences, setValuePreferences] = useState<ValuePreferences>(readValuePreferences);
   const [initialFgtsPreferences] = useState(readFgtsPreferences);
   const [state, setState] = useState<FinancingState>(() => ({ ...resolveValuePreferences(valuePreferences), ...initialFgtsPreferences }));
@@ -1363,11 +1368,12 @@ export default function FinancingWorkspace() {
     <div
       className={`financing-workspace palette-c min-h-screen${environment !== "financing" ? " financing-workspace-secondary" : ""}`}
     >
-      <WorkspaceHeader environment={environment} onChange={setEnvironment} />
+      <WorkspaceHeader environment={environment} onChange={onEnvironmentChange} />
+      {environmentMemoryError && <p className="mx-auto max-w-170 px-4 py-2 text-sm" role="alert">{environmentMemoryError}</p>}
       {environment === "financing" ? (
         <FinancingView props={props} />
       ) : environment === "investment" ? (
-        <InvestmentEnvironment financingEntry={state.entry} />
+        <InvestmentEnvironment />
       ) : (
         <ComparisonEnvironment fields={financeVsInvestFields} onFieldsChange={onFinanceVsInvestFieldsChange} financingState={state} />
       )}

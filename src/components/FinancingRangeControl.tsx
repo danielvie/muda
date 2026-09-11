@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { sliderControlKey, sliderControlValue, type ControlSpec } from "../financingGesture.ts";
 import { proposeRangeDrop, proposalAtPoint, type RangeDropProposal, type RangeDropTrack } from "../financingRangeDrop.ts";
 import type { Bounds } from "../financingControls.ts";
-import type { PreferenceResult } from "../financingRangePreferences.ts";
+import type { PreferenceActionResult } from "../preferenceResult.ts";
 import "./FinancingRangeControl.css";
 
 type Props = {
@@ -12,7 +12,7 @@ type Props = {
   onChange: (value: number, bounds: Bounds) => void;
   onBoundsChange: (bounds: Bounds) => void;
   onResetRange: () => void;
-  onSaveRange?: () => PreferenceResult;
+  onSaveRange?: () => PreferenceActionResult;
   valuePreferenceAction?: ReactNode;
   valuePreferenceDetails?: ReactNode;
 };
@@ -20,10 +20,10 @@ type Session = {
   pointerId: number | null; startX: number; startY: number; moved: boolean;
   track: RangeDropTrack; bounds: Bounds; spec: ControlSpec; target: number;
 };
-function proposalTitle(proposal: RangeDropProposal) {
+function proposalTitle(proposal: RangeDropProposal, focusWidthLabel: string) {
   if (proposal.intent === 'reset-min') return 'Restaurar mínimo';
   if (proposal.intent === 'expand-max') return 'Duplicar máximo';
-  if (proposal.intent === 'crop-center') return 'Centralizar faixa em ± R$ 100 mil';
+  if (proposal.intent === 'crop-center') return `Centralizar faixa em ± ${focusWidthLabel}`;
   return proposal.cropEdge === 'max' ? 'Manter mínimo e recortar máximo' : 'Recortar mínimo e manter máximo';
 }
 
@@ -35,7 +35,8 @@ export default function FinancingRangeControl(props: Props) {
   const proposal = useRef<RangeDropProposal | null>(null);
   const [preview, setPreview] = useState<RangeDropProposal | null>(null);
   const [active, setActive] = useState(false);
-  const [saveResult, setSaveResult] = useState<PreferenceResult | null>(null);
+  const [saveResult, setSaveResult] = useState<PreferenceActionResult | null>(null);
+  const focusWidthLabel = props.spec.focusHalfWidth === undefined ? 'R$ 100 mil' : props.format(props.spec.focusHalfWidth);
   const [message, setMessage] = useState('Arraste Foco até um ponto da barra para recortar.');
   const helpId = useId();
   const setProposal = (next: RangeDropProposal | null) => { proposal.current = next; setPreview(next); };
@@ -65,7 +66,7 @@ export default function FinancingRangeControl(props: Props) {
     if (!next) { setMessage('Solte sobre a barra ou nas laterais. Nada foi alterado.'); return; }
     if (next.changed) latest.current.onBoundsChange(next.bounds);
     const note = next.limited ? ' Os limites deste campo foram respeitados.' : '';
-    setMessage(next.changed ? `${proposalTitle(next)}: ${latest.current.format(next.bounds.min)} a ${latest.current.format(next.bounds.max)}. Valor preservado.${note}` : `A faixa já está no limite permitido.${note}`);
+    setMessage(next.changed ? `${proposalTitle(next, focusWidthLabel)}: ${latest.current.format(next.bounds.min)} a ${latest.current.format(next.bounds.max)}. Valor preservado.${note}` : `A faixa já está no limite permitido.${note}`);
   };
   useEffect(() => {
     const stop = () => cancel();
@@ -137,8 +138,8 @@ export default function FinancingRangeControl(props: Props) {
       <button type="button" className="frc-reset" onClick={() => { finish(); props.onResetRange(); setMessage('Faixa padrão restaurada. O valor foi preservado.'); }}>Resetar faixa</button>
     </div>
     {props.valuePreferenceDetails}
-    <div className="frc-feedback" role="status">{preview ? <><strong>{proposalTitle(preview)}</strong><span>{format(preview.bounds.min)} a {format(preview.bounds.max)}</span>{preview.limited && <small>Respeita o limite permitido para este campo.</small>}</> : <span>{message}</span>}</div>
+    <div className="frc-feedback" role="status">{preview ? <><strong>{proposalTitle(preview, focusWidthLabel)}</strong><span>{format(preview.bounds.min)} a {format(preview.bounds.max)}</span>{preview.limited && <small>Respeita o limite permitido para este campo.</small>}</> : <span>{message}</span>}</div>
     <p className="frc-step">Passo: {props.stepLabel}.</p>
-    <p id={helpId} className="frc-help">{spec.monetary && 'Perto do puxador, enquadra R$ 100 mil abaixo e acima do valor atual. '}Acima do valor atual, mantém o mínimo; abaixo, mantém o máximo. Fora à esquerda restaura o mínimo; fora à direita dobra o máximo. O valor atual é preservado. No teclado, use ← → para escolher o ponto, −/+ para os limites, Enter para aplicar e Esc para cancelar.</p>
+    <p id={helpId} className="frc-help">{spec.monetary && `Perto do puxador, enquadra ${focusWidthLabel} abaixo e acima do valor atual. `}Acima do valor atual, mantém o mínimo; abaixo, mantém o máximo. Fora à esquerda restaura o mínimo; fora à direita dobra o máximo. O valor atual é preservado. No teclado, use ← → para escolher o ponto, −/+ para os limites, Enter para aplicar e Esc para cancelar.</p>
   </div>;
 }
