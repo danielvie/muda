@@ -21,7 +21,7 @@ test("exports all financing and amortization-comparison inputs, including both i
     "Prazo (meses): 420", "Sistema de amortização: PRICE", "Considerar FGTS: Sim",
     "Salário mensal bruto para FGTS (R$): 6000", "Crescimento anual do salário (% a.a.): 4",
     "Uso do FGTS: Reduzir prazo", "Rentabilidade líquida estimada (% a.a.): 14",
-    "AMORTIZAR TODO MÊS OU INVESTIR ATÉ O CRUZAMENTO E AMORTIZAR",
+    "PRICE+ · AMORTIZAR TODO MÊS OU INVESTIR PARA AMORTIZAR DEPOIS",
   ]) assert.ok(text.includes(line), line);
 });
 

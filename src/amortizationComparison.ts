@@ -16,8 +16,17 @@ export type ComparisonMonth = {
   contribution: number; redemption: number; earnings: number; investment: number;
   interest: number; debt: number; fgtsApplied: number; fgtsRemaining: number;
   cashCommitted: number; fgtsUsed: number;
+  contributionRedeemed: number; earningsRedeemed: number; investmentBasis: number;
+};
+export type PayoffSummary = {
+  month: number; monthsSaved: number;
+  entry: number; payments: number; extras: number; totalInterest: number;
+  contributions: number; redemption: number; contributionRedeemed: number; earningsUsed: number;
+  cashApplied: number; fgtsUsed: number; totalPaid: number; cashCommitted: number;
+  investmentRemaining: number; contributionRemaining: number; earningsRemaining: number;
 };
 export type ComparisonStrategy = {
+  payoff: PayoffSummary | null;
   atCrossing: ComparisonMonth;
   position: number;
   payoffMonth: number | null;
@@ -28,6 +37,7 @@ export type ComparisonStrategy = {
 };
 export type AmortizationComparison =
   | { status: "no-debt" | "no-crossing" }
+  | { status: "needs-rate"; crossingMonth: number; budgets: number[]; amortize: Pick<ComparisonStrategy, "payoff"> }
   | { status: "ready"; crossingMonth: number; budgets: number[];
       amortize: ComparisonStrategy; invest: ComparisonStrategy;
       better: "amortize" | "invest" | "tie"; advantage: number };
@@ -37,8 +47,8 @@ export type AmortizationComparison =
  * Until the common date, early payoff does not make the unused budget disappear:
  * it goes into savings in either strategy. This keeps the comparison equally funded.
  */
-export function compareAmortization(state: FinancingState, includeFgts: boolean, annualInvestmentRate: number): AmortizationComparison {
-  if (parseInvestmentRate(String(annualInvestmentRate)) === null) throw new RangeError("Rentabilidade anual inválida.");
+export function compareAmortization(state: FinancingState, includeFgts: boolean, annualInvestmentRate: number | null): AmortizationComparison {
+  if (annualInvestmentRate !== null && parseInvestmentRate(String(annualInvestmentRate)) === null) throw new RangeError("Rentabilidade anual inválida.");
   const price = calculate({ ...state, method: "PRICE" }, false);
   if (price.financedAmount <= CENT_TOLERANCE) return { status: "no-debt" };
   const sac = calculate({ ...state, method: "SAC" }, false);
@@ -52,12 +62,18 @@ export function compareAmortization(state: FinancingState, includeFgts: boolean,
   const originalPrice = price.schedule[0].scheduledPayment;
   const budgets = Array.from({ length: term }, (_, index) => Math.max(originalPrice, sac.schedule[index]?.scheduledPayment ?? 0));
   const loanRate = annualToMonthlyRate(state.financingRate / 100);
-  const investmentRate = annualToMonthlyRate(annualInvestmentRate / 100);
+  // A missing return must not hide monthly amortization. Its payoff does not
+  // depend on investment growth; no common-date position is exposed in that case.
+  const investmentRate = annualToMonthlyRate((annualInvestmentRate ?? 0) / 100);
 
   function project(later: boolean): ComparisonStrategy {
     let debt = price.financedAmount;
     let installment = originalPrice;
     let investment = 0;
+    let investmentBasis = 0;
+    let payments = 0, extras = 0, contributions = 0;
+    let redeemed = 0, basisRedeemed = 0, earningsUsed = 0;
+    let payoff: PayoffSummary | null = null;
     let fgtsRemaining = 0;
     let fgtsUsed = 0;
     let cashCommitted = state.entry;
@@ -82,6 +98,10 @@ export function compareAmortization(state: FinancingState, includeFgts: boolean,
       debt = Math.max(0, debt - extra);
       const contribution = month <= crossingMonth ? Math.max(0, surplus - extra) : 0;
       investment += contribution;
+      investmentBasis += contribution;
+      payments += payment;
+      extras += extra;
+      contributions += contribution;
       const cash = payment + extra + contribution;
       cashCommitted += cash;
       let fgtsApplied = 0;
@@ -95,6 +115,14 @@ export function compareAmortization(state: FinancingState, includeFgts: boolean,
         if (state.fgtsMode === "PRESTACAO" && fgtsApplied > 0 && month < term) installment = fixedPricePayment(debt, loanRate, term - month);
       }
       const redemption = later && month === crossingMonth ? Math.min(investment, debt) : 0;
+      // Attribute a partial redemption proportionally to contributed principal
+      // and net earnings, rather than assuming either source is withdrawn first.
+      const contributionRedeemed = investment > 0 ? redemption * (investmentBasis / investment) : 0;
+      const earningsRedeemed = redemption - contributionRedeemed;
+      investmentBasis = Math.max(0, investmentBasis - contributionRedeemed);
+      redeemed += redemption;
+      basisRedeemed += contributionRedeemed;
+      earningsUsed += earningsRedeemed;
       investment -= redemption;
       debt = Math.max(0, debt - redemption);
       totalInterest += interest;
@@ -103,14 +131,23 @@ export function compareAmortization(state: FinancingState, includeFgts: boolean,
         cashUntilPayoff = cashCommitted;
         investmentAtPayoff = investment;
         debt = 0;
+        const cashApplied = state.entry + payments + extras + basisRedeemed;
+        payoff = {
+          month, monthsSaved: term - month, entry: state.entry, payments, extras, totalInterest,
+          contributions, redemption: redeemed, contributionRedeemed: basisRedeemed, earningsUsed,
+          cashApplied, fgtsUsed, totalPaid: cashApplied + fgtsUsed + earningsUsed, cashCommitted,
+          investmentRemaining: investment, contributionRemaining: investmentBasis,
+          earningsRemaining: Math.max(0, investment - investmentBasis),
+        };
       }
-      schedule.push({ month, budget, cash, payment, extra, contribution, redemption, earnings, investment, interest, debt, fgtsApplied, fgtsRemaining, cashCommitted, fgtsUsed });
+      schedule.push({ month, budget, cash, payment, extra, contribution, redemption, earnings, investment, interest, debt, fgtsApplied, fgtsRemaining, cashCommitted, fgtsUsed, contributionRedeemed, earningsRedeemed, investmentBasis });
     }
     const atCrossing = schedule[crossIndex];
-    return { atCrossing, position: atCrossing.investment + atCrossing.fgtsRemaining - atCrossing.debt,
+    return { payoff, atCrossing, position: atCrossing.investment + atCrossing.fgtsRemaining - atCrossing.debt,
       payoffMonth, cashUntilPayoff, investmentAtPayoff, totalInterest, schedule };
   }
   const amortize = project(false);
+  if (annualInvestmentRate === null) return { status: "needs-rate", crossingMonth, budgets, amortize: { payoff: amortize.payoff } };
   const invest = project(true);
   const difference = invest.position - amortize.position;
   return { status: "ready", crossingMonth, budgets, amortize, invest,

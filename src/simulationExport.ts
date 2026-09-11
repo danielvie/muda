@@ -51,7 +51,7 @@ export function formatProgramInputs(data: ProgramInputs): string {
     `Crescimento anual do salário (% a.a.): ${input(state.fgtsSalaryGrowth)}`,
     `Uso do FGTS: ${state.fgtsMode === "PRAZO" ? "Reduzir prazo" : "Reduzir prestação"}`,
     "",
-    "COMPARAÇÃO COM PRICE · AMORTIZAR TODO MÊS OU INVESTIR ATÉ O CRUZAMENTO E AMORTIZAR",
+    "PRICE+ · AMORTIZAR TODO MÊS OU INVESTIR PARA AMORTIZAR DEPOIS",
     `Rentabilidade líquida estimada (% a.a.): ${input(data.priceInvestment.annualRate)}`,
     "",
     "INVESTIR · PROJEÇÃO INDEPENDENTE",

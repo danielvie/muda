@@ -1214,7 +1214,7 @@ export default function FinancingWorkspace() {
   );
   const amortizationComparison = useMemo(() => {
     const rate = parseInvestmentRate(investmentRate);
-    return rate === null ? null : compareAmortization(state, includeFgts, rate);
+    return compareAmortization(state, includeFgts, rate);
   }, [state, includeFgts, investmentRate]);
   const result = state.method === "SAC" ? comparisonScenario.sac : comparisonScenario.price;
   const referenceResult = state.method === "SAC" ? comparisonScenario.sacReference : comparisonScenario.priceReference;

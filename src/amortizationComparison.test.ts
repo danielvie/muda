@@ -38,6 +38,8 @@ for (const fgtsMode of ["PRAZO", "PRESTACAO"] as const) {
             close(row.debt + principalPaid, input.property - input.entry);
             close(row.cashCommitted, cash);
             close(row.investment, contributions + earnings - redemptions);
+            close(row.contributionRedeemed + row.earningsRedeemed, row.redemption);
+            assert.ok(row.investmentBasis >= 0 && row.investmentBasis <= row.investment + 0.005);
             close(row.fgtsRemaining + fgtsUsed, deposits);
             close(row.cash, row.payment + row.extra + row.contribution);
             if (row.month <= result.crossingMonth) close(row.cash, result.budgets[row.month - 1]);
@@ -48,6 +50,30 @@ for (const fgtsMode of ["PRAZO", "PRESTACAO"] as const) {
           close(strategy.schedule.at(-1)!.debt, 0);
           close(strategy.position, strategy.atCrossing.investment + strategy.atCrossing.fgtsRemaining - strategy.atCrossing.debt);
           close(strategy.cashUntilPayoff!, strategy.schedule[strategy.payoffMonth! - 1].cashCommitted);
+          const payoff = strategy.payoff!;
+          assert.equal(payoff.month, strategy.payoffMonth);
+          assert.equal(payoff.monthsSaved, input.termMonths - payoff.month);
+          const paidRows = strategy.schedule.slice(0, payoff.month);
+          const sum = (field: keyof typeof paidRows[number]) => paidRows.reduce((total, row) => total + row[field], 0);
+          close(payoff.payments, sum("payment"));
+          close(payoff.extras, sum("extra"));
+          close(payoff.fgtsUsed, sum("fgtsApplied"));
+          close(payoff.totalInterest, sum("interest"));
+          close(payoff.contributions, sum("contribution"));
+          close(payoff.redemption, sum("redemption"));
+          close(payoff.contributionRedeemed, sum("contributionRedeemed"));
+          close(payoff.earningsUsed, sum("earningsRedeemed"));
+          close(payoff.cashApplied, input.entry + payoff.payments + payoff.extras + payoff.contributionRedeemed);
+          close(payoff.totalPaid, payoff.cashApplied + payoff.fgtsUsed + payoff.earningsUsed);
+          close(payoff.totalPaid, input.entry + payoff.payments + payoff.extras + payoff.fgtsUsed + payoff.redemption);
+          close(payoff.totalPaid, input.property + payoff.totalInterest);
+          close(payoff.cashCommitted, input.entry + payoff.payments + payoff.extras + payoff.contributions);
+          close(payoff.cashCommitted, payoff.cashApplied + payoff.contributionRemaining);
+          close(payoff.contributionRemaining, payoff.contributions - payoff.contributionRedeemed);
+          close(payoff.investmentRemaining, payoff.contributionRemaining + payoff.earningsRemaining);
+          close(payoff.investmentRemaining, strategy.investmentAtPayoff!);
+          close(payoff.earningsUsed + payoff.earningsRemaining, sum("earnings"));
+          close(payoff.cashCommitted, strategy.cashUntilPayoff!);
         }
         assert.deepEqual(input, before);
       });
@@ -110,4 +136,63 @@ test("zero loan rate, zero debt and invalid investment rates are explicit", () =
   assert.equal(parseInvestmentRate("0"), 0);
   assert.equal(parseInvestmentRate("14,5"), 14.5);
   for (const value of [-1, 101, NaN, Infinity]) assert.throws(() => compareAmortization(state, false, value), RangeError);
+});
+
+test("missing return exposes only the monthly payoff, identical to any valid return", () => {
+  for (const fgtsMode of ["PRAZO", "PRESTACAO"] as const) {
+    for (const fgtsSalary of [0, 20000, 1e8]) {
+      const input = { ...state, fgtsMode, fgtsSalary };
+      const result = compareAmortization(input, true, null);
+      assert.equal(result.status, "needs-rate");
+      if (result.status !== "needs-rate") return;
+      assert.deepEqual(Object.keys(result.amortize), ["payoff"]);
+      assert.ok(!("invest" in result) && !("better" in result));
+      for (const rate of [0, 14, 100]) {
+        assert.deepEqual(result.amortize.payoff, ready(input, true, rate).amortize.payoff);
+      }
+    }
+  }
+  assert.deepEqual(compareAmortization({ ...state, entry: state.property }, true, null), { status: "no-debt" });
+});
+
+test("partial redemption of investment attributes principal and earnings proportionally and excludes the leftover", () => {
+  const result = ready(state, false, 100);
+  const strategy = result.invest;
+  const row = strategy.atCrossing;
+  const paidRows = strategy.schedule.slice(0, row.month);
+  const contributions = paidRows.reduce((sum, month) => sum + month.contribution, 0);
+  const earnings = paidRows.reduce((sum, month) => sum + month.earnings, 0);
+  assert.ok(row.investment > 0 && row.redemption > 0);
+  close(row.contributionRedeemed, row.redemption * contributions / (contributions + earnings));
+  close(row.earningsRedeemed, row.redemption * earnings / (contributions + earnings));
+  close(strategy.payoff!.cashApplied, strategy.payoff!.cashCommitted - row.investmentBasis);
+  assert.ok(strategy.payoff!.cashApplied < strategy.payoff!.cashCommitted);
+  assert.ok(strategy.payoff!.earningsRemaining > 0);
+  assert.ok(strategy.payoff!.investmentRemaining < strategy.schedule.at(-1)!.investment);
+});
+
+test("full redemption and zero return never count the investment contributions twice", () => {
+  for (const rate of [0, 14]) {
+    const payoff = ready(state, false, rate).invest.payoff!;
+    close(payoff.investmentRemaining, 0);
+    close(payoff.contributionRedeemed, payoff.contributions);
+    close(payoff.cashApplied, payoff.cashCommitted);
+    if (rate === 0) close(payoff.earningsUsed, 0);
+    else assert.ok(payoff.earningsUsed > 0);
+  }
+});
+
+test("FGTS payoff before crossing freezes acquisition totals before later savings and fund deposits", () => {
+  const input = { ...state, fgtsSalary: 1e8, fgtsSalaryGrowth: 0 };
+  const result = ready(input, true, 100);
+  for (const strategy of [result.amortize, result.invest]) {
+    const payoff = strategy.payoff!;
+    assert.ok(payoff.month < result.crossingMonth);
+    assert.ok(payoff.cashCommitted < strategy.atCrossing.cashCommitted);
+    close(payoff.earningsUsed, 0);
+    close(payoff.redemption, 0);
+    close(payoff.totalPaid, input.property + payoff.totalInterest);
+    close(payoff.fgtsUsed, strategy.schedule[payoff.month - 1].fgtsUsed);
+    assert.ok(strategy.atCrossing.fgtsRemaining > payoff.fgtsUsed);
+  }
 });

@@ -79,7 +79,7 @@ O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. A Entrada contin
 
 ## Comparação atual
 
-O painel único Amortizar agora ou investir para amortizar depois reúne duas estratégias abertas, com o mesmo orçamento e avaliação no cruzamento das curvas originais. A conclusão considera investimento, dívida e FGTS remanescente na mesma data. SAC e PRICE seguem como referências separadas. A regra completa, a memória de salário com ocultação visual e a exportação somente de premissas estão em [amortizationComparison.md](../amortizationComparison.md).
+O painel PRICE+ reúne duas estratégias abertas, amortizar todo mês e investir para amortizar depois. O destaque mostra dinheiro do bolso aplicado no apartamento, FGTS utilizado, total do bolso + FGTS e tempo para quitar, todos até a quitação de cada estratégia. O resumo compara essa soma entre estratégias. Rendimentos usados e total pago incluindo rendimentos ficam em Entender os valores. Aportes e rendimentos que permanecem investidos não contam como gasto. A conclusão patrimonial no cruzamento das curvas originais fica nos detalhes, assim como a composição dos totais. A taxa de investimento não bloqueia o resultado de amortizar mensalmente. SAC e PRICE seguem como referências separadas. A regra completa, a memória de salário com ocultação visual e a exportação somente de premissas estão em [amortizationComparison.md](../amortizationComparison.md).
 
 ## Histórico anterior à comparação no cruzamento
 

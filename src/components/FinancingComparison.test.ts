@@ -8,7 +8,7 @@ import ts from "typescript";
 import { comparisonFixture } from "./FinancingComparison.fixture.ts";
 import { brl } from "../format.ts";
 import { calculateSacPriceScenario } from "../financingProjection.ts";
-import { compareAmortization } from "../amortizationComparison.ts";
+import { compareAmortization, parseInvestmentRate } from "../amortizationComparison.ts";
 import type { FinancingComparisonProps } from "./FinancingComparison.tsx";
 
 const hooks = registerHooks({
@@ -25,7 +25,9 @@ const hooks = registerHooks({
 const { default: FinancingComparison } = await import("./FinancingComparison.tsx");
 hooks.deregister();
 function render(patch: Partial<FinancingComparisonProps> = {}) {
-  return renderToStaticMarkup(createElement(FinancingComparison, { ...comparisonFixture, ...patch }));
+  const props = { ...comparisonFixture, ...patch };
+  if (!("amortizationComparison" in patch)) props.amortizationComparison = compareAmortization(props.state, props.includeFgts, parseInvestmentRate(props.investmentRate));
+  return renderToStaticMarkup(createElement(FinancingComparison, props));
 }
 function cards(html: string) {
   return [...html.matchAll(/<article class="comparison-strategy[^"\n]*"[^>]*>(.*?)<\/article>/gs)].map(match => match[1]);
@@ -37,16 +39,23 @@ test("one merged decision panel contains both open strategies, with SAC and PRIC
   const panels = cards(html);
   assert.equal(panels.length, 4);
   assert.deepEqual(panels.map(card => card.match(/<h4[^>]*>(.*?)<\/h4>/)![1]), [
-    "SAC", "PRICE", "Amortizar todo mês", "Investir até o cruzamento e amortizar",
+    "SAC", "PRICE", "Amortizar todo mês", "Investir para amortizar depois",
   ]);
   assert.doesNotMatch(html, /comparison-payoff-summary|comparison-selector|Quitar quando o investimento cobrir|PRICE \+ diferença|Rendimento acumulado ≥ saldo devedor/);
   assert.equal((html.match(/type="checkbox"/g) ?? []).length, 1);
   assert.equal((html.match(/placeholder="Informe a taxa anual"/g) ?? []).length, 1);
 });
 
-test("a missing or invalid rate does not invent a winner, zero is a valid comparison", () => {
-  assert.match(render(), /Informe a rentabilidade para comparar as duas estratégias/);
+test("a missing or invalid rate keeps monthly payoff visible, without inventing investment results", () => {
+  const missing = render();
+  assert.match(cards(missing)[2], /Saiu do seu bolso/);
+  assert.match(cards(missing)[2], /Tempo para quitar/);
+  assert.match(cards(missing)[3], /Informe a rentabilidade abaixo/);
+  assert.doesNotMatch(cards(missing)[3], /Saiu do seu bolso/);
+  assert.doesNotMatch(missing, /deixa a posição financeira|menos do bolso \+ FGTS/);
   const invalid = render({ investmentRate: "-1" });
+  assert.match(cards(invalid)[2], /Tempo para quitar/);
+  assert.doesNotMatch(cards(invalid)[3], /Saiu do seu bolso/);
   assert.match(invalid, /aria-invalid="true"/);
   assert.match(invalid, /Informe uma taxa anual entre 0% e 100%/);
   const state = { ...comparisonFixture.state, financingRate: 11 };
@@ -62,16 +71,16 @@ test("14% investing vs 11% debt shows partial amortization and the position adva
   if (comparison.status !== "ready") return;
   const html = render({ state, scenario: calculateSacPriceScenario(state, false), investmentRate: "14", includeFgts: false, amortizationComparison: comparison });
   assert.match(html, /Comparação no mês 105 · 8 anos e 9 meses/);
-  assert.match(html, /Investir até o cruzamento e amortizar<\/strong> deixa/);
+  assert.match(html, /Investir para amortizar depois<\/strong> deixa/);
   assert.ok(html.includes(brl(comparison.advantage)));
   assert.match(html, /A dívida não foi quitada; as prestações continuam/);
   assert.match(html, /Um desembolso igual não significa empate/);
   const values = cards(html).slice(2).map(card => [...card.matchAll(/<dd>([^<]*)/g)].map(m => m[1]));
-  assert.equal(values[0][0], values[1][0]);
-  assert.equal(values[0][1], brl(comparison.amortize.atCrossing.debt));
-  assert.equal(values[1][1], brl(comparison.invest.atCrossing.debt));
-  assert.equal(values[1][4], brl(comparison.invest.atCrossing.fgtsUsed));
-  assert.equal(values[1][5], brl(comparison.invest.atCrossing.fgtsRemaining));
+  assert.equal(values[0][0], brl(comparison.amortize.payoff!.cashApplied));
+  assert.equal(values[1][0], brl(comparison.invest.payoff!.cashApplied));
+  assert.equal(values[1][1], brl(comparison.invest.payoff!.fgtsUsed));
+  assert.equal(values[1][2], brl(comparison.invest.payoff!.cashApplied + comparison.invest.payoff!.fgtsUsed));
+  assert.notEqual(values[0][0], brl(comparison.amortize.atCrossing.cashCommitted));
 });
 
 test("no debt, absent crossing and a genuine financial tie have explicit labels", () => {
@@ -149,6 +158,86 @@ test("reference details start collapsed and preserve model limitations", () => {
   assert.match(html, /não uma carência obrigatória/);
   assert.match(html, /curvas originais sem FGTS/);
   assert.match(html, /Não representa as estratégias de amortizar mensalmente/);
+});
+
+test("PRICE+ shows payoff totals before inputs and keeps crossing and composition collapsed", () => {
+  const comparison = compareAmortization(comparisonFixture.state, true, 14);
+  const html = render({ investmentRate: "14", amortizationComparison: comparison });
+  const panel = html.slice(html.indexOf('<section class="amortization-comparison"'));
+  const overview = panel.slice(0, panel.indexOf('<details'));
+  assert.match(overview, /<h3[^>]*>PRICE\+<\/h3>/);
+  assert.match(overview, /Projeção até a quitação de cada estratégia/);
+  assert.match(overview, /Não é um histórico/);
+  assert.match(overview, /Estimativa sem TR, seguros, tarifas e custos de compra e posse/);
+  assert.ok(overview.indexOf("Tempo para quitar") < overview.indexOf('placeholder="Informe a taxa anual"'));
+  assert.doesNotMatch(overview, /Dívida após as amortizações|FGTS remanescente|Posição financeira|Comparação no mês \d/);
+  assert.match(panel, /<summary>Entender os valores<\/summary>/);
+  assert.match(panel, /<summary>Comparação no mês da amortização<\/summary>/);
+  assert.doesNotMatch(panel, /<details[^>]*\bopen\b/);
+  assert.match(panel, /dividido proporcionalmente entre aportes e rendimentos/);
+  assert.match(panel, /antes do prazo contratado/);
+  for (const card of cards(html).slice(2)) {
+    assert.doesNotMatch(card, /<details/);
+    const labels = [...card.matchAll(/<dt>([^<]*)/g)].map(m => m[1]);
+    assert.deepEqual(labels, ["Saiu do seu bolso", "FGTS utilizado", "Total do bolso + FGTS", "Tempo para quitar"]);
+  }
+});
+
+test("investment surplus stays outside apartment cost and no-payoff does not fabricate totals", () => {
+  const comparison = compareAmortization(comparisonFixture.state, false, 100);
+  assert.equal(comparison.status, "ready");
+  if (comparison.status !== "ready") return;
+  const html = render({ investmentRate: "100", amortizationComparison: comparison });
+  const card = cards(html)[3];
+  assert.match(card, /Sobra investida ao quitar/);
+  assert.ok(card.includes(brl(comparison.invest.payoff!.investmentRemaining)));
+  assert.match(card, /Não entra no total do bolso \+ FGTS/);
+  const noPayoff = render({ investmentRate: "100", amortizationComparison: { ...comparison, invest: { ...comparison.invest, payoff: null, payoffMonth: null } } });
+  assert.match(cards(noPayoff)[3], /Quitação não ocorre no prazo simulado/);
+  assert.doesNotMatch(cards(noPayoff)[3], /Total do bolso \+ FGTS/);
+  assert.doesNotMatch(noPayoff, /aria-label="Diferenças até quitar"/);
+});
+
+test("PRICE+ highlights cash plus FGTS and preserves the earnings-inclusive total only in details", () => {
+  const state = { ...comparisonFixture.state, property: 800000, entry: 120000, financingRate: 10, termMonths: 420, fgtsSalary: 30000, fgtsSalaryGrowth: 3, fgtsMode: "PRAZO" as const };
+  const html = render({ state, investmentRate: "14", includeFgts: true });
+  const panel = html.slice(html.indexOf('<section class="amortization-comparison"'));
+  const overview = panel.slice(0, panel.indexOf('<details'));
+  const totals = cards(html).slice(2).map(card => card.match(/<dt>Total do bolso \+ FGTS<\/dt><dd>([^<]*)/)![1]);
+  assert.deepEqual(totals, [brl(1198582.91), brl(1157165.42)]);
+  assert.match(overview, /Investir para amortizar depois<\/strong> usa/);
+  assert.ok(overview.includes(brl(41417.49)));
+  assert.match(overview, /menos do bolso \+ FGTS/);
+  assert.doesNotMatch(overview, /Rendimentos usados no pagamento|Total pago incluindo rendimentos|As duas usam o mesmo/);
+  assert.ok(!overview.includes(brl(1261254.71)));
+  assert.ok(!overview.includes(brl(104089.29)));
+  assert.match(panel, /<dt>Total pago incluindo rendimentos<\/dt>/);
+  assert.ok(panel.includes(brl(1261254.71)));
+  assert.ok(panel.includes(brl(104089.29)));
+  assert.match(overview, /As duas quitam no mesmo mês/);
+});
+
+test("cash plus FGTS summary handles both FGTS modes, zero return, no FGTS and investment leftovers", () => {
+  for (const fgtsMode of ["PRAZO", "PRESTACAO"] as const) {
+    for (const includeFgts of [false, true]) {
+      for (const rate of [0, 14, 100]) {
+        const state = { ...comparisonFixture.state, fgtsMode };
+        const comparison = compareAmortization(state, includeFgts, rate);
+        assert.equal(comparison.status, "ready");
+        if (comparison.status !== "ready") continue;
+        const html = render({ state, includeFgts, investmentRate: String(rate), amortizationComparison: comparison });
+        cards(html).slice(2).forEach((card, i) => {
+          const payoff = [comparison.amortize, comparison.invest][i].payoff!;
+          const total = card.match(/<dt>Total do bolso \+ FGTS<\/dt><dd>([^<]*)/)![1];
+          assert.equal(total, brl(payoff.cashApplied + payoff.fgtsUsed));
+          assert.ok(Math.abs(payoff.totalPaid - payoff.earningsUsed - payoff.cashApplied - payoff.fgtsUsed) < 0.005);
+          if (!includeFgts) assert.equal(total, brl(payoff.cashApplied));
+        });
+      }
+    }
+  }
+  const html = render({ state: { ...comparisonFixture.state, financingRate: 0 }, investmentRate: "14", includeFgts: false });
+  assert.match(html, /As duas usam o mesmo total do bolso \+ FGTS/);
 });
 
 test("annual reference columns retain SAC then PRICE values, and missing years are not zeroed", () => {

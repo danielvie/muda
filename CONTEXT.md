@@ -148,6 +148,30 @@ _Avoid_: Guaranteed raise, investment return
 
 ### Financing payoff choices
 
+**PRICE+**:
+The comparison of monthly extra amortization with investing the surplus and amortizing later, both using PRICE financing. Its primary questions are how much each funding source pays toward the apartment and how long each strategy takes to pay off the debt.
+_Avoid_: Banking amortization method, PRICE + diferença
+
+**Do bolso aplicado no apartamento**:
+The household's own cash used for the Entrada, Prestação and Amortização extraordinária through payoff, including contributed principal redeemed from investments. It excludes FGTS, investment earnings and contributions that remain invested.
+_Avoid_: Desembolso bruto, todos os aportes, custo líquido
+
+**Rendimentos usados no pagamento**:
+The part of redeemed net investment earnings applied to the apartment debt through payoff. It excludes both the contributed principal and earnings that remain invested.
+_Avoid_: Rendimento acumulado, resgate total
+
+**Total do bolso + FGTS**:
+The household cash applied to the apartment plus FGTS actually used through payoff. It excludes redeemed investment earnings, unused FGTS and money that remains invested.
+_Avoid_: Total pago incluindo rendimentos, custo completo de ter o apartamento
+
+**Total pago incluindo rendimentos**:
+The nominal amount paid toward acquisition through payoff, including Entrada, Prestação and Amortização extraordinária funded by household cash, FGTS and redeemed investment earnings. It excludes unused investments and FGTS, purchase fees, indexation, insurance and ownership costs not modeled in PRICE+.
+_Avoid_: Valor do imóvel, custo completo de ter o apartamento, desembolso do bolso
+
+**Tempo para quitar**:
+The projected number of months from the start of the financing through the month that clears its debt. It is not necessarily the original Prazo or the common amortization date.
+_Avoid_: Tempo já pago, data do cruzamento
+
 **Desembolso do bolso até quitar**:
 The gross cash committed by the household from Entrada through a scenario's payoff, including scheduled payments and extra amortization or investment contributions. It excludes FGTS and investment earnings and does not count redemption as another cash contribution.
 _Avoid_: Total gasto, juros totais, custo líquido
@@ -157,7 +181,7 @@ The invested balance remaining immediately after a scenario's debt is paid off. 
 _Avoid_: Saldo no fim do horizonte, desconto no desembolso
 
 **Comparação de amortização**:
-The comparison of amortizing monthly versus investing and amortizing the accumulated balance at the original SAC/PRICE crossing, with equal monthly budgets and the same evaluation date. The result compares remaining investment and FGTS minus outstanding debt; payoff time and cash committed through payoff are complementary measures.
+The comparison of amortizing monthly versus investing and amortizing the accumulated balance at the original SAC/PRICE crossing, with equal monthly budgets and the same evaluation date. This patrimonial comparison complements PRICE+ acquisition totals and payoff times, which are measured at each strategy's own payoff date.
 _Avoid_: Empate apenas por desembolso igual, melhor investimento garantido
 
 **Data comum de amortização**:

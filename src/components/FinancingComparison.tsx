@@ -41,7 +41,7 @@ export default function FinancingComparison({
     <header>
       <p className="comparison-eyebrow">FINANCIAMENTO · ESTRATÉGIAS</p>
       <h2 id="financing-comparison-title">Como usar o dinheiro extra?</h2>
-      <p className="comparison-intro">Configure o FGTS, consulte SAC e PRICE e depois compare amortizar com investir.</p>
+      <p className="comparison-intro">Configure o FGTS, consulte SAC e PRICE e veja custo e prazo no PRICE+.</p>
     </header>
     <div className="comparison-controls">
       <label className="comparison-toggle"><span>Considerar FGTS</span><input type="checkbox" checked={includeFgts} onChange={event => onIncludeFgtsChange(event.currentTarget.checked)} /></label>
@@ -99,6 +99,6 @@ export default function FinancingComparison({
       </div>
     </details>
     {showFgtsDetails && <FgtsEvolution comparison={fgtsComparison} />}
-    <AmortizationComparisonPanel comparison={amortizationComparison} investmentRate={investmentRate} storageError={investmentRateStorageError} onRateChange={onInvestmentRateChange} />
+    <AmortizationComparisonPanel comparison={amortizationComparison} includeFgts={includeFgts} investmentRate={investmentRate} storageError={investmentRateStorageError} onRateChange={onInvestmentRateChange} />
   </section>;
 }

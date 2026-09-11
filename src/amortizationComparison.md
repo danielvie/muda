@@ -1,8 +1,10 @@
-# Amortizar agora ou investir até o cruzamento
+# PRICE+
 
 ## Objetivo
 
-Comparar duas destinações do mesmo orçamento no mesmo mês: amortizar mensalmente ou investir e amortizar o acumulado depois. Desembolso igual não é empate financeiro se a dívida, o investimento ou o FGTS remanescente forem diferentes.
+Responder quanto do apartamento é pago do bolso e com FGTS, qual o total dessas duas fontes e quanto tempo leva para quitar. Rendimentos usados e o total pago incluindo rendimentos ficam nos detalhes. O resumo apresenta projeções até a quitação de cada estratégia, incluindo a entrada, não um histórico de pagamentos reais.
+
+As estratégias continuam sendo amortizar mensalmente ou investir a sobra e amortizar o acumulado no cruzamento. A comparação patrimonial na mesma data permanece nos detalhes. Desembolso igual não é empate financeiro se a dívida, o investimento ou o FGTS remanescente forem diferentes.
 
 ## Data e orçamento comuns
 
@@ -38,13 +40,33 @@ Todos os extras e o resgate reduzem prazo. Somente FGTS no modo reduzir prestaç
 
 O retorno informado é efetivo anual líquido, entre 0% e 100%, convertido para taxa mensal equivalente. Não há tributação adicional, TR, seguros, tarifas, rendimento do FGTS ou garantia da rentabilidade futura.
 
+## Totais até quitar
+
+O resumo `payoff` é registrado uma única vez, no primeiro mês de dívida zerada. Os campos posteriores do cronograma não alteram esse resumo. Sem quitação, o resumo fica nulo; sem dívida inicial, a interface informa que não há dívida, sem inventar um financiamento.
+
+- Do bolso aplicado no apartamento = entrada + prestações + extras em dinheiro + principal dos aportes usado no resgate.
+- FGTS utilizado = somente o fundo aplicado à dívida até quitar.
+- Rendimentos usados no pagamento = somente a parte dos rendimentos resgatada para amortizar a dívida.
+- Total do bolso + FGTS = do bolso aplicado + FGTS utilizado. É o total principal e a base da diferença de recursos entre as estratégias, sem rendimentos nem sobras investidas.
+- Total pago incluindo rendimentos, nos detalhes = do bolso aplicado + FGTS utilizado + rendimentos usados. Também equivale a entrada + prestações + extras + FGTS + resgate, ou valor do imóvel + juros totais no modelo atual.
+- Desembolso do bolso, nos detalhes = entrada + prestações + extras + todos os aportes até quitar. Não soma o resgate novamente.
+- Sobra investida ao quitar = principal dos aportes remanescente + rendimentos remanescentes. Fica fora do total pago e não inclui crescimento posterior à quitação.
+
+Um resgate parcial é atribuído proporcionalmente ao principal dos aportes e aos rendimentos presentes no saldo imediatamente antes do resgate. A simulação não presume que um deles sai primeiro. Isso é uma regra de atribuição, não uma regra tributária. Exemplo: um saldo com R$ 100 em aportes e R$ 20 em rendimentos, ao resgatar R$ 60, aplica R$ 50 do bolso e R$ 10 de rendimentos; os R$ 60 restantes não entram no gasto.
+
+Tempo para quitar usa o mês da quitação. A antecipação compara esse mês ao prazo original contratado. Valores são nominais em datas possivelmente diferentes, sem desconto de inflação. As diferenças de total do bolso + FGTS e prazo não elegem um vencedor patrimonial.
+
+Taxa ausente ou inválida mantém o resumo de amortizar todo mês disponível, pois esse resultado independe da rentabilidade. O estado `needs-rate` não expõe resultado de investimento nem conclusão na data comum. Zero é uma taxa válida, não um substituto apresentado para taxa ausente.
+
 ## Conclusão financeira
 
 Na data comum, a posição comparada é `saldo investido + FGTS remanescente − saldo devedor`. O imóvel tem o mesmo valor e o orçamento desembolsado é igual nas duas estratégias. O FGTS remanescente conta como patrimônio, mas não como dinheiro livre para resgate imediato.
 
-O painel mostra desembolso até a data, dívida após amortizações, saldo investido, falta para quitar usando esse saldo e FGTS utilizado e remanescente. A conclusão fica no mesmo painel que as duas estratégias abertas. Quitação prevista, desembolso até quitar e saldo investido na quitação são informações complementares recolhidas, não o critério de vitória.
+O PRICE+ mostra primeiro as duas estratégias abertas, com os indicadores nesta ordem: saiu do seu bolso, FGTS utilizado, total do bolso + FGTS e tempo para quitar. A sobra investida aparece separadamente quando existir. As estratégias ficam lado a lado quando o painel tem espaço, empilhadas em telas estreitas. Abaixo ficam as diferenças de total do bolso + FGTS e prazo, orçamento inicial, estado do FGTS e taxa de investimento editável. O aviso de custos excluídos permanece visível.
 
-A ordem dos painéis é SAC, PRICE e, ao final, o painel mesclado de amortizar ou investir. SAC e PRICE permanecem como referências separadas, abertas e empilhadas. Sua tabela anual não representa as duas estratégias novas. Saíram o resumo independente, o checkbox de quitação por cobertura e o indicador de rendimento sozinho cobrindo a dívida.
+Entender os valores reúne a composição dos totais, os rendimentos usados e o total pago incluindo rendimentos, recolhidos inicialmente. Comparação no mês da amortização reúne o cruzamento, desembolso bruto na data, dívida, investimentos, FGTS e a conclusão patrimonial, também recolhida. Regras das estratégias preserva as hipóteses de orçamento e a ordem dos eventos.
+
+A ordem dos painéis é SAC, PRICE e, ao final, PRICE+. SAC e PRICE permanecem como referências separadas, abertas e empilhadas. Sua tabela anual não representa as duas estratégias do PRICE+.
 
 ## Memória e exportação
 
@@ -59,6 +81,6 @@ A ordem dos painéis é SAC, PRICE e, ao final, o painel mesclado de amortizar o
 
 `amortizationComparison.ts` calcula orçamento, cronogramas e resultado; `AmortizationComparisonPanel.tsx` apenas apresenta os dados. `FinancingComparison.tsx` reúne FGTS, o painel mesclado e as referências. As projeções originais de SAC e PRICE não são mutadas.
 
-Os testes cobrem orçamento e data comuns, dois modos FGTS, igualdade de taxas, investimento mais ou menos rentável, taxa zero, ausência de dívida, amortização parcial, sobra após resgate, quitação antecipada por FGTS e conservação de principal, caixa, investimento e FGTS em todos os meses. Também verificam memória, privacidade visual, exportação de entradas e a organização do painel.
+Os testes cobrem orçamento e data comuns, dois modos FGTS, igualdade de taxas, investimento mais ou menos rentável, taxa zero, ausência de dívida, amortização parcial, sobra após resgate, quitação antecipada por FGTS e conservação de principal, caixa, investimento e FGTS em todos os meses. O resumo PRICE+ tem verificações de composição das fontes, entrada única, resgate proporcional, aportes não duplicados, sobra excluída e congelamento dos totais na quitação. Também há cobertura de taxa ausente sem bloquear amortização mensal, ausência de quitação e hierarquia de resultados visíveis antes da taxa e dos detalhes. Também verificam memória, privacidade visual, exportação de entradas e a organização do painel.
 
-Na entrega do painel mesclado, a suíte aprovou 164 testes; TypeScript, build e verificação de whitespace passaram. A tentativa de inspeção visual pelo Chrome MCP foi bloqueada pelo perfil de navegador já em uso. A renderização responsiva dessa versão ainda requer conferência visual no navegador.
+A suíte aprova 173 testes, incluindo o caso de imóvel de R$ 800 mil, entrada de R$ 120 mil, dívida a 10% e investimento a 14%, com FGTS de salário de R$ 30 mil e crescimento de 3%. Nesse caso, os destaques são R$ 1.198.582,91 e R$ 1.157.165,42; os R$ 1.261.254,71 incluindo rendimentos aparecem apenas nos detalhes. O teste também confere a diferença de R$ 41.417,49 no resumo. Na validação do PRICE+, TypeScript, build e verificação de whitespace passaram. A inspeção no Chrome conferiu larguras de 320, 390, 768 e 1440 px, sem transbordamento horizontal do painel, inclusive com os detalhes abertos. Conferiu também taxa zero, inválida, apagada pelo teclado, sobra investida com retorno alto, restauração de taxa com vírgula após recarregar e troca do modo de FGTS. Não houve erros ou avisos no console.

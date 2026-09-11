@@ -41,7 +41,28 @@
 .comparison-salary-input { gap:2px; padding-right:4px; }
 .comparison-salary-input > span { margin-right:4px; }
 .financing-comparison .comparison-note { font-size: 12px; line-height: 1.5; color: var(--lp-muted); }
-.amortization-comparison { display:grid; gap:18px; min-width:0; padding:16px; border:1px solid var(--lp-accent); border-radius:12px; }
+.amortization-comparison { display:grid; gap:18px; min-width:0; padding:16px; border:1px solid var(--lp-accent); border-radius:12px; container-type:inline-size; container-name:price-plus; }
+.financing-comparison .amortization-comparison h3 { font-size:24px; letter-spacing:-.03em; }
+.amortization-comparison > header { display:grid; gap:6px; }
+.amortization-comparison > header .comparison-intro { margin-top:0; font-size:14px; color:var(--lp-ink); }
+.price-plus-strategies { align-items:start; }
+.price-plus-strategy { align-content:start; }
+.price-plus-strategy .price-plus-totals { grid-template-columns:minmax(0,1fr); gap:14px; }
+.amortization-comparison .price-plus-strategy .price-plus-totals > div { border:0; padding:0; }
+.price-plus-strategy .price-plus-totals dt { font-size:12px; }
+.price-plus-strategy .price-plus-totals dd { font-size:20px; }
+.amortization-comparison .price-plus-strategy .price-plus-totals .comparison-total,
+.amortization-comparison .price-plus-strategy .price-plus-totals .price-plus-payoff { border-top:1px solid var(--lp-line); padding-top:14px; }
+.amortization-comparison .price-plus-strategy .comparison-total dd { color:var(--lp-accent); font-size:22px; }
+.price-plus-leftover { border-top:1px solid var(--lp-line); padding-top:12px; }
+.price-plus-assumptions { display:grid; gap:12px; padding:14px; border-radius:8px; background:color-mix(in srgb,var(--lp-accent) 5%,var(--lp-paper)); }
+.price-plus-assumptions .comparison-investment-input { gap:6px; }
+.price-plus-differences { display:grid; gap:6px; }
+.price-plus-detail-columns { display:grid; gap:24px; min-width:0; }
+@container price-plus (min-width: 560px) {
+  .amortization-comparison .price-plus-strategies, .price-plus-detail-columns { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .price-plus-strategy > header { min-height:76px; }
+}
 .comparison-references { display:grid; gap:14px; min-width:0; }
 .comparison-common-date, .comparison-conclusion { padding:14px; border-radius:8px; background:color-mix(in srgb,var(--lp-accent) 6%,var(--lp-paper)); font-size:13px; line-height:1.5; }
 .comparison-conclusion { display:grid; gap:10px; }
