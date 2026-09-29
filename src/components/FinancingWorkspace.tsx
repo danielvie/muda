@@ -17,6 +17,7 @@ import { readRangePreferences, resolveRangePreferences, saveRangePreference, res
 import InvestmentProjection from "./InvestmentProjection.tsx";
 import { readEnvironmentPreference, saveEnvironmentPreference, type Environment } from "../environmentPreference.ts";
 import { readValuePreferences, resolveValuePreferences, saveValuePreference, removeValuePreference, type ValuePreferences, type ValuePreferenceResult } from "../financingValuePreferences.ts";
+import { readFinancingMethod, saveFinancingMethod } from "../financingMethodPreference.ts";
 import FinancingComparison, { type FinancingComparisonScenario } from "./FinancingComparison.tsx";
 import { compareAmortization, parseInvestmentRate, type AmortizationComparison } from "../amortizationComparison.ts";
 import { readInvestmentRate, saveInvestmentRate } from "../investmentRatePreference.ts";
@@ -66,6 +67,7 @@ type LayoutProps = {
   onClearFgtsSalary: () => boolean;
   fgtsMemoryFeedback: { ok: boolean; message: string } | null;
   valuePreferences: ValuePreferences;
+  methodMemoryError: string | null;
   onSaveValuePreference: (field: FinancingField) => ValuePreferenceResult;
   onRemoveValuePreference: (field: FinancingField) => ValuePreferenceResult;
   rangePreferences: RangePreferences;
@@ -1194,7 +1196,11 @@ export default function FinancingWorkspace() {
   };
   const [valuePreferences, setValuePreferences] = useState<ValuePreferences>(readValuePreferences);
   const [initialFgtsPreferences] = useState(readFgtsPreferences);
-  const [state, setState] = useState<FinancingState>(() => ({ ...resolveValuePreferences(valuePreferences), ...initialFgtsPreferences }));
+  const [state, setState] = useState<FinancingState>(() => ({ ...resolveValuePreferences(valuePreferences), ...initialFgtsPreferences, method: readFinancingMethod() }));
+  const [methodMemoryError, setMethodMemoryError] = useState<string | null>(null);
+  const rememberMethod = useCallback((method: FinancingState["method"]) => {
+    setMethodMemoryError(saveFinancingMethod(method) ? null : "Não foi possível salvar o sistema de amortização neste navegador.");
+  }, []);
   const [salaryHidden, setSalaryHidden] = useState(() => (initialFgtsPreferences.fgtsSalary ?? 0) > 0);
   const [fgtsMemoryFeedback, setFgtsMemoryFeedback] = useState<{ ok: boolean; message: string } | null>(null);
   const [studies, setStudies] = useState<Study[]>(readSavedStudies);
@@ -1237,6 +1243,7 @@ export default function FinancingWorkspace() {
   );
   const update = useCallback((patch: Partial<FinancingState>) => {
     setState(previous => updateFinancing(previous, patch, false));
+    if (patch.method === "SAC" || patch.method === "PRICE") rememberMethod(patch.method);
     const preferences: FgtsPreferences = {};
     for (const field of ["fgtsSalary", "fgtsSalaryGrowth"] as const) {
       const value = patch[field];
@@ -1246,7 +1253,7 @@ export default function FinancingWorkspace() {
       const result = saveFgtsPreferences(preferences);
       setFgtsMemoryFeedback({ ok: result.ok, message: result.ok ? "Memória do FGTS atualizada neste navegador." : result.error });
     }
-  }, []);
+  }, [rememberMethod]);
   const onClearFgtsSalary = () => {
     const result = clearSavedFgtsSalary();
     if (result.ok) {
@@ -1305,6 +1312,7 @@ export default function FinancingWorkspace() {
       if (study) {
         setSalaryHidden((study.state.fgtsSalary ?? 0) > 0);
         setFgtsMemoryFeedback(null);
+        rememberMethod(study.state.method);
         setState(updateFinancing({
           ...study.state,
           fgtsSalary: study.state.fgtsSalary ?? 0,
@@ -1313,7 +1321,7 @@ export default function FinancingWorkspace() {
         }, {}, false));
       }
     },
-    [studies],
+    [studies, rememberMethod],
   );
   const removeStudy = useCallback(
     (id: number) =>
@@ -1339,6 +1347,7 @@ export default function FinancingWorkspace() {
       financeVsInvest: financeVsInvestFields,
     },
     valuePreferences,
+    methodMemoryError,
     onSaveValuePreference,
     onRemoveValuePreference,
     rangePreferences,

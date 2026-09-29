@@ -7,9 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "check": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types src/fgtsSchedule.test.ts src/financingControls.test.ts src/financingGesture.test.ts src/financingRangeDrop.test.ts src/financingRangePreferences.test.ts src/financingProjection.test.ts src/amortizationComparison.test.ts src/investmentRatePreference.test.ts src/fgtsPreferences.test.ts src/financeVsInvestPreferences.test.ts src/financingDetails.test.ts src/financingValuePreferences.test.ts src/simulationExport.test.ts src/components/FinancingComparison.test.ts src/components/FinancingRangeActions.test.ts src/investmentControls.test.ts src/investmentPreferences.test.ts src/environmentPreference.test.ts src/components/InvestmentProjection.test.ts",
+    "test": "node --test --experimental-strip-types src/fgtsSchedule.test.ts src/financingControls.test.ts src/financingGesture.test.ts src/financingRangeDrop.test.ts src/financingRangePreferences.test.ts src/financingProjection.test.ts src/amortizationComparison.test.ts src/investmentRatePreference.test.ts src/fgtsPreferences.test.ts src/financeVsInvestPreferences.test.ts src/financingDetails.test.ts src/financingValuePreferences.test.ts src/financingMethodPreference.test.ts src/simulationExport.test.ts src/components/FinancingComparison.test.ts src/components/FinancingRangeActions.test.ts src/investmentControls.test.ts src/investmentPreferences.test.ts src/environmentPreference.test.ts src/components/InvestmentProjection.test.ts",
     "test:comparison": "node --test --experimental-strip-types src/components/FinancingComparison.test.ts",
-    "test:financing": "node --test src/financingControls.test.ts src/financingGesture.test.ts src/financingRangeDrop.test.ts src/financingRangePreferences.test.ts src/financingProjection.test.ts src/financingValuePreferences.test.ts",
+    "test:financing": "node --test src/financingControls.test.ts src/financingGesture.test.ts src/financingRangeDrop.test.ts src/financingRangePreferences.test.ts src/financingProjection.test.ts src/financingValuePreferences.test.ts src/financingMethodPreference.test.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

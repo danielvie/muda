@@ -75,7 +75,9 @@ Salvar padrão salva somente o valor confirmado do campo selecionado. Não salva
 
 O painel principal, os detalhes, os estudos e a comparação usam a mesma largura do contêiner da workspace, limitada a 680 px. O painel principal não tem um limite próprio menor no desktop. As bordas foram conferidas no navegador em 320, 390, 700 e 1280 px.
 
-O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. A Entrada continua manual; o selo de 20% é uma ação explícita e não altera a regra de edição dos campos. Estudos existentes, os dois modos de FGTS e as faixas temporárias são preservados. Apenas comandos explícitos persistem padrões. Os estudos usam a chave de armazenamento existente.
+O seletor SAC/PRICE e Salvar estudo ficam junto à prestação. A Entrada continua manual; o selo de 20% é uma ação explícita e não altera a regra de edição dos campos. Estudos existentes, os dois modos de FGTS e as faixas temporárias são preservados. Apenas comandos explícitos persistem padrões dos valores. Os estudos usam a chave de armazenamento existente.
+
+O último sistema de amortização escolhido fica separado dos valores padrão e dos estudos, na chave `muda.financing.method.v1`. Clicar em SAC ou PRICE ou carregar um estudo atualiza essa memória; na próxima abertura, o sistema é restaurado sem retomar os demais dados do estudo. Sem preferência válida ou com armazenamento indisponível, o padrão é SAC. Uma falha ao salvar não impede a troca na simulação atual e aparece junto ao seletor.
 
 ## Investir e aba inicial
 

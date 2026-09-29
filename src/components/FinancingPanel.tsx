@@ -11,6 +11,7 @@ import "./FinancingPanel.css";
 
 type Props = {
   valuePreferences: ValuePreferences;
+  methodMemoryError: string | null;
   onSaveValuePreference: (field: FinancingField) => ValuePreferenceResult;
   onRemoveValuePreference: (field: FinancingField) => ValuePreferenceResult;
   rangePreferences: RangePreferences;
@@ -105,6 +106,7 @@ export default function FinancingPanel(props: Props) {
             {(["SAC", "PRICE"] as const).map(method => <button type="button" key={method} aria-pressed={state.method === method} onClick={() => update({ method })}>{method}</button>)}
           </div>
           <span className="fc-save-status" role="status">{savedState === state ? "Adicionado aos estudos." : ""}</span>
+          {props.methodMemoryError && <p className="fc-method-error" role="alert">{props.methodMemoryError}</p>}
         </div>
       </div>
       <div className="fc-card-body">

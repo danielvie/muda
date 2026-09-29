@@ -45,6 +45,7 @@
 .fc-method { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; border-top:1px solid #ffffff30; padding-top:12px; }
 .fc-method > span { flex:1 1 auto; min-width:0; font-size:14px; color:#e0e8f3; }
 .fc-method .fc-save-status:empty { display:none; }
+.fc-method-error { flex-basis:100%; margin:0; font-size:12px; color:#ffe1d5; }
 .financing-panel .fc-method button { min-width:76px; min-height:48px; background:transparent; color:white; border-color:#ffffff70; }
 .financing-panel .fc-method button:hover { border-color:white; background:#ffffff18; }
 .financing-panel .fc-method button[aria-pressed=true] { background:var(--lp-yellow); color:var(--lp-hero); border-color:var(--lp-yellow); }
